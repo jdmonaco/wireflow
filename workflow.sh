@@ -31,252 +31,289 @@ if ! command -v filecat &>/dev/null; then
     exit 1
 fi
 
+# =============================================================================
+# Project Root Discovery
+# =============================================================================
+find_project_root() {
+    local dir="$PWD"
+    while [[ "$dir" != "$HOME" && "$dir" != "/" ]]; do
+        if [[ -d "$dir/.workflow" ]]; then
+            echo "$dir"
+            return 0
+        fi
+        dir="$(dirname "$dir")"
+    done
+    return 1
+}
+
 # Default configuration
 DEFAULT_MODEL="claude-sonnet-4-5"
 DEFAULT_TEMPERATURE=1.0
 DEFAULT_MAX_TOKENS=4096
-SYSTEM_PROMPT_FILE="prompts/system.txt"
 
 # =============================================================================
 # Help Text
 # =============================================================================
 show_help() {
     cat <<EOF
-Usage: $0 SUBCOMMAND [OPTIONS]
+Usage: workflow SUBCOMMAND [OPTIONS]
 
 SUBCOMMANDS:
-    init NAME                   Initialize a new workflow with interactive setup
-    run [OPTIONS]               Execute a workflow ('run' is optional)
+    init [dir]              Initialize workflow project (default: current dir)
+    new NAME                Create new workflow in current project
+    run NAME [OPTIONS]      Execute workflow
 
-EXECUTION OPTIONS:
-    --workflow WORKFLOW_NAME    Workflow to execute (required)
-    --stream                    Use streaming API mode (default: single-batch)
-    --dry-run                   Estimate tokens only, don't make API call
-
-CONTEXT AGGREGATION:
-    --context-file FILE         Add specific file to context (repeatable)
-    --context-pattern PATTERN   Use glob pattern for filecat aggregation
-    --depends-on WORKFLOW       Include output from another workflow
-
-API CONFIGURATION:
-    --model MODEL              Claude model (default: $DEFAULT_MODEL)
-    --temperature TEMP         Sampling temperature (default: $DEFAULT_TEMPERATURE)
-    --max-tokens NUM           Max output tokens (default: $DEFAULT_MAX_TOKENS)
-    --system-prompts LIST      Comma-separated system prompt names (overrides config)
+RUN OPTIONS:
+    --stream                Use streaming API mode (default: single-batch)
+    --dry-run              Estimate tokens only, don't make API call
+    --context-pattern GLOB  Glob pattern for context files
+    --context-file FILE     Add specific file (repeatable)
+    --depends-on WORKFLOW   Include output from another workflow
+    --model MODEL           Override model from config
+    --temperature TEMP      Override temperature
+    --max-tokens NUM        Override max tokens
+    --system-prompts LIST   Comma-separated prompt names (overrides config)
 
 OTHER:
-    --help, -h                 Show this help message
+    --help, -h, help        Show this help message
 
 EXAMPLES:
-    # Initialize new workflow
-    $0 init 01-outline-draft
+    # Initialize project
+    workflow init .
 
-    # Execute workflow with context pattern
-    $0 run --workflow 00-workshop-context --context-pattern '../References/*.md'
+    # Create new workflow
+    workflow new 01-outline-draft
 
-    # Execute with dependencies and streaming (implicit 'run')
-    $0 --workflow 02-intro-draft --depends-on 01-outline-draft --stream
+    # Execute workflow (uses .workflow/01-outline-draft/config)
+    workflow run 01-outline-draft
 
-    # Execute with explicit files
-    $0 run --workflow 03-methods --context-file ../data.md --context-file ../notes.md
+    # Execute with streaming
+    workflow run 01-outline-draft --stream
+
+    # Execute with overrides
+    workflow run 02-intro --depends-on 01-outline-draft --max-tokens 8192
 
 EOF
 }
 
 # =============================================================================
-# Initialization Subcommand
+# Init Subcommand - Initialize Project
 # =============================================================================
-init_workflow() {
-    local workflow_name="$1"
+init_project() {
+    local target_dir="${1:-.}"
 
-    if [[ -z "$workflow_name" ]]; then
-        echo "Error: Workflow name required for init subcommand"
-        echo "Usage: $0 init WORKFLOW_NAME"
+    # Check if already initialized
+    if [[ -d "$target_dir/.workflow" ]]; then
+        echo "Error: Project already initialized at $target_dir"
+        echo "Found existing .workflow/ directory"
         exit 1
     fi
 
-    # Create default config file if it doesn't exist
-    if [[ ! -f "config" ]]; then
-        cat > "config" <<'CONFIG_EOF'
-# Work/config - Project configuration
+    # Create .workflow structure
+    mkdir -p "$target_dir/.workflow/prompts"
+    mkdir -p "$target_dir/.workflow/output"
+
+    # Create default config
+    cat > "$target_dir/.workflow/config" <<'CONFIG_EOF'
+# Project-level configuration
 
 # System prompts to concatenate (in order)
 # Each name maps to $PROMPT_PREFIX/System/{name}.xml
 SYSTEM_PROMPTS=(Root NeuroAI)
 
 # API defaults
-MODEL="$DEFAULT_MODEL"
-TEMPERATURE=$DEFAULT_TEMPERATURE
-MAX_TOKENS=$DEFAULT_MAX_TOKENS
+MODEL="claude-sonnet-4-5"
+TEMPERATURE=1.0
+MAX_TOKENS=4096
 CONFIG_EOF
-        echo "Created default config file: config"
+
+    echo "Initialized workflow project: $target_dir/.workflow/"
+    echo "Created:"
+    echo "  $target_dir/.workflow/config"
+    echo "  $target_dir/.workflow/prompts/"
+    echo "  $target_dir/.workflow/output/"
+    echo ""
+    echo "Next steps:"
+    echo "  1. cd $target_dir"
+    echo "  2. workflow new WORKFLOW_NAME"
+}
+
+# =============================================================================
+# New Subcommand - Create Workflow
+# =============================================================================
+new_workflow() {
+    local workflow_name="$1"
+
+    if [[ -z "$workflow_name" ]]; then
+        echo "Error: Workflow name required"
+        echo "Usage: workflow new NAME"
+        exit 1
+    fi
+
+    # Find project root
+    PROJECT_ROOT=$(find_project_root) || {
+        echo "Error: Not in workflow project (no .workflow/ directory found)"
+        echo "Run 'workflow init' to initialize a project first"
+        exit 1
+    }
+
+    WORKFLOW_DIR="$PROJECT_ROOT/.workflow/$workflow_name"
+
+    # Check if workflow already exists
+    if [[ -d "$WORKFLOW_DIR" ]]; then
+        echo "Error: Workflow '$workflow_name' already exists"
+        exit 1
     fi
 
     # Create workflow directory
-    if [[ ! -d "$workflow_name" ]]; then
-        mkdir -p "$workflow_name"
-        echo "Created workflow directory: $workflow_name/"
-    else
-        echo "Workflow directory already exists: $workflow_name/"
-    fi
+    mkdir -p "$WORKFLOW_DIR"
 
-    # Interactive task description input
-    echo ""
-    echo "Enter task description (press Ctrl-D when finished):"
-    echo "---"
-    local task_content
-    task_content=$(cat)
+    # Create empty task file
+    touch "$WORKFLOW_DIR/task.txt"
 
-    # Write task file
-    echo "$task_content" > "$workflow_name/task.txt"
-    echo ""
-    echo "Created: $workflow_name/task.txt"
+    # Create workflow config file
+    cat > "$WORKFLOW_DIR/config" <<'WORKFLOW_CONFIG_EOF'
+# Workflow-specific configuration
+# These values override project defaults from .workflow/config
 
-    # Generate stub workflow script
-    local stub_script="$workflow_name/run.sh"
-    cat > "$stub_script" <<'STUB_EOF'
-#!/usr/bin/env bash
-set -e
+# Context aggregation methods (uncomment and configure as needed):
 
-# Workflow configuration
-WORKFLOW_NAME="WORKFLOW_NAME_PLACEHOLDER"
-
-# Context aggregation
-# Choose one or more methods:
-
-# Method 1: Glob pattern for auto-aggregation
+# Method 1: Glob pattern
 # CONTEXT_PATTERN="../References/*.md"
 
 # Method 2: Explicit file list
 # CONTEXT_FILES=(
-#     "../References/document1.md"
-#     "../References/document2.md"
+#     "../References/doc1.md"
+#     "../References/doc2.md"
 # )
 
-# Method 3: Depend on previous workflow outputs
+# Method 3: Workflow dependencies
 # DEPENDS_ON=(
 #     "00-workshop-context"
 #     "01-outline-draft"
 # )
 
-# API configuration (optional workflow-specific overrides)
-# Note: Default values are set in ../config
-# Uncomment to override for this workflow only:
+# API overrides (optional)
 # MODEL="claude-sonnet-4-5"
 # TEMPERATURE=1.0
 # MAX_TOKENS=4096
 # SYSTEM_PROMPTS="Root,NeuroAI,DataScience"
+WORKFLOW_CONFIG_EOF
 
-# Build command
-CMD="../workflow.sh run --workflow $WORKFLOW_NAME"
-
-# Add context options
-if [[ -n "$CONTEXT_PATTERN" ]]; then
-    CMD="$CMD --context-pattern '$CONTEXT_PATTERN'"
-fi
-
-if [[ -n "$CONTEXT_FILES" ]]; then
-    for file in "${CONTEXT_FILES[@]}"; do
-        CMD="$CMD --context-file '$file'"
-    done
-fi
-
-if [[ -n "$DEPENDS_ON" ]]; then
-    for dep in "${DEPENDS_ON[@]}"; do
-        CMD="$CMD --depends-on '$dep'"
-    done
-fi
-
-# Add API config overrides (if set)
-[[ -n "$MODEL" ]] && CMD="$CMD --model $MODEL"
-[[ -n "$TEMPERATURE" ]] && CMD="$CMD --temperature $TEMPERATURE"
-[[ -n "$MAX_TOKENS" ]] && CMD="$CMD --max-tokens $MAX_TOKENS"
-[[ -n "$SYSTEM_PROMPTS" ]] && CMD="$CMD --system-prompts $SYSTEM_PROMPTS"
-
-# Add streaming flag if desired
-# CMD="$CMD --stream"
-
-# Execute
-eval $CMD
-STUB_EOF
-
-    # Replace placeholder with actual workflow name
-    sed -i '' "s/WORKFLOW_NAME_PLACEHOLDER/$workflow_name/g" "$stub_script"
-
-    # Make executable
-    chmod +x "$stub_script"
-    echo "Created: $stub_script"
-
-    # Open in editor
+    echo "Created workflow: $workflow_name"
+    echo "  $WORKFLOW_DIR/task.txt"
+    echo "  $WORKFLOW_DIR/config"
     echo ""
-    echo "Opening workflow script in editor..."
-    local editor="${EDITOR:-vim}"
-    $editor "$stub_script"
+    echo "Opening task and config files in editor..."
 
-    echo ""
-    echo "Workflow '$workflow_name' initialized successfully!"
-    echo "Edit $stub_script to configure context sources and run the workflow."
+    # Open both files in vim with vertical split
+    ${EDITOR:-vim} -O "$WORKFLOW_DIR/task.txt" "$WORKFLOW_DIR/config"
 }
 
 # =============================================================================
 # Parse Subcommand
 # =============================================================================
 
-# Check for help first
-if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+# Require subcommand
+if [[ $# -eq 0 ]]; then
     show_help
-    exit 0
+    exit 1
 fi
 
-# Check for init subcommand
-if [[ "$1" == "init" ]]; then
-    init_workflow "$2"
-    exit 0
-fi
-
-# Check for explicit run subcommand (and skip it)
-if [[ "$1" == "run" ]]; then
-    shift
-fi
-
-# Otherwise, proceed with execution mode (implicit run)
+# Parse subcommand
+case "$1" in
+    init)
+        init_project "$2"
+        exit 0
+        ;;
+    new)
+        if [[ -z "$2" ]]; then
+            echo "Error: Workflow name required"
+            echo "Usage: workflow new NAME"
+            exit 1
+        fi
+        new_workflow "$2"
+        exit 0
+        ;;
+    run)
+        shift  # Remove 'run' from args
+        if [[ -z "$1" ]]; then
+            echo "Error: Workflow name required"
+            echo "Usage: workflow run NAME [options]"
+            exit 1
+        fi
+        WORKFLOW_NAME="$1"
+        shift  # Remove workflow name from args
+        # Continue to run mode with remaining args
+        ;;
+    --help|-h|help)
+        show_help
+        exit 0
+        ;;
+    *)
+        echo "Error: Unknown subcommand: $1"
+        echo "Valid subcommands: init, new, run"
+        echo ""
+        show_help
+        exit 1
+        ;;
+esac
 
 # =============================================================================
-# Load Project Configuration
+# Run Mode - Find Project and Load Configuration
 # =============================================================================
 
-# Set defaults first
+# Find project root
+PROJECT_ROOT=$(find_project_root) || {
+    echo "Error: Not in workflow project (no .workflow/ directory found)"
+    echo "Run 'workflow init' to initialize a project"
+    exit 1
+}
+
+WORKFLOW_DIR="$PROJECT_ROOT/.workflow/$WORKFLOW_NAME"
+
+# Check workflow exists
+if [[ ! -d "$WORKFLOW_DIR" ]]; then
+    echo "Error: Workflow '$WORKFLOW_NAME' not found"
+    echo "Available workflows:"
+    ls -1 "$PROJECT_ROOT/.workflow" | grep -v '^config$\|^prompts$\|^output$' || echo "  (none)"
+    echo ""
+    echo "Create new workflow with: workflow new $WORKFLOW_NAME"
+    exit 1
+fi
+
+# Tier 1: Built-in defaults
 SYSTEM_PROMPTS=(Root)
 MODEL="$DEFAULT_MODEL"
 TEMPERATURE="$DEFAULT_TEMPERATURE"
 MAX_TOKENS="$DEFAULT_MAX_TOKENS"
-
-# Source config file if it exists (overrides defaults)
-if [[ -f "config" ]]; then
-    source config
-fi
-
-# =============================================================================
-# Execution Mode - Argument Parsing
-# =============================================================================
-WORKFLOW_NAME=""
-STREAM_MODE=false
-DRY_RUN=false
 CONTEXT_FILES=()
 CONTEXT_PATTERN=""
 DEPENDS_ON=()
+
+# Tier 2: Project-level config
+if [[ -f "$PROJECT_ROOT/.workflow/config" ]]; then
+    source "$PROJECT_ROOT/.workflow/config"
+fi
+
+# Tier 3: Workflow-level config
+if [[ -f "$WORKFLOW_DIR/config" ]]; then
+    source "$WORKFLOW_DIR/config"
+fi
+
+# =============================================================================
+# Run Mode - Parse Command-Line Overrides
+# =============================================================================
+STREAM_MODE=false
+DRY_RUN=false
 SYSTEM_PROMPTS_OVERRIDE=""
 
-# Parse arguments
+# Parse arguments (command-line overrides)
 while [[ $# -gt 0 ]]; do
     case $1 in
         --help|-h)
             show_help
             exit 0
-            ;;
-        --workflow)
-            WORKFLOW_NAME="$2"
-            shift 2
             ;;
         --stream)
             STREAM_MODE=true
@@ -291,19 +328,19 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --context-pattern)
-            CONTEXT_PATTERN="$2"
+            CONTEXT_PATTERN="$2"  # Override config
             shift 2
             ;;
         --depends-on)
-            DEPENDS_ON+=("$2")
+            DEPENDS_ON+=("$2")  # Add to config
             shift 2
             ;;
         --model)
-            MODEL="$2"
+            MODEL="$2"  # Override config
             shift 2
             ;;
         --temperature)
-            TEMPERATURE="$2"
+            TEMPERATURE="$2"  # Override config
             shift 2
             ;;
         --max-tokens)
@@ -327,33 +364,21 @@ if [[ -n "$SYSTEM_PROMPTS_OVERRIDE" ]]; then
     IFS=',' read -ra SYSTEM_PROMPTS <<< "$SYSTEM_PROMPTS_OVERRIDE"
 fi
 
-# Validate execution mode requirements
-if [[ -z "$WORKFLOW_NAME" ]]; then
-    echo "Error: --workflow required for execution mode"
-    echo "Use --help for usage information"
-    exit 1
-fi
-
 # =============================================================================
-# Execution Mode - Setup
+# Run Mode - Setup Paths
 # =============================================================================
 
-# Validate workflow directory exists
-if [[ ! -d "$WORKFLOW_NAME" ]]; then
-    echo "Error: Workflow directory not found: $WORKFLOW_NAME"
-    echo "Use '$0 init $WORKFLOW_NAME' to create a new workflow"
-    exit 1
-fi
+# File paths (all relative to PROJECT_ROOT/.workflow/)
+TASK_PROMPT_FILE="$WORKFLOW_DIR/task.txt"
+CONTEXT_PROMPT_FILE="$WORKFLOW_DIR/context.txt"
+OUTPUT_FILE="$WORKFLOW_DIR/output.md"
+OUTPUT_LINK="$PROJECT_ROOT/.workflow/output/${WORKFLOW_NAME}.md"
+SYSTEM_PROMPT_FILE="$PROJECT_ROOT/.workflow/prompts/system.txt"
 
-# File paths
-TASK_PROMPT_FILE="$WORKFLOW_NAME/task.txt"
-CONTEXT_PROMPT_FILE="$WORKFLOW_NAME/context.txt"
-OUTPUT_FILE="$WORKFLOW_NAME/output.md"
-OUTPUT_LINK="output/${WORKFLOW_NAME}.md"
-
-# Check if task file exists
+# Validate task file exists
 if [[ ! -f "$TASK_PROMPT_FILE" ]]; then
     echo "Error: Task file not found: $TASK_PROMPT_FILE"
+    echo "Workflow may be incomplete. Re-create with: workflow new $WORKFLOW_NAME"
     exit 1
 fi
 
@@ -400,7 +425,7 @@ echo "Building context..."
 if [[ ${#DEPENDS_ON[@]} -gt 0 ]]; then
     echo "  Adding dependencies..."
     for dep in "${DEPENDS_ON[@]}"; do
-        dep_file="output/${dep}.md"
+        dep_file="$PROJECT_ROOT/.workflow/output/${dep}.md"
         if [[ ! -f "$dep_file" ]]; then
             echo "Error: Dependency output not found: $dep_file"
             echo "Ensure workflow '$dep' has been executed successfully"
@@ -611,7 +636,7 @@ fi
 echo "Response saved to: $OUTPUT_FILE"
 
 # Create/update hardlink in output directory
-mkdir -p output
+mkdir -p "$PROJECT_ROOT/.workflow/output"
 if [[ -f "$OUTPUT_LINK" ]]; then
     rm "$OUTPUT_LINK"
 fi
