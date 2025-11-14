@@ -104,6 +104,7 @@ find_project_root() {
 DEFAULT_MODEL="claude-sonnet-4-5"
 DEFAULT_TEMPERATURE=1.0
 DEFAULT_MAX_TOKENS=4096
+DEFAULT_OUTPUT_FORMAT="md"
 
 # =============================================================================
 # Help Text
@@ -173,8 +174,8 @@ init_project() {
     mkdir -p "$target_dir/.workflow/output"
 
     # Create default config
-    cat > "$target_dir/.workflow/config" <<'CONFIG_EOF'
-# Project-level configuration
+    cat > "$target_dir/.workflow/config" <<CONFIG_EOF
+# Project-level workflow configuration
 
 # System prompts to concatenate (in order, space-separated)
 # Note: Each name must map to a prompt file with the corresponding path:
@@ -245,7 +246,7 @@ new_workflow() {
     touch "$WORKFLOW_DIR/task.txt"
 
     # Create workflow config file
-    cat > "$WORKFLOW_DIR/config" <<'WORKFLOW_CONFIG_EOF'
+    cat > "$WORKFLOW_DIR/config" <<WORKFLOW_CONFIG_EOF
 # Workflow-specific configuration
 # These values override project defaults from .workflow/config
 
@@ -267,12 +268,12 @@ new_workflow() {
 # )
 
 # API overrides (optional)
-# MODEL="claude-sonnet-4-5"
-# TEMPERATURE=1.0
-# MAX_TOKENS=4096
-# SYSTEM_PROMPTS="Root,NeuroAI,DataScience"
+# MODEL="DEFAULT_MODEL"
+# TEMPERATURE=DEFAULT_TEMPERATURE
+# MAX_TOKENS=DEFAULT_MAX_TOKENS
+# SYSTEM_PROMPTS="Root,DataScience"
 
-# Output format override (optional)
+# Output format override (extension without dot: md, txt, json, html, etc.)
 # OUTPUT_FORMAT="txt"
 # OUTPUT_FORMAT="json"
 WORKFLOW_CONFIG_EOF
@@ -408,7 +409,7 @@ SYSTEM_PROMPTS=(Root)
 MODEL="$DEFAULT_MODEL"
 TEMPERATURE="$DEFAULT_TEMPERATURE"
 MAX_TOKENS="$DEFAULT_MAX_TOKENS"
-OUTPUT_FORMAT="md"
+OUTPUT_FORMAT="$DEFAULT_OUTPUT_FORMAT"
 CONTEXT_FILES=()
 CONTEXT_PATTERN=""
 DEPENDS_ON=()
