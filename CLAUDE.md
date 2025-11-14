@@ -2,32 +2,93 @@
 
 ## Project Overview
 
-This `Work/` directory contains a bash-scripted workflow framework for AI-assisted manuscript development. The parent project is a BRAIN NeuroAI commentary manuscript developed with Jeffrey Kopsick for submission to the Journal of Neural Engineering special issue associated with the AAAI NeuroAI workshop organized by Anton Arkhipov at the Allen Institute.
-
-The framework processes reference materials from the parent project directory, applies custom prompts and instructions, and generates structured outputs using the Anthropic Messages API.
+This directory contains `workflow.sh`, a portable CLI tool for managing AI-assisted manuscript development workflows using the Anthropic Messages API. The tool uses a git-like project structure with `.workflow/` directories and supports flexible configuration cascading, context aggregation, and workflow chaining.
 
 ## Directory Structure
 
 ```
-Work/
-├── workflow.sh                 # Unified workflow script (init + run modes)
-├── config                      # Project configuration (sourced by workflow.sh)
-├── prompts/
-│   └── system.txt              # Generated system prompt (concatenated from config)
-├── 00-workshop-context/        # Example workflow implementation
-│   ├── task.txt                # Task-specific instructions
-│   ├── context.txt             # Aggregated reference materials (generated)
-│   ├── output.md               # API response output
-│   └── run.sh                  # Workflow execution script
-└── output/                     # Hardlinks to workflow outputs
-    └── 00-workshop-context.md  # Hardlink to 00-workshop-context/output.md
+project-root/
+├── .workflow/                   # Git-like workflow directory
+│   ├── config                   # Project-level configuration
+│   ├── prompts/
+│   │   └── system.txt          # Generated system prompt
+│   ├── output/                  # Hardlinks to workflow outputs
+│   │   └── WORKFLOW.md         # Hardlink to WORKFLOW/output.md
+│   └── WORKFLOW_NAME/           # Individual workflow directory
+│       ├── config              # Workflow-specific configuration
+│       ├── task.txt            # Task description
+│       ├── context.txt         # Generated context
+│       └── output.md           # API response
+└── (project files...)
 ```
+
+## Installation
+
+1. Copy `workflow.sh` to a directory on your PATH (e.g., `~/bin/` or `/usr/local/bin/`)
+2. Rename to `workflow`: `mv workflow.sh workflow`
+3. Ensure it's executable: `chmod +x workflow`
+4. Set required environment variables in `~/.bashrc` or `~/.bash_profile`:
+   ```bash
+   export ANTHROPIC_API_KEY="your-api-key"
+   export PROMPT_PREFIX="$HOME/OneDrive/Admin/Prompts"  # Path to system prompts
+   ```
+5. Ensure `filecat` function is available in `~/.bash_functions`
+
+## Commands
+
+### Initialize Project
+
+```bash
+workflow init [directory]
+```
+
+Creates `.workflow/` structure in the specified directory (default: current directory):
+- `.workflow/config` - Project-level configuration
+- `.workflow/prompts/` - For generated system prompts
+- `.workflow/output/` - For workflow output hardlinks
+
+### Create Workflow
+
+```bash
+workflow new WORKFLOW_NAME
+```
+
+Creates a new workflow in the current project:
+- Creates `.workflow/WORKFLOW_NAME/` directory
+- Creates empty `task.txt` and template `config` files
+- Opens both files in vim for editing
+
+**Requirements:** Must be run within an initialized project (will search upward for `.workflow/`).
+
+### Execute Workflow
+
+```bash
+workflow run WORKFLOW_NAME [options]
+```
+
+Executes a workflow by:
+1. Finding project root (searches upward for `.workflow/`)
+2. Loading configuration (3-tier cascade)
+3. Building context from configured sources
+4. Making API request (single-batch or streaming)
+5. Saving output with hardlink in `.workflow/output/`
+
+**Options:**
+- `--stream` - Use streaming mode (real-time output)
+- `--dry-run` - Estimate tokens without API call
+- `--context-pattern GLOB` - Override context pattern
+- `--context-file FILE` - Add additional context file (repeatable)
+- `--depends-on WORKFLOW` - Add workflow dependency
+- `--model MODEL` - Override model
+- `--temperature TEMP` - Override temperature
+- `--max-tokens NUM` - Override max tokens
+- `--system-prompts LIST` - Override system prompts (comma-separated)
 
 ## Configuration
 
-### Project Configuration File (`config`)
+### Project Configuration (`.workflow/config`)
 
-The `config` file is a sourceable bash script containing project-wide settings:
+Project-wide defaults sourced by all workflows:
 
 ```bash
 # System prompts to concatenate (in order)
@@ -40,155 +101,265 @@ TEMPERATURE=1.0
 MAX_TOKENS=4096
 ```
 
-**Key features:**
-- Created automatically by `workflow.sh init` if missing
-- Sourced by `workflow.sh` at runtime
-- Can be overridden per-workflow via command-line flags
+### Workflow Configuration (`.workflow/WORKFLOW_NAME/config`)
 
-### System Prompts
-
-System prompts are built by concatenating XML files specified in the `SYSTEM_PROMPTS` array:
-- Files are located at `$PROMPT_PREFIX/System/{name}.xml`
-- `Root` prompt is the base and typically always included
-- Additional prompts (e.g., `NeuroAI`) are project-specific
-- Concatenated into `prompts/system.txt` before API requests
-
-### Workflow Structure
-
-Each workflow follows this pattern:
-1. **Task Description**: Specific instructions (`<workflow>/task.txt`)
-2. **Context Materials**: Aggregated references (`<workflow>/context.txt`, auto-generated)
-3. **Output**: API response (`<workflow>/output.md`)
-4. **Output Hardlink**: Linked in `output/` directory for easy access and workflow chaining
-5. **Execution Script**: Simple wrapper (`<workflow>/run.sh`) calling `workflow.sh`
-
-## Key Dependencies
-
-- **External**: `curl`, `jq`, `mdformat` (optional)
-- **Custom**: `filecat()` function from `~/.bash_functions` (required)
-- **Environment Variables**:
-  - `ANTHROPIC_API_KEY`: Messages API access
-  - `PROMPT_PREFIX`: Base path to system prompt directory (e.g., `~/OneDrive/Admin/Prompts`)
-
-## Usage
-
-### Initialize a New Workflow
+Workflow-specific settings that override project defaults:
 
 ```bash
-./workflow.sh init WORKFLOW_NAME
+# Context aggregation methods
+
+# Method 1: Glob pattern
+CONTEXT_PATTERN="../References/*.md"
+
+# Method 2: Explicit file list
+CONTEXT_FILES=(
+    "../References/doc1.md"
+    "../References/doc2.md"
+)
+
+# Method 3: Workflow dependencies
+DEPENDS_ON=(
+    "00-workshop-context"
+    "01-outline-draft"
+)
+
+# API overrides (optional)
+MODEL="claude-sonnet-4-5"
+TEMPERATURE=1.0
+MAX_TOKENS=8192
+SYSTEM_PROMPTS="Root,NeuroAI,DataScience"
 ```
 
-This creates:
-1. `config` file (if missing) with default settings
-2. `WORKFLOW_NAME/` directory
-3. `WORKFLOW_NAME/task.txt` (from interactive input)
-4. `WORKFLOW_NAME/run.sh` (stub execution script)
+### Configuration Priority
 
-### Execute a Workflow
+Settings are applied in order (later overrides earlier):
+1. Built-in defaults (Root prompt, standard API parameters)
+2. Project config (`.workflow/config`)
+3. Workflow config (`.workflow/WORKFLOW_NAME/config`)
+4. Command-line flags (highest priority)
+
+## System Prompts
+
+System prompts are XML files concatenated in the specified order:
+- Located at `$PROMPT_PREFIX/System/{name}.xml`
+- `Root` prompt typically included first (baseline instructions)
+- Additional prompts add domain-specific context
+- Concatenated into `.workflow/prompts/system.txt`
+- Rebuilt only when missing (delete to regenerate)
+
+## Context Aggregation
+
+Three methods for building workflow context (can be combined):
+
+### 1. Glob Patterns
 
 ```bash
-# Using workflow-specific script
-cd WORKFLOW_NAME && ./run.sh
-
-# Direct execution
-./workflow.sh run --workflow WORKFLOW_NAME [options]
-
-# Or (implicit 'run')
-./workflow.sh --workflow WORKFLOW_NAME [options]
+CONTEXT_PATTERN="../References/*.md"
 ```
 
-### Common Options
+Uses `filecat` to concatenate all matching files with visual separators.
 
-- `--stream`: Use streaming mode (default: single-batch)
-- `--dry-run`: Estimate tokens without API call
-- `--context-pattern PATTERN`: Glob pattern for context files
-- `--context-file FILE`: Add specific file (repeatable)
-- `--depends-on WORKFLOW`: Include output from another workflow
-- `--model MODEL`: Override model (default from config)
-- `--temperature TEMP`: Override temperature
-- `--max-tokens NUM`: Override max tokens
-- `--system-prompts LIST`: Override system prompts (comma-separated)
-
-### Examples
+### 2. Explicit Files
 
 ```bash
-# Initialize new workflow
-./workflow.sh init 01-outline-draft
-
-# Execute with context pattern
-./workflow.sh --workflow 00-workshop-context \
-  --context-pattern '../Workshops/AAAI 2026 NeuroAI Workshop - Jan 2026/*.md'
-
-# Execute with dependencies and streaming
-./workflow.sh --workflow 02-intro-draft \
-  --depends-on 01-outline-draft \
-  --stream
-
-# Override system prompts for specific workflow
-./workflow.sh --workflow 03-methods \
-  --system-prompts "Root,DataScience,Statistics"
+CONTEXT_FILES=(
+    "../data/results.md"
+    "../notes/analysis.md"
+)
 ```
 
-## Implementation Details
+Maintains exact ordering of specified files.
 
-### Context Aggregation
+### 3. Workflow Dependencies
 
-The framework supports multiple methods for building context:
+```bash
+DEPENDS_ON=(
+    "01-outline-draft"
+    "02-intro"
+)
+```
 
-1. **Glob patterns** (`--context-pattern`): Auto-aggregate files matching pattern
-   - Example: `--context-pattern '../References/*.md'`
-   - Uses `filecat` with visual separators between files
+Includes outputs from previously executed workflows. Reads from `.workflow/output/` hardlinks.
 
-2. **Explicit files** (`--context-file`): Specify exact files (repeatable)
-   - Example: `--context-file ../data.md --context-file ../notes.md`
-   - Maintains specified order
+## Usage Examples
 
-3. **Workflow dependencies** (`--depends-on`): Chain workflows together
-   - Example: `--depends-on 01-outline-draft`
-   - Reads from `output/WORKFLOW.md` hardlinks
-   - Ensures workflows are executed in proper order
+### Initialize and Create First Workflow
 
-### Output Management
+```bash
+# Navigate to project directory
+cd ~/projects/my-manuscript
 
-- Generated output saved to `WORKFLOW/output.md`
-- Hardlink created at `output/WORKFLOW.md` for:
-  - Easy browsing (visible in Finder/Obsidian)
-  - Workflow chaining via `--depends-on`
+# Initialize workflow project
+workflow init .
+
+# Create first workflow
+workflow new 00-context-analysis
+
+# Edit opens automatically - configure context sources and task
+```
+
+### Execute Workflows
+
+```bash
+# Execute with default settings (from config)
+workflow run 00-context-analysis
+
+# Execute with streaming output
+workflow run 00-context-analysis --stream
+
+# Execute with overrides
+workflow run 01-outline --depends-on 00-context-analysis --max-tokens 8192
+```
+
+### Chain Workflows
+
+```bash
+# Workflow 1: Analyze workshop materials
+workflow new 00-workshop-context
+# In config: CONTEXT_PATTERN="../Workshops/*.md"
+workflow run 00-workshop-context
+
+# Workflow 2: Draft outline using workshop analysis
+workflow new 01-outline-draft
+# In config: DEPENDS_ON=("00-workshop-context")
+workflow run 01-outline-draft
+
+# Workflow 3: Draft introduction using both
+workflow new 02-intro-draft
+# In config: DEPENDS_ON=("00-workshop-context" "01-outline-draft")
+workflow run 02-intro-draft
+```
+
+### Work from Anywhere
+
+```bash
+# Can run from project root
+cd ~/projects/my-manuscript
+workflow run 01-outline
+
+# Or from subdirectory - finds .workflow/ automatically
+cd ~/projects/my-manuscript/drafts
+workflow run 01-outline
+
+# Or from workflow directory
+cd ~/projects/my-manuscript/.workflow/01-outline
+workflow run 01-outline
+```
+
+## Token Estimation
+
+Estimates displayed before each API call:
+```
+Estimated system tokens: 6633
+Estimated task tokens: 4294
+Estimated context tokens: 12450
+Estimated total input tokens: 23377
+```
+
+Formula: `(word_count * 1.3) + 4096`
+
+Use `--dry-run` to estimate without making API request.
+
+## Output Management
+
+- Workflow output saved to `.workflow/WORKFLOW_NAME/output.md`
+- Hardlink created at `.workflow/output/WORKFLOW_NAME.md`
+- Hardlinks visible in Finder/Obsidian (unlike symlinks)
 - Previous outputs backed up with timestamps (YYYYMMDDHHMMSS)
-- Optional `mdformat` post-processing
+- Optional `mdformat` post-processing if available
 
-### Token Estimation
+## Dependencies
 
-Token estimation uses heuristic formula: `(word_count * 1.3) + 4096`
-- System prompt tokens
-- Task prompt tokens
-- Context prompt tokens
-- Displayed before API call (useful for cost estimation)
-- Use `--dry-run` to estimate without making API request
+### Required
+- `bash` 4.0+
+- `curl` - API requests
+- `jq` - JSON processing
+- `filecat` - File concatenation with separators (from `~/.bash_functions`)
 
-### API Request Modes
+### Environment Variables
+- `ANTHROPIC_API_KEY` - Anthropic API access
+- `PROMPT_PREFIX` - Base path to system prompt directory
 
-**Single-batch (default):**
-- Blocks until complete
-- Displays output in `less`
-- More reliable for long responses
+### Optional
+- `mdformat` - Markdown formatting
+- `EDITOR` - Text editor (default: `vim`)
 
-**Streaming (`--stream`):**
-- Real-time terminal output
-- See progress as text is generated
-- Good for interactive use
+## Key Features
 
-## Future Enhancements
+### Portable
+- Single script, can be on PATH
+- Works from any directory within project
+- Project root auto-discovery (like git)
 
-- **Multi-turn Conversations**: Support iterative refinement with conversation history
-- **Template System**: Predefined task templates for common operations
-- **Parallel Execution**: Run independent workflows concurrently
-- **Output Validation**: Check generated content for completeness
-- **DAG Visualization**: Display workflow dependency graph
+### Flexible Configuration
+- Three-tier configuration cascade
+- Command-line overrides
+- Per-workflow customization
+
+### Workflow Chaining
+- Depends-on mechanism
+- Hardlinked outputs
+- DAG-style dependencies
+
+### Context Management
+- Multiple aggregation methods
+- Glob patterns with `filecat`
+- Explicit file lists
+- Workflow output dependencies
+
+### User Experience
+- Streaming or batch API modes
+- Token estimation before calls
+- Automatic output backup
+- Helpful error messages
+
+## Migration from Previous Version
+
+If you have an existing project with the old structure:
+
+```bash
+# In your Work/ directory:
+mkdir .workflow
+mv config prompts output .workflow/
+mv 00-workshop-context .workflow/
+
+# Convert run.sh to config
+cd .workflow/00-workshop-context
+# Extract config variables from run.sh into config file
+# Delete run.sh
+
+# Test
+cd ../..
+workflow run 00-workshop-context --dry-run
+```
+
+## Troubleshooting
+
+### "Not in workflow project"
+- Run `workflow init` to initialize
+- Or navigate to directory containing `.workflow/`
+
+### "Workflow not found"
+- Use `workflow new NAME` to create
+- Check workflow exists: `ls .workflow/`
+
+### "PROMPT_PREFIX not set"
+- Set in `~/.bashrc`: `export PROMPT_PREFIX="path/to/prompts"`
+- Reload shell: `source ~/.bashrc`
+
+### "filecat not found"
+- Ensure `~/.bash_functions` exists and is sourced
+- Define `filecat` function or source from dotfiles
+
+### Context files not found
+- Paths in config are relative to project root
+- Use `--dry-run` to test without API call
+- Check glob patterns expand correctly
 
 ## Notes
 
 - System prompts use XML formatting for structured instructions
-- The `filecat()` function adds visual separators for better context parsing
-- Workflow-specific `run.sh` scripts are thin wrappers - main logic in `workflow.sh`
-- Config file uses bash syntax - can include shell variables and logic if needed
+- The `filecat()` function adds visual separators between files
+- Workflow configs are bash scripts - can include shell logic
+- Command-line context options augment (not replace) config
+- Hardlinks updated atomically for safe concurrent access
