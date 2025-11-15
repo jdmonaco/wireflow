@@ -349,32 +349,35 @@ EOF
 }
 
 # =============================================================================
-# extract_parent_config() Function Tests
+# extract_config() Function Tests
 # =============================================================================
 
-@test "extract_parent_config: extracts MODEL from config" {
-    mkdir -p parent/.workflow
-    cat > parent/.workflow/config <<'EOF'
+@test "extract_config: extracts MODEL from config" {
+    mkdir -p test/.workflow
+    cat > test/.workflow/config <<'EOF'
 MODEL="claude-opus-4"
 EOF
 
-    run extract_parent_config parent/.workflow/config
+    run extract_config test/.workflow/config
 
     assert_success
     assert_output --partial "MODEL=claude-opus-4"
 }
 
-@test "extract_parent_config: extracts all inheritable values" {
-    mkdir -p parent/.workflow
-    cat > parent/.workflow/config <<'EOF'
+@test "extract_config: extracts all config values" {
+    mkdir -p test/.workflow
+    cat > test/.workflow/config <<'EOF'
 MODEL="claude-opus-4"
 TEMPERATURE=0.7
 MAX_TOKENS=8000
 OUTPUT_FORMAT="json"
 SYSTEM_PROMPTS=(Root NeuroAI)
+CONTEXT_PATTERN="References/*.md"
+CONTEXT_FILES=("data.md" "notes.md")
+DEPENDS_ON=("workflow-01")
 EOF
 
-    run extract_parent_config parent/.workflow/config
+    run extract_config test/.workflow/config
 
     assert_success
     assert_output --partial "MODEL=claude-opus-4"
@@ -382,10 +385,13 @@ EOF
     assert_output --partial "MAX_TOKENS=8000"
     assert_output --partial "OUTPUT_FORMAT=json"
     assert_output --partial "SYSTEM_PROMPTS=Root NeuroAI"
+    assert_output --partial "CONTEXT_PATTERN=References/*.md"
+    assert_output --partial "CONTEXT_FILES=data.md notes.md"
+    assert_output --partial "DEPENDS_ON=workflow-01"
 }
 
-@test "extract_parent_config: handles missing config gracefully" {
-    run extract_parent_config /nonexistent/config
+@test "extract_config: handles missing config gracefully" {
+    run extract_config /nonexistent/config
 
     assert_success
     # Should output empty values
@@ -393,58 +399,57 @@ EOF
     assert_output --partial "TEMPERATURE="
 }
 
-@test "extract_parent_config: handles malformed config gracefully" {
-    mkdir -p parent/.workflow
-    cat > parent/.workflow/config <<'EOF'
+@test "extract_config: handles malformed config gracefully" {
+    mkdir -p test/.workflow
+    cat > test/.workflow/config <<'EOF'
 MODEL="broken
 SYNTAX ERROR!!!
 EOF
 
-    run extract_parent_config parent/.workflow/config
+    run extract_config test/.workflow/config
 
     # Should not fail, just return empty/default values
     assert_success
 }
 
-@test "extract_parent_config: handles array SYSTEM_PROMPTS correctly" {
-    mkdir -p parent/.workflow
-    cat > parent/.workflow/config <<'EOF'
+@test "extract_config: handles array SYSTEM_PROMPTS correctly" {
+    mkdir -p test/.workflow
+    cat > test/.workflow/config <<'EOF'
 SYSTEM_PROMPTS=(Root NeuroAI DataScience)
 EOF
 
-    run extract_parent_config parent/.workflow/config
+    run extract_config test/.workflow/config
 
     assert_success
     assert_output --partial "SYSTEM_PROMPTS=Root NeuroAI DataScience"
 }
 
-@test "extract_parent_config: ignores non-inheritable values" {
-    mkdir -p parent/.workflow
-    cat > parent/.workflow/config <<'EOF'
+@test "extract_config: extracts workflow-specific values" {
+    mkdir -p test/.workflow
+    cat > test/.workflow/config <<'EOF'
 MODEL="claude-opus-4"
 CONTEXT_PATTERN="References/*.md"
 CONTEXT_FILES=("data.md")
 DEPENDS_ON=("workflow-01")
 EOF
 
-    run extract_parent_config parent/.workflow/config
+    run extract_config test/.workflow/config
 
     assert_success
     assert_output --partial "MODEL=claude-opus-4"
-    # Should only output inheritable values
-    refute_output --partial "CONTEXT_PATTERN"
-    refute_output --partial "CONTEXT_FILES"
-    refute_output --partial "DEPENDS_ON"
+    assert_output --partial "CONTEXT_PATTERN=References/*.md"
+    assert_output --partial "CONTEXT_FILES=data.md"
+    assert_output --partial "DEPENDS_ON=workflow-01"
 }
 
-@test "extract_parent_config: runs in isolated subshell" {
-    mkdir -p parent/.workflow
-    cat > parent/.workflow/config <<'EOF'
+@test "extract_config: runs in isolated subshell" {
+    mkdir -p test/.workflow
+    cat > test/.workflow/config <<'EOF'
 DANGEROUS_VAR="should_not_leak"
 MODEL="claude-opus-4"
 EOF
 
-    extract_parent_config parent/.workflow/config > /dev/null
+    extract_config test/.workflow/config > /dev/null
 
     # Variable should not leak to current shell
     [[ -z "$DANGEROUS_VAR" ]]

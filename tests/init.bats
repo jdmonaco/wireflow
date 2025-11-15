@@ -24,18 +24,24 @@ teardown() {
     assert_file_exists ".workflow/project.txt"
 }
 
-@test "init: creates config with default values" {
+@test "init: creates config with empty values for global default pass-through" {
     bash "$WORKFLOW_SCRIPT" init .
 
     assert_file_exists ".workflow/config"
 
-    # Source config and check defaults
+    # Source config and check values are empty (for pass-through)
     source .workflow/config
-    assert_equal "$MODEL" "claude-sonnet-4-5"
-    assert_equal "$TEMPERATURE" "1.0"
-    assert_equal "$MAX_TOKENS" "4096"
-    assert_equal "$OUTPUT_FORMAT" "md"
-    assert_equal "${SYSTEM_PROMPTS[0]}" "Root"
+    assert_equal "$MODEL" ""
+    assert_equal "$TEMPERATURE" ""
+    assert_equal "$MAX_TOKENS" ""
+    assert_equal "$OUTPUT_FORMAT" ""
+    assert_equal "${#SYSTEM_PROMPTS[@]}" "0"  # Empty array
+
+    # Config should contain comments showing inherited defaults
+    run cat .workflow/config
+    assert_output --partial "Current inherited defaults:"
+    assert_output --partial "MODEL="
+    assert_output --partial "TEMPERATURE="
 }
 
 @test "init: fails when project already initialized" {
@@ -81,12 +87,12 @@ EOF
     assert_output --partial "claude-opus-4"
     assert_output --partial "0.5"
 
-    # Verify inherited config
+    # Verify config uses empty values for transparent pass-through
     source .workflow/config
-    assert_equal "$MODEL" "claude-opus-4"
-    assert_equal "$TEMPERATURE" "0.5"
-    assert_equal "${SYSTEM_PROMPTS[0]}" "Root"
-    assert_equal "${SYSTEM_PROMPTS[1]}" "NeuroAI"
+    assert_equal "$MODEL" ""
+    assert_equal "$TEMPERATURE" ""
+    # But the display should have shown inherited values during init
+    # (checked earlier in assert_output)
 }
 
 @test "init: nested project can decline inheritance" {

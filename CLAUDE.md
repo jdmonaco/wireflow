@@ -107,6 +107,33 @@ workflow edit [WORKFLOW_NAME]
 
 **Requirements:** Must be run within an initialized project.
 
+### View Configuration
+
+```bash
+workflow config [WORKFLOW_NAME]
+```
+
+Display current configuration with source tracking and option to edit.
+
+**Without workflow name (project config):**
+- Shows effective project configuration (defaults + project overrides)
+- Lists all workflows with last-run timestamps
+- Indicates source for each parameter: (default) or (project)
+- Interactive prompt to edit project.txt and config
+
+**With workflow name (workflow config):**
+- Shows full configuration cascade (default → project → workflow)
+- Indicates source for each parameter: (default), (project), or (workflow)
+- Shows workflow-specific settings (CONTEXT_PATTERN, CONTEXT_FILES, DEPENDS_ON)
+- Interactive prompt to edit workflow task.txt and config
+
+**Source indicators:**
+- `(default)` - Using global DEFAULT_* constant (transparent pass-through)
+- `(project)` - Set explicitly in `.workflow/config`
+- `(workflow)` - Set explicitly in `.workflow/WORKFLOW_NAME/config`
+
+**Requirements:** Must be run within an initialized project.
+
 ### Execute Workflow
 
 ```bash
@@ -134,65 +161,84 @@ Executes a workflow by:
 
 ## Configuration
 
+### Global Default Pass-Through
+
+The tool uses **transparent pass-through** for configuration parameters. Empty values inherit from parent tier, while explicit values "own" the parameter.
+
+**Benefits:**
+- Change global DEFAULT_* constants to affect all uncustomized projects
+- Clear distinction between inherited and customized values
+- Easy reset: set to empty to restore pass-through
+- View effective config with source tracking via `workflow config`
+
+**The Rule:**
+- **Empty value** (`MODEL=`): Passes through to parent tier (transparent)
+- **Explicit value** (`MODEL="claude-opus-4"`): Owns parameter (decoupled from parent changes)
+
+**Example:**
+```bash
+# Global default in workflow.sh:
+DEFAULT_MODEL="claude-sonnet-4-5"
+
+# Project .workflow/config (empty = pass-through):
+MODEL=
+
+# Workflow config (empty = pass-through):
+MODEL=
+
+# Result: Uses claude-sonnet-4-5
+# Change DEFAULT_MODEL → all empty configs update automatically
+```
+
 ### Project Configuration (`.workflow/config`)
 
-Project-wide defaults sourced by all workflows:
+Project-wide settings (empty values pass through to global defaults):
 
 ```bash
-# System prompts to concatenate (in order)
-# Each name maps to $WORKFLOW_PROMPT_PREFIX/System/{name}.xml
-SYSTEM_PROMPTS=(Root)
+# Leave empty to use global defaults (recommended):
+MODEL=
+TEMPERATURE=
+MAX_TOKENS=
+SYSTEM_PROMPTS=()
+OUTPUT_FORMAT=
 
-# API defaults
-MODEL="claude-sonnet-4-5"
-TEMPERATURE=1.0
-MAX_TOKENS=4096
-
-# Output format (extension without dot)
-OUTPUT_FORMAT="md"
+# Or set explicit values to override globally:
+# MODEL="claude-opus-4"
+# TEMPERATURE=0.7
+# MAX_TOKENS=8192
+# SYSTEM_PROMPTS=(Root NeuroAI)
+# OUTPUT_FORMAT="json"
 ```
+
+**Note:** Project configs do NOT have CONTEXT_PATTERN, CONTEXT_FILES, or DEPENDS_ON (those are workflow-specific).
 
 ### Workflow Configuration (`.workflow/WORKFLOW_NAME/config`)
 
-Workflow-specific settings that override project defaults:
+Workflow-specific settings:
 
 ```bash
-# Context aggregation methods
-# Note: Paths are relative to project root
-
-# Method 1: Glob pattern (single pattern, supports brace expansion)
+# Context sources (workflow-specific, not inherited from project)
+# Paths are relative to project root
 CONTEXT_PATTERN="References/*.md"
 CONTEXT_PATTERN="References/{Topic1,Topic2}/*.md"
+CONTEXT_FILES=("References/doc1.md" "References/doc2.md")
+DEPENDS_ON=("00-workshop-context" "01-outline-draft")
 
-# Method 2: Explicit file list
-CONTEXT_FILES=(
-    "References/doc1.md"
-    "References/doc2.md"
-)
-
-# Method 3: Workflow dependencies
-DEPENDS_ON=(
-    "00-workshop-context"
-    "01-outline-draft"
-)
-
-# API overrides (optional)
-MODEL="claude-sonnet-4-5"
-TEMPERATURE=1.0
-MAX_TOKENS=8192
-SYSTEM_PROMPTS=(Root NeuroAI DataScience)
-
-# Output format override
-OUTPUT_FORMAT="json"
+# API parameters (leave empty to inherit from project/global defaults)
+# MODEL="claude-opus-4"
+# TEMPERATURE=0.7
+# MAX_TOKENS=8192
+# SYSTEM_PROMPTS=(Root NeuroAI)
+# OUTPUT_FORMAT="json"
 ```
 
 ### Configuration Priority
 
-Settings are applied in order (later overrides earlier):
-1. Built-in defaults (Root prompt, standard API parameters)
-2. Project config (`.workflow/config`)
-3. Workflow config (`.workflow/WORKFLOW_NAME/config`)
-4. Command-line flags (highest priority)
+Settings cascade through tiers (empty values pass through, non-empty override):
+1. Built-in defaults (global DEFAULT_* constants in workflow.sh)
+2. Project config (`.workflow/config`) - inherits from #1 if empty
+3. Workflow config (`.workflow/WORKFLOW_NAME/config`) - inherits from #2 if empty
+4. Command-line flags (always override, highest priority)
 
 ### Path Resolution
 

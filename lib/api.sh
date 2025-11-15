@@ -172,6 +172,10 @@ EOF
     # Initialize output file
     > "${params[output_file]}"
 
+    # Use error flag file to communicate from pipeline subshell
+    local error_flag="$(mktemp)"
+    rm "$error_flag"  # Remove, we'll create it if error occurs
+
     # Stream response and parse SSE events
     curl -Ns https://api.anthropic.com/v1/messages \
         -H "content-type: application/json" \
@@ -207,15 +211,16 @@ EOF
                     echo ""
                     echo "API Error:"
                     echo "$json_data" | jq '.error'
+                    touch "$error_flag"  # Signal error
                     exit 1
                     ;;
             esac
         fi
     done
 
-    # Check if pipe failed
-    local pipe_status=${PIPESTATUS[0]}
-    if [[ $pipe_status -ne 0 ]]; then
+    # Check if error occurred in pipeline
+    if [[ -f "$error_flag" ]]; then
+        rm -f "$error_flag"
         return 1
     fi
 

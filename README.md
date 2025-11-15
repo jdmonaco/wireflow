@@ -96,6 +96,23 @@ Opens files in vim for editing:
 - **Without name:** Edits project-level `project.txt` and `config`
 - **With name:** Edits workflow-specific `task.txt` and `config`
 
+### View Configuration
+
+```bash
+workflow config [WORKFLOW_NAME]
+```
+
+Display current configuration with option to edit:
+- **Without name:** Shows project configuration, lists workflows, prompts to edit project
+- **With name:** Shows workflow configuration with cascade (default → project → workflow), prompts to edit workflow
+
+**Source tracking:** Each parameter shows where its value comes from:
+- `(default)` - Using global DEFAULT_* constant (transparent pass-through)
+- `(project)` - Set explicitly in `.workflow/config`
+- `(workflow)` - Set explicitly in `.workflow/WORKFLOW_NAME/config`
+
+**Workflow-specific settings:** Displays CONTEXT_PATTERN, CONTEXT_FILES, DEPENDS_ON if configured.
+
 ### Execute Workflow
 
 ```bash
@@ -113,48 +130,67 @@ workflow run WORKFLOW_NAME [options]
 
 ## Configuration
 
+### Global Default Pass-Through
+
+Project and workflow configs use **empty values** for transparent pass-through to global defaults. This allows changing global DEFAULT_* constants to affect all uncustomized projects.
+
+**The rule:** Empty values inherit from parent tier. Explicit values "own" the parameter (decoupled from changes above).
+
+**Example - Transparent cascading:**
+```bash
+# Global: DEFAULT_MODEL="claude-sonnet-4-5"
+# Project .workflow/config: MODEL= (empty, passes through)
+# Workflow config: MODEL= (empty, passes through)
+# Result: Uses claude-sonnet-4-5
+
+# Change global: DEFAULT_MODEL="claude-opus-4"
+# Result: All empty configs now use claude-opus-4 automatically
+```
+
+**Example - Explicit ownership:**
+```bash
+# Project .workflow/config: MODEL="claude-opus-4"
+# Workflow config: MODEL= (empty)
+# Result: Uses claude-opus-4 from project (ignores global changes)
+```
+
 ### Project Config (`.workflow/config`)
 
-Project-wide defaults:
+Project-wide settings (leave empty for global default pass-through):
 
 ```bash
-# System prompts to concatenate
-SYSTEM_PROMPTS=(Root)
+# Leave empty to use global defaults (recommended):
+MODEL=
+TEMPERATURE=
+MAX_TOKENS=
+SYSTEM_PROMPTS=()
+OUTPUT_FORMAT=
 
-# API defaults
-MODEL="claude-sonnet-4-5"
-TEMPERATURE=1.0
-MAX_TOKENS=4096
-
-# Output format
-OUTPUT_FORMAT="md"
+# Or set explicit values to override globally:
+# MODEL="claude-opus-4"
+# TEMPERATURE=0.7
+# MAX_TOKENS=8192
+# SYSTEM_PROMPTS=(Root NeuroAI)
+# OUTPUT_FORMAT="json"
 ```
 
 ### Workflow Config (`.workflow/WORKFLOW_NAME/config`)
 
-Workflow-specific overrides:
+Workflow-specific settings:
 
 ```bash
-# Context from glob pattern (relative to project root)
+# Context sources (workflow-specific, not inherited)
+# Paths are relative to project root
 CONTEXT_PATTERN="References/*.md"
+CONTEXT_FILES=("data/results.md" "notes/analysis.md")
+DEPENDS_ON=("00-workshop-context" "01-outline-draft")
 
-# Or explicit files (relative to project root)
-CONTEXT_FILES=(
-    "data/results.md"
-    "notes/analysis.md"
-)
-
-# Or workflow dependencies
-DEPENDS_ON=(
-    "00-workshop-context"
-    "01-outline-draft"
-)
-
-# API overrides
-MAX_TOKENS=8192
-
-# Output format override
-OUTPUT_FORMAT="txt"
+# API parameters (leave empty to inherit from project/global defaults)
+# MODEL="claude-opus-4"
+# TEMPERATURE=0.7
+# MAX_TOKENS=8192
+# SYSTEM_PROMPTS=(Root NeuroAI)
+# OUTPUT_FORMAT="json"
 ```
 
 ### Configuration Priority

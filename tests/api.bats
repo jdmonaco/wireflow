@@ -190,7 +190,7 @@ teardown() {
         output_file="$output_file"
 
     assert_success
-    assert_file_exists "$output"
+    assert_file_exists "$output_file"
 
     run cat "$output_file"
     assert_output "Test streaming response"
@@ -239,7 +239,7 @@ EOF
         output_file="$output_file" > /dev/null
 
     # Output file should contain streamed content
-    assert_file_exists "$output"
+    assert_file_exists "$output_file"
     run cat "$output_file"
     assert_output "Test streaming response"
 }

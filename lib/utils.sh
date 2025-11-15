@@ -119,25 +119,37 @@ list_workflows() {
 }
 
 # =============================================================================
-# Configuration Inheritance
+# Configuration Extraction
 # =============================================================================
 
-# Extract inheritable config values from parent project
-extract_parent_config() {
-    local parent_config="$1"
+# Extract config values from a config file
+# General-purpose function for reading config files and outputting key=value pairs
+# Used for: parent config inheritance, config display, config cascade tracking
+#
+# Args:
+#   $1 - Config file path
+# Returns:
+#   Outputs key=value pairs to stdout (one per line)
+#   Arrays are space-separated
+#   Empty/unset values output as "KEY="
+extract_config() {
+    local config_file="$1"
 
-    # Source parent config in subshell and extract only inheritable values
+    # Source config in subshell and extract all config values
     (
         # Suppress errors if config doesn't exist or has issues
-        source "$parent_config" 2>/dev/null || true
+        source "$config_file" 2>/dev/null || true
 
-        # Output key=value pairs for parsing
+        # Output key=value pairs for all config variables
         echo "MODEL=${MODEL:-}"
         echo "TEMPERATURE=${TEMPERATURE:-}"
         echo "MAX_TOKENS=${MAX_TOKENS:-}"
         echo "OUTPUT_FORMAT=${OUTPUT_FORMAT:-}"
-        # Handle array - output space-separated
+        # Handle arrays - output space-separated
         echo "SYSTEM_PROMPTS=${SYSTEM_PROMPTS[*]:-}"
+        echo "CONTEXT_PATTERN=${CONTEXT_PATTERN:-}"
+        echo "CONTEXT_FILES=${CONTEXT_FILES[*]:-}"
+        echo "DEPENDS_ON=${DEPENDS_ON[*]:-}"
     )
 }
 

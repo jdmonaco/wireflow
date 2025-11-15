@@ -26,6 +26,7 @@ SUBCOMMANDS:
     new NAME                Create new workflow in current project
     edit [NAME]             Edit workflow or project (if NAME omitted)
     list                    List all workflows in current project
+    config [NAME]           Show configuration (project or workflow)
     run NAME [OPTIONS]      Execute workflow
 
 RUN OPTIONS:
@@ -55,6 +56,12 @@ EXAMPLES:
 
     # Edit existing workflow
     $(basename ${0}) edit 01-outline-draft
+
+    # Show project configuration
+    $(basename ${0}) config
+
+    # Show workflow configuration with cascade
+    $(basename ${0}) config 01-outline-draft
 
     # Execute workflow (uses .workflow/01-outline-draft/config)
     $(basename ${0}) run 01-outline-draft
@@ -123,7 +130,7 @@ init_project() {
                     [[ -n "$value" ]] && INHERITED_SYSTEM_PROMPTS="$value"
                     ;;
             esac
-        done < <(extract_parent_config "$PARENT_ROOT/.workflow/config")
+        done < <(extract_config "$PARENT_ROOT/.workflow/config")
 
         # Display inherited values
         echo "  MODEL: $INHERITED_MODEL"
@@ -138,21 +145,38 @@ init_project() {
     mkdir -p "$target_dir/.workflow/prompts"
     mkdir -p "$target_dir/.workflow/output"
 
-    # Create default config with inherited values
+    # Create config file with transparent pass-through
+    # Note: Both top-level and nested projects use empty values for pass-through
+    # The INHERITED_* values show what the parent had, but we pass through for transparency
+    local parent_note=""
+    [[ -n "$PARENT_ROOT" ]] && parent_note="# Nested under parent project: $PARENT_ROOT"$'\n'
+
     cat > "$target_dir/.workflow/config" <<CONFIG_EOF
 # Project-level workflow configuration
+${parent_note}
+# API Configuration
+# Leave values empty to use global defaults, or set explicit values to override.
+#
+# Current inherited defaults:
+#   MODEL: $INHERITED_MODEL
+#   TEMPERATURE: $INHERITED_TEMPERATURE
+#   MAX_TOKENS: $INHERITED_MAX_TOKENS
+#   SYSTEM_PROMPTS: $INHERITED_SYSTEM_PROMPTS
+#   OUTPUT_FORMAT: $INHERITED_OUTPUT_FORMAT
+#
+# To use inherited defaults (recommended):
+MODEL=
+TEMPERATURE=
+MAX_TOKENS=
+SYSTEM_PROMPTS=()
+OUTPUT_FORMAT=
 
-# System prompts to concatenate (in order, space-separated)
-# Names must map to \$WORKFLOW_PROMPT_PREFIX/System/{name}.txt
-SYSTEM_PROMPTS=($INHERITED_SYSTEM_PROMPTS)
-
-# API defaults
-MODEL="$INHERITED_MODEL"
-TEMPERATURE=$INHERITED_TEMPERATURE
-MAX_TOKENS=$INHERITED_MAX_TOKENS
-
-# Output format (extension without dot: md, txt, json, html, etc.)
-OUTPUT_FORMAT="$INHERITED_OUTPUT_FORMAT"
+# To override, uncomment and set values:
+# MODEL="claude-opus-4"
+# TEMPERATURE=0.7
+# MAX_TOKENS=8192
+# SYSTEM_PROMPTS=(Root NeuroAI)
+# OUTPUT_FORMAT="json"
 CONFIG_EOF
 
     # Create empty project description file
@@ -233,14 +257,12 @@ new_workflow() {
 #     "01-outline-draft"
 # )
 
-# API overrides (optional)
-# MODEL="$DEFAULT_MODEL"
-# TEMPERATURE=$DEFAULT_TEMPERATURE
-# MAX_TOKENS=$DEFAULT_MAX_TOKENS
-# SYSTEM_PROMPTS=(Root DataScience)
-
-# Output format override (extension without dot: md, txt, json, html, etc.)
-# OUTPUT_FORMAT="txt"
+# API overrides (leave empty to inherit from project/global defaults)
+# Uncomment and set values to override:
+# MODEL="claude-opus-4"
+# TEMPERATURE=0.7
+# MAX_TOKENS=8192
+# SYSTEM_PROMPTS=(Root NeuroAI)
 # OUTPUT_FORMAT="json"
 WORKFLOW_CONFIG_EOF
 
@@ -344,4 +366,210 @@ list_workflows_cmd() {
     fi
 
     echo ""
+}
+
+# =============================================================================
+# Config Subcommand - Display and Edit Configuration
+# =============================================================================
+
+# Display project-level configuration with option to edit
+config_project() {
+    # Find project root
+    PROJECT_ROOT=$(find_project_root) || {
+        echo "Error: Not in workflow project (no .workflow/ directory found)"
+        echo "Run 'workflow init' to initialize a project first"
+        exit 1
+    }
+
+    echo "Project Configuration"
+    echo "  Location: $PROJECT_ROOT/.workflow"
+    echo ""
+
+    # Load config values with source tracking
+    declare -A CONFIG_VALUE
+    declare -A CONFIG_SOURCE
+
+    # Initialize with defaults
+    CONFIG_VALUE[MODEL]="$DEFAULT_MODEL"
+    CONFIG_VALUE[TEMPERATURE]="$DEFAULT_TEMPERATURE"
+    CONFIG_VALUE[MAX_TOKENS]="$DEFAULT_MAX_TOKENS"
+    CONFIG_VALUE[OUTPUT_FORMAT]="$DEFAULT_OUTPUT_FORMAT"
+    CONFIG_VALUE[SYSTEM_PROMPTS]="Root"
+    CONFIG_SOURCE[MODEL]="default"
+    CONFIG_SOURCE[TEMPERATURE]="default"
+    CONFIG_SOURCE[MAX_TOKENS]="default"
+    CONFIG_SOURCE[OUTPUT_FORMAT]="default"
+    CONFIG_SOURCE[SYSTEM_PROMPTS]="default"
+
+    # Override with project config if exists and values are non-empty
+    if [[ -f "$PROJECT_ROOT/.workflow/config" ]]; then
+        while IFS='=' read -r key value; do
+            case "$key" in
+                MODEL|TEMPERATURE|MAX_TOKENS|OUTPUT_FORMAT|SYSTEM_PROMPTS)
+                    if [[ -n "$value" ]]; then
+                        CONFIG_VALUE[$key]="$value"
+                        CONFIG_SOURCE[$key]="project"
+                    fi
+                    ;;
+            esac
+        done < <(extract_config "$PROJECT_ROOT/.workflow/config")
+    fi
+
+    # Display configuration with sources
+    echo "Configuration:"
+    echo "  MODEL: ${CONFIG_VALUE[MODEL]} (${CONFIG_SOURCE[MODEL]})"
+    echo "  TEMPERATURE: ${CONFIG_VALUE[TEMPERATURE]} (${CONFIG_SOURCE[TEMPERATURE]})"
+    echo "  MAX_TOKENS: ${CONFIG_VALUE[MAX_TOKENS]} (${CONFIG_SOURCE[MAX_TOKENS]})"
+    echo "  SYSTEM_PROMPTS: ${CONFIG_VALUE[SYSTEM_PROMPTS]} (${CONFIG_SOURCE[SYSTEM_PROMPTS]})"
+    echo "  OUTPUT_FORMAT: ${CONFIG_VALUE[OUTPUT_FORMAT]} (${CONFIG_SOURCE[OUTPUT_FORMAT]})"
+    echo ""
+
+    # Show workflows
+    echo "Workflows:"
+    local workflow_list
+    workflow_list=$(list_workflows) || true
+
+    if [[ -n "$workflow_list" ]]; then
+        echo "$workflow_list" | while read -r workflow; do
+            # Check for output file to show status
+            local output_file=$(ls "$PROJECT_ROOT/.workflow/output/$workflow".* 2>/dev/null | head -1)
+            if [[ -n "$output_file" ]]; then
+                local output_time
+                if [[ "$(uname)" == "Darwin" ]]; then
+                    output_time=$(stat -f "%Sm" -t "%Y-%m-%d %H:%M" "$output_file" 2>/dev/null)
+                else
+                    output_time=$(stat -c "%y" "$output_file" 2>/dev/null | cut -d'.' -f1)
+                fi
+                [[ -n "$output_time" ]] && echo "  $workflow [last run: $output_time]" || echo "  $workflow"
+            else
+                echo "  $workflow"
+            fi
+        done
+    else
+        echo "  (no workflows found)"
+    fi
+    echo ""
+
+    # Interactive prompt to edit
+    read -p "Edit project configuration? [y/N] " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo ""
+        edit_workflow  # No arguments = edit project
+    fi
+}
+
+# Display workflow-specific configuration with cascade and option to edit
+config_workflow() {
+    local workflow_name="$1"
+
+    # Find project root
+    PROJECT_ROOT=$(find_project_root) || {
+        echo "Error: Not in workflow project (no .workflow/ directory found)"
+        echo "Run 'workflow init' to initialize a project first"
+        exit 1
+    }
+
+    WORKFLOW_DIR="$PROJECT_ROOT/.workflow/$workflow_name"
+
+    # Check if workflow exists
+    if [[ ! -d "$WORKFLOW_DIR" ]]; then
+        echo "Error: Workflow '$workflow_name' not found"
+        echo "Available workflows:"
+        if list_workflows; then
+            list_workflows | sed 's/^/  /'
+        else
+            echo "  (none)"
+        fi
+        echo ""
+        echo "Create new workflow with: workflow new $workflow_name"
+        exit 1
+    fi
+
+    echo "Workflow Configuration: $workflow_name"
+    echo "  Location: $WORKFLOW_DIR"
+    echo ""
+
+    # Track config sources with associative arrays
+    declare -A CONFIG_SOURCE
+    declare -A CONFIG_VALUE
+
+    # Tier 1: Built-in defaults
+    CONFIG_VALUE[MODEL]="$DEFAULT_MODEL"
+    CONFIG_VALUE[TEMPERATURE]="$DEFAULT_TEMPERATURE"
+    CONFIG_VALUE[MAX_TOKENS]="$DEFAULT_MAX_TOKENS"
+    CONFIG_VALUE[OUTPUT_FORMAT]="$DEFAULT_OUTPUT_FORMAT"
+    CONFIG_VALUE[SYSTEM_PROMPTS]="Root"
+    CONFIG_SOURCE[MODEL]="default"
+    CONFIG_SOURCE[TEMPERATURE]="default"
+    CONFIG_SOURCE[MAX_TOKENS]="default"
+    CONFIG_SOURCE[OUTPUT_FORMAT]="default"
+    CONFIG_SOURCE[SYSTEM_PROMPTS]="default"
+
+    # Tier 2: Project config
+    if [[ -f "$PROJECT_ROOT/.workflow/config" ]]; then
+        while IFS='=' read -r key value; do
+            if [[ -n "$value" ]]; then
+                case "$key" in
+                    MODEL|TEMPERATURE|MAX_TOKENS|OUTPUT_FORMAT|SYSTEM_PROMPTS)
+                        CONFIG_VALUE[$key]="$value"
+                        CONFIG_SOURCE[$key]="project"
+                        ;;
+                esac
+            fi
+        done < <(extract_config "$PROJECT_ROOT/.workflow/config")
+    fi
+
+    # Tier 3: Workflow config
+    CONTEXT_PATTERN=""
+    CONTEXT_FILES_STR=""
+    DEPENDS_ON_STR=""
+
+    if [[ -f "$WORKFLOW_DIR/config" ]]; then
+        while IFS='=' read -r key value; do
+            if [[ -n "$value" ]]; then
+                case "$key" in
+                    MODEL|TEMPERATURE|MAX_TOKENS|OUTPUT_FORMAT|SYSTEM_PROMPTS)
+                        CONFIG_VALUE[$key]="$value"
+                        CONFIG_SOURCE[$key]="workflow"
+                        ;;
+                    CONTEXT_PATTERN)
+                        CONTEXT_PATTERN="$value"
+                        ;;
+                    CONTEXT_FILES)
+                        CONTEXT_FILES_STR="$value"
+                        ;;
+                    DEPENDS_ON)
+                        DEPENDS_ON_STR="$value"
+                        ;;
+                esac
+            fi
+        done < <(extract_config "$WORKFLOW_DIR/config")
+    fi
+
+    # Display API settings with sources
+    echo "API Settings:"
+    echo "  MODEL: ${CONFIG_VALUE[MODEL]} (${CONFIG_SOURCE[MODEL]})"
+    echo "  TEMPERATURE: ${CONFIG_VALUE[TEMPERATURE]} (${CONFIG_SOURCE[TEMPERATURE]})"
+    echo "  MAX_TOKENS: ${CONFIG_VALUE[MAX_TOKENS]} (${CONFIG_SOURCE[MAX_TOKENS]})"
+    echo "  SYSTEM_PROMPTS: ${CONFIG_VALUE[SYSTEM_PROMPTS]} (${CONFIG_SOURCE[SYSTEM_PROMPTS]})"
+    echo "  OUTPUT_FORMAT: ${CONFIG_VALUE[OUTPUT_FORMAT]} (${CONFIG_SOURCE[OUTPUT_FORMAT]})"
+    echo ""
+
+    # Display context sources if any are configured
+    if [[ -n "$CONTEXT_PATTERN" || -n "$CONTEXT_FILES_STR" || -n "$DEPENDS_ON_STR" ]]; then
+        echo "Context Sources:"
+        [[ -n "$CONTEXT_PATTERN" ]] && echo "  CONTEXT_PATTERN: $CONTEXT_PATTERN"
+        [[ -n "$CONTEXT_FILES_STR" ]] && echo "  CONTEXT_FILES: $CONTEXT_FILES_STR"
+        [[ -n "$DEPENDS_ON_STR" ]] && echo "  DEPENDS_ON: $DEPENDS_ON_STR"
+        echo ""
+    fi
+
+    # Interactive prompt to edit
+    read -p "Edit workflow '$workflow_name'? [y/N] " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo ""
+        edit_workflow "$workflow_name"
+    fi
 }

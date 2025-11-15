@@ -75,6 +75,14 @@ case "$1" in
         list_workflows_cmd
         exit 0
         ;;
+    config)
+        if [[ -z "$2" ]]; then
+            config_project
+        else
+            config_workflow "$2"
+        fi
+        exit 0
+        ;;
     run)
         shift  # Remove 'run' from args
         if [[ -z "$1" ]]; then
@@ -92,7 +100,7 @@ case "$1" in
         ;;
     *)
         echo "Error: Unknown subcommand: $1"
-        echo "Valid subcommands: init, new, edit, list, run"
+        echo "Valid subcommands: init, new, edit, list, config, run"
         echo ""
         show_help
         exit 1
@@ -136,14 +144,33 @@ CONTEXT_FILES=()
 CONTEXT_PATTERN=""
 DEPENDS_ON=()
 
-# Tier 2: Project-level config
+# Tier 2: Project-level config (only apply non-empty values)
 if [[ -f "$PROJECT_ROOT/.workflow/config" ]]; then
-    source "$PROJECT_ROOT/.workflow/config"
+    while IFS='=' read -r key value; do
+        case "$key" in
+            MODEL) [[ -n "$value" ]] && MODEL="$value" ;;
+            TEMPERATURE) [[ -n "$value" ]] && TEMPERATURE="$value" ;;
+            MAX_TOKENS) [[ -n "$value" ]] && MAX_TOKENS="$value" ;;
+            OUTPUT_FORMAT) [[ -n "$value" ]] && OUTPUT_FORMAT="$value" ;;
+            SYSTEM_PROMPTS) [[ -n "$value" ]] && SYSTEM_PROMPTS=($value) ;;
+        esac
+    done < <(extract_config "$PROJECT_ROOT/.workflow/config")
 fi
 
-# Tier 3: Workflow-level config
+# Tier 3: Workflow-level config (only apply non-empty values)
 if [[ -f "$WORKFLOW_DIR/config" ]]; then
-    source "$WORKFLOW_DIR/config"
+    while IFS='=' read -r key value; do
+        case "$key" in
+            MODEL) [[ -n "$value" ]] && MODEL="$value" ;;
+            TEMPERATURE) [[ -n "$value" ]] && TEMPERATURE="$value" ;;
+            MAX_TOKENS) [[ -n "$value" ]] && MAX_TOKENS="$value" ;;
+            OUTPUT_FORMAT) [[ -n "$value" ]] && OUTPUT_FORMAT="$value" ;;
+            SYSTEM_PROMPTS) [[ -n "$value" ]] && SYSTEM_PROMPTS=($value) ;;
+            CONTEXT_PATTERN) [[ -n "$value" ]] && CONTEXT_PATTERN="$value" ;;
+            CONTEXT_FILES) [[ -n "$value" ]] && CONTEXT_FILES=($value) ;;
+            DEPENDS_ON) [[ -n "$value" ]] && DEPENDS_ON=($value) ;;
+        esac
+    done < <(extract_config "$WORKFLOW_DIR/config")
 fi
 
 # =============================================================================
