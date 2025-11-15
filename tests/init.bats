@@ -72,7 +72,7 @@ teardown() {
     cat >> .workflow/config <<'EOF'
 MODEL="claude-opus-4"
 TEMPERATURE=0.5
-SYSTEM_PROMPTS=(Root NeuroAI)
+SYSTEM_PROMPTS=(base NeuroAI)
 EOF
 
     # Create nested project (respond 'y' to prompt)

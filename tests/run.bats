@@ -364,15 +364,15 @@ EOF
 
 @test "run: CLI --system-prompts overrides config" {
     # Add NeuroAI prompt
-    echo "NeuroAI system prompt" > "$WORKFLOW_PROMPT_PREFIX/System/NeuroAI.txt"
+    echo "NeuroAI system prompt" > "$WORKFLOW_PROMPT_PREFIX/NeuroAI.txt"
 
-    run bash "$WORKFLOW_SCRIPT" run test-workflow --system-prompts "Root,NeuroAI" --dry-run
+    run bash "$WORKFLOW_SCRIPT" run test-workflow --system-prompts "base,NeuroAI" --dry-run
 
     assert_success
     # System prompt should be built with both
     assert_file_exists ".workflow/prompts/system.txt"
     run cat .workflow/prompts/system.txt
-    assert_output --partial "Root system prompt"
+    assert_output --partial "base system prompt"
     assert_output --partial "NeuroAI system prompt"
 }
 
@@ -400,7 +400,7 @@ EOF
 
 @test "run: fails when system prompt file missing" {
     # Configure to use non-existent prompt
-    echo 'SYSTEM_PROMPTS=(Root Nonexistent)' >> .workflow/test-workflow/config
+    echo 'SYSTEM_PROMPTS=(base Nonexistent)' >> .workflow/test-workflow/config
 
     run bash "$WORKFLOW_SCRIPT" run test-workflow
 
@@ -445,7 +445,7 @@ EOF
     assert_file_exists ".workflow/prompts/system.txt"
 
     run cat .workflow/prompts/system.txt
-    assert_output --partial "Root system prompt"
+    assert_output --partial "base system prompt"
 }
 
 @test "run: rebuilds system prompt on every run" {
@@ -453,13 +453,13 @@ EOF
     bash "$WORKFLOW_SCRIPT" run test-workflow --dry-run > /dev/null
 
     # Modify system prompt file
-    echo "MODIFIED ROOT PROMPT" > "$WORKFLOW_PROMPT_PREFIX/System/Root.txt"
+    echo "MODIFIED BASE PROMPT" > "$WORKFLOW_PROMPT_PREFIX/base.txt"
 
     # Run again - should rebuild
     bash "$WORKFLOW_SCRIPT" run test-workflow --dry-run > /dev/null
 
     run cat .workflow/prompts/system.txt
-    assert_output "MODIFIED ROOT PROMPT"
+    assert_output "MODIFIED BASE PROMPT"
 }
 
 @test "run: appends project.txt to system prompt when non-empty" {

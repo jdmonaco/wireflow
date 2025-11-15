@@ -57,12 +57,19 @@ chmod +x ~/bin/workflow
 
 ### Environment Setup
 
-Add to `~/.bashrc` or `~/.bash_profile`:
+**Required:** Set your API key (or store in global config):
 
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-..."
-export WORKFLOW_PROMPT_PREFIX="$HOME/prompts"  # Path to your system prompt directory
 ```
+
+**Optional:** Override the default system prompt directory:
+
+```bash
+export WORKFLOW_PROMPT_PREFIX="$HOME/custom/prompts"
+```
+
+**Note:** On first use, workflow automatically creates `~/.config/workflow/` with default configuration and a system prompt, so WORKFLOW_PROMPT_PREFIX is only needed if you want to use custom prompts.
 
 ## Usage
 
@@ -130,20 +137,53 @@ workflow run WORKFLOW_NAME [options]
 
 ## Configuration
 
-### Global Default Pass-Through
+### Global User Configuration
 
-Project and workflow configs use **empty values** for transparent pass-through to global defaults. This allows changing global DEFAULT_* constants to affect all uncustomized projects.
+On first use, workflow automatically creates a global configuration directory at `~/.config/workflow/` with:
+
+- **`config`** - Default API settings for all projects
+- **`prompts/base.txt`** - Default system prompt
+
+This makes the tool self-contained and ready to use out-of-the-box. You can customize these defaults once and affect all your projects.
+
+**Location:** `~/.config/workflow/config`
+
+**Contents:**
+```bash
+# Global Workflow Configuration
+MODEL="claude-sonnet-4-5"
+TEMPERATURE=1.0
+MAX_TOKENS=4096
+OUTPUT_FORMAT="md"
+SYSTEM_PROMPTS=(base)
+
+# System prompt directory - points to included prompts
+WORKFLOW_PROMPT_PREFIX="$HOME/.config/workflow/prompts"
+
+# Optional: Store API key here (environment variable preferred)
+# ANTHROPIC_API_KEY="sk-ant-..."
+```
+
+**Four-tier configuration cascade:**
+1. **Global config** (`~/.config/workflow/config`) - User defaults for all projects
+2. **Project config** (`.workflow/config`) - Project-wide overrides
+3. **Workflow config** (`.workflow/NAME/config`) - Workflow-specific overrides
+4. **Command-line flags** - Highest priority
+
+### Configuration Pass-Through
+
+Project and workflow configs use **empty values** for transparent pass-through. This allows changing global defaults to affect all uncustomized projects.
 
 **The rule:** Empty values inherit from parent tier. Explicit values "own" the parameter (decoupled from changes above).
 
 **Example - Transparent cascading:**
 ```bash
-# Global: DEFAULT_MODEL="claude-sonnet-4-5"
+# Global ~/.config/workflow/config: MODEL="claude-sonnet-4-5"
 # Project .workflow/config: MODEL= (empty, passes through)
 # Workflow config: MODEL= (empty, passes through)
 # Result: Uses claude-sonnet-4-5
 
-# Change global: DEFAULT_MODEL="claude-opus-4"
+# Change global config: MODEL="claude-opus-4"
 # Result: All empty configs now use claude-opus-4 automatically
 ```
 
@@ -195,10 +235,12 @@ DEPENDS_ON=("00-workshop-context" "01-outline-draft")
 
 ### Configuration Priority
 
-1. Built-in defaults
-2. Project config (`.workflow/config`)
-3. Workflow config (`.workflow/NAME/config`)
-4. Command-line flags ← highest priority
+Settings cascade through four tiers (empty values pass through, non-empty override):
+
+1. **Global config** (`~/.config/workflow/config`) - User defaults, fallback to hard-coded defaults if unavailable
+2. **Project config** (`.workflow/config`) - Inherits from #1 if empty
+3. **Workflow config** (`.workflow/NAME/config`) - Inherits from #2 if empty
+4. **Command-line flags** - Always override (highest priority)
 
 ### Path Resolution
 
@@ -376,27 +418,26 @@ my-manuscript/
 
 ## System Prompts
 
-System prompts are XML-formatted text files at `$WORKFLOW_PROMPT_PREFIX/System/{name}.txt`:
+System prompts are XML-formatted text files at `$WORKFLOW_PROMPT_PREFIX/{name}.txt`:
 
 ```
 $WORKFLOW_PROMPT_PREFIX/
-└── System/
-    ├── Root.txt        # Base prompt (always included first)
-    ├── NeuroAI.txt     # Domain-specific
-    ├── DataScience.txt
-    └── Writing.txt
+├── base.txt        # Base prompt (always included first)
+├── NeuroAI.txt     # Domain-specific
+├── DataScience.txt
+└── Writing.txt
 ```
 
 Configure in project or workflow config:
 
 ```bash
-SYSTEM_PROMPTS=(Root NeuroAI Writing)
+SYSTEM_PROMPTS=(base NeuroAI Writing)
 ```
 
 Or override from command line:
 
 ```bash
-workflow run my-workflow --system-prompts "Root,DataScience"
+workflow run my-workflow --system-prompts "base,DataScience"
 ```
 
 **Note:** System prompts are rebuilt on every workflow run to ensure current configuration is used. The concatenated result is cached at `.workflow/prompts/system.txt` for debugging and as a fallback if rebuild fails.

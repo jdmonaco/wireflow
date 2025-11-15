@@ -161,15 +161,44 @@ Executes a workflow by:
 
 ## Configuration
 
-### Global Default Pass-Through
+### Global User Configuration
 
-The tool uses **transparent pass-through** for configuration parameters. Empty values inherit from parent tier, while explicit values "own" the parameter.
+The workflow tool automatically creates a global configuration directory at `~/.config/workflow/` on first use:
+
+**Auto-created files:**
+- `config` - Global defaults for API settings
+- `prompts/base.txt` - Default system prompt
+
+This makes the tool self-contained and immediately usable without requiring environment variable setup.
+
+**Location:** `~/.config/workflow/config`
+
+**Default contents:**
+```bash
+# Global Workflow Configuration
+MODEL="claude-sonnet-4-5"
+TEMPERATURE=1.0
+MAX_TOKENS=4096
+OUTPUT_FORMAT="md"
+SYSTEM_PROMPTS=(base)
+
+# System prompt directory - points to included prompts
+WORKFLOW_PROMPT_PREFIX="$HOME/.config/workflow/prompts"
+
+# Optional: API key (env var preferred for security)
+# ANTHROPIC_API_KEY=""
+```
 
 **Benefits:**
-- Change global DEFAULT_* constants to affect all uncustomized projects
+- Change global config once to affect all uncustomized projects
+- Tool works out-of-the-box without environment variable setup
 - Clear distinction between inherited and customized values
 - Easy reset: set to empty to restore pass-through
 - View effective config with source tracking via `workflow config`
+
+### Configuration Pass-Through
+
+The tool uses **transparent pass-through** for configuration parameters. Empty values inherit from parent tier, while explicit values "own" the parameter.
 
 **The Rule:**
 - **Empty value** (`MODEL=`): Passes through to parent tier (transparent)
@@ -177,8 +206,8 @@ The tool uses **transparent pass-through** for configuration parameters. Empty v
 
 **Example:**
 ```bash
-# Global default in workflow.sh:
-DEFAULT_MODEL="claude-sonnet-4-5"
+# Global ~/.config/workflow/config:
+MODEL="claude-sonnet-4-5"
 
 # Project .workflow/config (empty = pass-through):
 MODEL=
@@ -187,7 +216,7 @@ MODEL=
 MODEL=
 
 # Result: Uses claude-sonnet-4-5
-# Change DEFAULT_MODEL → all empty configs update automatically
+# Change global config → all empty configs update automatically
 ```
 
 ### Project Configuration (`.workflow/config`)
@@ -234,11 +263,13 @@ DEPENDS_ON=("00-workshop-context" "01-outline-draft")
 
 ### Configuration Priority
 
-Settings cascade through tiers (empty values pass through, non-empty override):
-1. Built-in defaults (global DEFAULT_* constants in workflow.sh)
-2. Project config (`.workflow/config`) - inherits from #1 if empty
-3. Workflow config (`.workflow/WORKFLOW_NAME/config`) - inherits from #2 if empty
-4. Command-line flags (always override, highest priority)
+Settings cascade through four tiers (empty values pass through, non-empty override):
+1. Global config (`~/.config/workflow/config`) - User defaults, with fallback to hard-coded defaults
+2. Project config (`.workflow/config`) - Inherits from #1 if empty
+3. Workflow config (`.workflow/WORKFLOW_NAME/config`) - Inherits from #2 if empty
+4. Command-line flags - Always override (highest priority)
+
+**Graceful degradation:** If global config is unavailable (permissions issues, etc.), the tool falls back to hard-coded defaults and continues to function.
 
 ### Path Resolution
 
@@ -327,8 +358,8 @@ CONTEXT_PATTERN="References/{Modeling\ Topic,Testing\ Topic}/*.md"
 ## System Prompts
 
 System prompts are XML-formatted text files concatenated in the specified order:
-- Located at `$WORKFLOW_PROMPT_PREFIX/System/{name}.txt`
-- `Root` prompt typically included first (baseline instructions)
+- Located at `$WORKFLOW_PROMPT_PREFIX/{name}.txt`
+- `base` prompt typically included first (baseline instructions)
 - Additional prompts add domain-specific context
 - Concatenated into `.workflow/prompts/system.txt`
 - **Rebuilt on every workflow run** to ensure current configuration is used

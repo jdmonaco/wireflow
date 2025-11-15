@@ -21,18 +21,18 @@ teardown() {
 # =============================================================================
 
 @test "config: displays project configuration with global defaults" {
-    run bash -c "echo 'n' | bash '$WORKFLOW_SCRIPT' config"
+    run bash -c "bash '$WORKFLOW_SCRIPT' config --no-edit"
 
     assert_success
     assert_output --partial "Project Configuration"
     assert_output --partial "Location:"
     assert_output --partial "Configuration:"
-    # With empty project config, all values pass through from global defaults
-    assert_output --partial "MODEL: claude-sonnet-4-5 (default)"
-    assert_output --partial "TEMPERATURE: 1.0 (default)"
-    assert_output --partial "MAX_TOKENS: 4096 (default)"
-    assert_output --partial "SYSTEM_PROMPTS: Root (default)"
-    assert_output --partial "OUTPUT_FORMAT: md (default)"
+    # With empty project config, all values pass through from global config
+    assert_output --partial "MODEL: claude-sonnet-4-5 (global)"
+    assert_output --partial "TEMPERATURE: 1.0 (global)"
+    assert_output --partial "MAX_TOKENS: 4096 (global)"
+    assert_output --partial "SYSTEM_PROMPTS: base (global)"
+    assert_output --partial "OUTPUT_FORMAT: md (global)"
 }
 
 @test "config: displays custom project configuration" {
@@ -40,15 +40,15 @@ teardown() {
     cat >> .workflow/config <<'EOF'
 MODEL="claude-opus-4"
 TEMPERATURE=0.5
-SYSTEM_PROMPTS=(Root NeuroAI)
+SYSTEM_PROMPTS=(base NeuroAI)
 EOF
 
-    run bash -c "echo 'n' | bash '$WORKFLOW_SCRIPT' config"
+    run bash -c "bash '$WORKFLOW_SCRIPT' config --no-edit"
 
     assert_success
     assert_output --partial "MODEL: claude-opus-4"
     assert_output --partial "TEMPERATURE: 0.5"
-    assert_output --partial "SYSTEM_PROMPTS: Root NeuroAI"
+    assert_output --partial "SYSTEM_PROMPTS: base NeuroAI"
 }
 
 @test "config: lists workflows in project config" {
@@ -56,7 +56,7 @@ EOF
     bash "$WORKFLOW_SCRIPT" new workflow-01 > /dev/null 2>&1
     bash "$WORKFLOW_SCRIPT" new workflow-02 > /dev/null 2>&1
 
-    run bash -c "echo 'n' | bash '$WORKFLOW_SCRIPT' config"
+    run bash -c "bash '$WORKFLOW_SCRIPT' config --no-edit"
 
     assert_success
     assert_output --partial "Workflows:"
@@ -65,7 +65,7 @@ EOF
 }
 
 @test "config: shows no workflows when none exist" {
-    run bash -c "echo 'n' | bash '$WORKFLOW_SCRIPT' config"
+    run bash -c "bash '$WORKFLOW_SCRIPT' config --no-edit"
 
     assert_success
     assert_output --partial "Workflows:"
@@ -73,7 +73,7 @@ EOF
 }
 
 @test "config: completes successfully when declining edit" {
-    run bash -c "echo 'n' | bash '$WORKFLOW_SCRIPT' config"
+    run bash -c "bash '$WORKFLOW_SCRIPT' config --no-edit"
 
     assert_success
     # Verify it showed config and completed (prompt text may not appear in output)
@@ -83,7 +83,7 @@ EOF
 @test "config: fails when not in workflow project" {
     cd "$TEST_TEMP_DIR"
 
-    run bash -c "echo 'n' | bash '$WORKFLOW_SCRIPT' config"
+    run bash -c "bash '$WORKFLOW_SCRIPT' config --no-edit"
 
     assert_failure
     assert_output --partial "Not in workflow project"
@@ -96,32 +96,32 @@ EOF
 @test "config NAME: displays workflow configuration with defaults" {
     bash "$WORKFLOW_SCRIPT" new test-workflow > /dev/null 2>&1
 
-    run bash -c "echo 'n' | bash '$WORKFLOW_SCRIPT' config test-workflow"
+    run bash -c "bash '$WORKFLOW_SCRIPT' config --no-edit test-workflow"
 
     assert_success
     assert_output --partial "Workflow Configuration: test-workflow"
     assert_output --partial "Location:"
-    assert_output --partial "API Settings:"
-    assert_output --partial "MODEL: claude-sonnet-4-5 (default)"
-    assert_output --partial "TEMPERATURE: 1.0 (default)"
-    assert_output --partial "MAX_TOKENS: 4096 (default)"
+    assert_output --partial "Configuration Cascade:"
+    assert_output --partial "MODEL: claude-sonnet-4-5 (global)"
+    assert_output --partial "TEMPERATURE: 1.0 (global)"
+    assert_output --partial "MAX_TOKENS: 4096 (global)"
 }
 
 @test "config NAME: shows config cascade from project" {
     # Modify project config
     cat >> .workflow/config <<'EOF'
 MODEL="claude-opus-4"
-SYSTEM_PROMPTS=(Root NeuroAI)
+SYSTEM_PROMPTS=(base NeuroAI)
 EOF
 
     bash "$WORKFLOW_SCRIPT" new test-workflow > /dev/null 2>&1
 
-    run bash -c "echo 'n' | bash '$WORKFLOW_SCRIPT' config test-workflow"
+    run bash -c "bash '$WORKFLOW_SCRIPT' config --no-edit test-workflow"
 
     assert_success
     assert_output --partial "MODEL: claude-opus-4 (project)"
-    assert_output --partial "SYSTEM_PROMPTS: Root NeuroAI (project)"
-    assert_output --partial "TEMPERATURE: 1.0 (default)"
+    assert_output --partial "SYSTEM_PROMPTS: base NeuroAI (project)"
+    assert_output --partial "TEMPERATURE: 1.0 (global)"
 }
 
 @test "config NAME: shows workflow overrides" {
@@ -133,12 +133,12 @@ MODEL="claude-sonnet-4"
 MAX_TOKENS=8192
 EOF
 
-    run bash -c "echo 'n' | bash '$WORKFLOW_SCRIPT' config test-workflow"
+    run bash -c "bash '$WORKFLOW_SCRIPT' config --no-edit test-workflow"
 
     assert_success
     assert_output --partial "MODEL: claude-sonnet-4 (workflow)"
     assert_output --partial "MAX_TOKENS: 8192 (workflow)"
-    assert_output --partial "TEMPERATURE: 1.0 (default)"
+    assert_output --partial "TEMPERATURE: 1.0 (global)"
 }
 
 @test "config NAME: displays context sources" {
@@ -151,7 +151,7 @@ CONTEXT_FILES=("data/file1.md" "data/file2.md")
 DEPENDS_ON=("workflow-01")
 EOF
 
-    run bash -c "echo 'n' | bash '$WORKFLOW_SCRIPT' config test-workflow"
+    run bash -c "bash '$WORKFLOW_SCRIPT' config --no-edit test-workflow"
 
     assert_success
     assert_output --partial "Context Sources:"
@@ -163,7 +163,7 @@ EOF
 @test "config NAME: no context section when no sources configured" {
     bash "$WORKFLOW_SCRIPT" new test-workflow > /dev/null 2>&1
 
-    run bash -c "echo 'n' | bash '$WORKFLOW_SCRIPT' config test-workflow"
+    run bash -c "bash '$WORKFLOW_SCRIPT' config --no-edit test-workflow"
 
     assert_success
     refute_output --partial "Context Sources:"
@@ -172,7 +172,7 @@ EOF
 @test "config NAME: completes successfully when declining edit" {
     bash "$WORKFLOW_SCRIPT" new test-workflow > /dev/null 2>&1
 
-    run bash -c "echo 'n' | bash '$WORKFLOW_SCRIPT' config test-workflow"
+    run bash -c "bash '$WORKFLOW_SCRIPT' config --no-edit test-workflow"
 
     assert_success
     # Verify it showed config and completed
@@ -180,7 +180,7 @@ EOF
 }
 
 @test "config NAME: fails when workflow doesn't exist" {
-    run bash -c "echo 'n' | bash '$WORKFLOW_SCRIPT' config nonexistent"
+    run bash -c "bash '$WORKFLOW_SCRIPT' config --no-edit nonexistent"
 
     assert_failure
     assert_output --partial "not found"
@@ -193,7 +193,7 @@ EOF
     mkdir subdir
     cd subdir
 
-    run bash -c "echo 'n' | bash '$WORKFLOW_SCRIPT' config test-workflow"
+    run bash -c "bash '$WORKFLOW_SCRIPT' config --no-edit test-workflow"
 
     assert_success
     assert_output --partial "Workflow Configuration: test-workflow"

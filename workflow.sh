@@ -38,6 +38,13 @@ DEFAULT_MAX_TOKENS=4096
 DEFAULT_OUTPUT_FORMAT="md"
 
 # =============================================================================
+# Global Configuration Setup
+# =============================================================================
+
+# Ensure global config exists (creates on first use)
+ensure_global_config || true  # Don't fail if can't create (will use fallbacks)
+
+# =============================================================================
 # Parse Subcommand
 # =============================================================================
 
@@ -76,10 +83,33 @@ case "$1" in
         exit 0
         ;;
     config)
-        if [[ -z "$2" ]]; then
-            config_project
+        shift  # Remove 'config' from args
+
+        # Parse flags
+        NO_EDIT=false
+        WORKFLOW_NAME=""
+
+        while [[ $# -gt 0 ]]; do
+            case "$1" in
+                --no-edit)
+                    NO_EDIT=true
+                    shift
+                    ;;
+                *)
+                    # First non-flag argument is workflow name
+                    if [[ -z "$WORKFLOW_NAME" ]]; then
+                        WORKFLOW_NAME="$1"
+                    fi
+                    shift
+                    ;;
+            esac
+        done
+
+        # Call appropriate config function
+        if [[ -z "$WORKFLOW_NAME" ]]; then
+            config_project "$NO_EDIT"
         else
-            config_workflow "$2"
+            config_workflow "$WORKFLOW_NAME" "$NO_EDIT"
         fi
         exit 0
         ;;
@@ -134,12 +164,10 @@ if [[ ! -d "$WORKFLOW_DIR" ]]; then
     exit 1
 fi
 
-# Tier 1: Built-in defaults
-SYSTEM_PROMPTS=(Root)
-MODEL="$DEFAULT_MODEL"
-TEMPERATURE="$DEFAULT_TEMPERATURE"
-MAX_TOKENS="$DEFAULT_MAX_TOKENS"
-OUTPUT_FORMAT="$DEFAULT_OUTPUT_FORMAT"
+# Tier 1: Global config (with hard-coded fallbacks)
+load_global_config
+
+# Initialize workflow-specific variables
 CONTEXT_FILES=()
 CONTEXT_PATTERN=""
 DEPENDS_ON=()
@@ -265,13 +293,12 @@ fi
 # Build system prompt from current configuration
 if [[ -z "$WORKFLOW_PROMPT_PREFIX" ]]; then
     echo "Error: WORKFLOW_PROMPT_PREFIX environment variable is not set"
-    echo "Set WORKFLOW_PROMPT_PREFIX to the directory containing your System/*.txt prompt files"
+    echo "Set WORKFLOW_PROMPT_PREFIX to the directory containing your *.txt prompt files"
     exit 1
 fi
 
-PROMPTDIR="$WORKFLOW_PROMPT_PREFIX/System"
-if [[ ! -d "$PROMPTDIR" ]]; then
-    echo "Error: System prompt directory not found: $PROMPTDIR"
+if [[ ! -d "$WORKFLOW_PROMPT_PREFIX" ]]; then
+    echo "Error: System prompt directory not found: $WORKFLOW_PROMPT_PREFIX"
     exit 1
 fi
 
@@ -285,7 +312,7 @@ TEMP_SYSTEM_PROMPT=$(mktemp)
 BUILD_SUCCESS=true
 
 for prompt_name in "${SYSTEM_PROMPTS[@]}"; do
-    prompt_file="$PROMPTDIR/${prompt_name}.txt"
+    prompt_file="$WORKFLOW_PROMPT_PREFIX/${prompt_name}.txt"
     if [[ ! -f "$prompt_file" ]]; then
         echo "Error: System prompt file not found: $prompt_file"
         BUILD_SUCCESS=false

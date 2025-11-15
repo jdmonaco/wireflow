@@ -371,7 +371,7 @@ MODEL="claude-opus-4"
 TEMPERATURE=0.7
 MAX_TOKENS=8000
 OUTPUT_FORMAT="json"
-SYSTEM_PROMPTS=(Root NeuroAI)
+SYSTEM_PROMPTS=(base NeuroAI)
 CONTEXT_PATTERN="References/*.md"
 CONTEXT_FILES=("data.md" "notes.md")
 DEPENDS_ON=("workflow-01")
@@ -384,7 +384,7 @@ EOF
     assert_output --partial "TEMPERATURE=0.7"
     assert_output --partial "MAX_TOKENS=8000"
     assert_output --partial "OUTPUT_FORMAT=json"
-    assert_output --partial "SYSTEM_PROMPTS=Root NeuroAI"
+    assert_output --partial "SYSTEM_PROMPTS=base NeuroAI"
     assert_output --partial "CONTEXT_PATTERN=References/*.md"
     assert_output --partial "CONTEXT_FILES=data.md notes.md"
     assert_output --partial "DEPENDS_ON=workflow-01"
@@ -415,13 +415,13 @@ EOF
 @test "extract_config: handles array SYSTEM_PROMPTS correctly" {
     mkdir -p test/.workflow
     cat > test/.workflow/config <<'EOF'
-SYSTEM_PROMPTS=(Root NeuroAI DataScience)
+SYSTEM_PROMPTS=(base NeuroAI DataScience)
 EOF
 
     run extract_config test/.workflow/config
 
     assert_success
-    assert_output --partial "SYSTEM_PROMPTS=Root NeuroAI DataScience"
+    assert_output --partial "SYSTEM_PROMPTS=base NeuroAI DataScience"
 }
 
 @test "extract_config: extracts workflow-specific values" {

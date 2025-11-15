@@ -29,10 +29,16 @@ setup_test_env() {
     export WORKFLOW_PROMPT_PREFIX="$TEST_TEMP_DIR/prompts"
     export EDITOR="echo"  # Don't actually open vim in tests
 
+    # Mock global config directory (isolate from user's real config)
+    export HOME="$TEST_TEMP_DIR/home"
+    export XDG_CONFIG_HOME="$TEST_TEMP_DIR/home/.config"
+    export GLOBAL_CONFIG_DIR="$XDG_CONFIG_HOME/workflow"
+    mkdir -p "$HOME"
+
     # Create mock system prompts
-    mkdir -p "$WORKFLOW_PROMPT_PREFIX/System"
-    echo "This is the Root system prompt for testing." > "$WORKFLOW_PROMPT_PREFIX/System/Root.txt"
-    echo "This is a NeuroAI prompt for testing." > "$WORKFLOW_PROMPT_PREFIX/System/NeuroAI.txt"
+    mkdir -p "$WORKFLOW_PROMPT_PREFIX"
+    echo "This is the base system prompt for testing." > "$WORKFLOW_PROMPT_PREFIX/base.txt"
+    echo "This is a NeuroAI prompt for testing." > "$WORKFLOW_PROMPT_PREFIX/NeuroAI.txt"
 
     # Path to workflow.sh (assuming tests/ is next to workflow.sh)
     export WORKFLOW_SCRIPT="$(cd "$(dirname "$BATS_TEST_DIRNAME")"; pwd)/workflow.sh"
