@@ -76,6 +76,8 @@ Creates `.workflow/` structure with config and output directories. Opens `projec
 
 The optional `project.txt` file lets you describe project goals, folder structure, and conventions. If non-empty, it's automatically appended to the system prompt for all workflows.
 
+**Config Inheritance:** When initializing a project inside an existing workflow project, the tool detects the parent and offers to inherit configuration defaults (MODEL, TEMPERATURE, MAX_TOKENS, SYSTEM_PROMPTS, OUTPUT_FORMAT). This creates a nested project with a separate workflow namespace but consistent configuration.
+
 ### Create Workflow
 
 ```bash
@@ -239,6 +241,35 @@ workflow run 01-outline
 workflow new 02-intro
 # config: DEPENDS_ON=("00-gather-context" "01-outline")
 workflow run 02-intro --stream
+```
+
+### Nested Projects with Config Inheritance
+
+```bash
+# Parent project
+cd ~/research/neuroai-project
+workflow init .
+# Configure: MODEL=claude-opus-4, SYSTEM_PROMPTS=(Root NeuroAI)
+
+# Create nested subproject (inherits config)
+cd experiments/experiment-1
+workflow init .
+# Output:
+#   Initializing nested project inside existing project at:
+#     /Users/name/research/neuroai-project
+#
+#   This will:
+#     - Create a separate workflow namespace
+#     - Inherit configuration defaults from parent
+#   Continue? [y/N] y
+#
+#   Inheriting configuration from parent...
+#     MODEL: claude-opus-4
+#     SYSTEM_PROMPTS: Root NeuroAI
+#     ...
+
+# Nested project now has separate workflows but same config defaults
+workflow new 01-analysis
 ```
 
 ### Override Settings

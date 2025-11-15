@@ -106,6 +106,25 @@ find_project_root() {
     return 1
 }
 
+# Extract inheritable config values from parent project
+extract_parent_config() {
+    local parent_config="$1"
+
+    # Source parent config in subshell and extract only inheritable values
+    (
+        # Suppress errors if config doesn't exist or has issues
+        source "$parent_config" 2>/dev/null || true
+
+        # Output key=value pairs for parsing
+        echo "MODEL=${MODEL:-}"
+        echo "TEMPERATURE=${TEMPERATURE:-}"
+        echo "MAX_TOKENS=${MAX_TOKENS:-}"
+        echo "OUTPUT_FORMAT=${OUTPUT_FORMAT:-}"
+        # Handle array - output space-separated
+        echo "SYSTEM_PROMPTS=${SYSTEM_PROMPTS[*]:-}"
+    )
+}
+
 # Default configuration
 DEFAULT_MODEL="claude-sonnet-4-5"
 DEFAULT_TEMPERATURE=1.0
@@ -178,26 +197,79 @@ init_project() {
         exit 1
     fi
 
+    # Initialize config values with defaults
+    INHERITED_MODEL="$DEFAULT_MODEL"
+    INHERITED_TEMPERATURE="$DEFAULT_TEMPERATURE"
+    INHERITED_MAX_TOKENS="$DEFAULT_MAX_TOKENS"
+    INHERITED_OUTPUT_FORMAT="$DEFAULT_OUTPUT_FORMAT"
+    INHERITED_SYSTEM_PROMPTS="Root"
+
+    # Check for parent project (handles both nesting detection and inheritance)
+    PARENT_ROOT=$(cd "$target_dir" && find_project_root 2>/dev/null) || true
+    if [[ -n "$PARENT_ROOT" ]]; then
+        echo "Initializing nested project inside existing project at:"
+        echo "  $PARENT_ROOT"
+        echo ""
+        echo "This will:"
+        echo "  - Create a separate workflow namespace"
+        echo "  - Inherit configuration defaults from parent"
+        read -p "Continue? [y/N] " -n 1 -r
+        echo
+        [[ ! $REPLY =~ ^[Yy]$ ]] && exit 0
+
+        echo ""
+        echo "Inheriting configuration from parent..."
+
+        # Extract config from parent
+        while IFS='=' read -r key value; do
+            case "$key" in
+                MODEL)
+                    [[ -n "$value" ]] && INHERITED_MODEL="$value"
+                    ;;
+                TEMPERATURE)
+                    [[ -n "$value" ]] && INHERITED_TEMPERATURE="$value"
+                    ;;
+                MAX_TOKENS)
+                    [[ -n "$value" ]] && INHERITED_MAX_TOKENS="$value"
+                    ;;
+                OUTPUT_FORMAT)
+                    [[ -n "$value" ]] && INHERITED_OUTPUT_FORMAT="$value"
+                    ;;
+                SYSTEM_PROMPTS)
+                    [[ -n "$value" ]] && INHERITED_SYSTEM_PROMPTS="$value"
+                    ;;
+            esac
+        done < <(extract_parent_config "$PARENT_ROOT/.workflow/config")
+
+        # Display inherited values
+        echo "  MODEL: $INHERITED_MODEL"
+        echo "  TEMPERATURE: $INHERITED_TEMPERATURE"
+        echo "  MAX_TOKENS: $INHERITED_MAX_TOKENS"
+        echo "  SYSTEM_PROMPTS: $INHERITED_SYSTEM_PROMPTS"
+        echo "  OUTPUT_FORMAT: $INHERITED_OUTPUT_FORMAT"
+        echo ""
+    fi
+
     # Create .workflow structure
     mkdir -p "$target_dir/.workflow/prompts"
     mkdir -p "$target_dir/.workflow/output"
 
-    # Create default config
+    # Create default config with inherited values
     cat > "$target_dir/.workflow/config" <<CONFIG_EOF
 # Project-level workflow configuration
 
 # System prompts to concatenate (in order, space-separated)
 # Note: Each name must map to a prompt file with the corresponding path:
 #       \$WORKFLOW_PROMPT_PREFIX/System/{name}.txt
-SYSTEM_PROMPTS=(Root)
+SYSTEM_PROMPTS=($INHERITED_SYSTEM_PROMPTS)
 
 # API defaults
-MODEL="$DEFAULT_MODEL"
-TEMPERATURE=$DEFAULT_TEMPERATURE
-MAX_TOKENS=$DEFAULT_MAX_TOKENS
+MODEL="$INHERITED_MODEL"
+TEMPERATURE=$INHERITED_TEMPERATURE
+MAX_TOKENS=$INHERITED_MAX_TOKENS
 
 # Output format (extension without dot: md, txt, json, html, etc.)
-OUTPUT_FORMAT="$DEFAULT_OUTPUT_FORMAT"
+OUTPUT_FORMAT="$INHERITED_OUTPUT_FORMAT"
 CONFIG_EOF
 
     # Create empty project description file
@@ -411,7 +483,7 @@ WORKFLOW_DIR="$PROJECT_ROOT/.workflow/$WORKFLOW_NAME"
 if [[ ! -d "$WORKFLOW_DIR" ]]; then
     echo "Error: Workflow '$WORKFLOW_NAME' not found"
     echo "Available workflows:"
-    ls -1 "$PROJECT_ROOT/.workflow" | grep -v '^config$\|^prompts$\|^output$|^project.txt' || echo "  (none)"
+    ls -1 "$PROJECT_ROOT/.workflow" | grep -v '^config$\|^prompts$\|^output$|^project.txt$' || echo "  (none)"
     echo ""
     echo "Create new workflow with: workflow new $WORKFLOW_NAME"
     exit 1

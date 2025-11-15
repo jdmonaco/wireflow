@@ -50,6 +50,38 @@ Creates `.workflow/` structure in the specified directory (default: current dire
 
 Opens `project.txt` and `config` in vim for editing, allowing you to describe the project context, goals, and file structure.
 
+#### Config Inheritance
+
+When initializing a project inside an existing workflow project, the tool automatically detects the parent and offers config inheritance:
+
+**Detection:**
+- Uses `find_project_root()` from target directory to search upward for parent `.workflow/`
+- Stops at HOME or root directory (same boundaries as normal project discovery)
+
+**Inheritance Process:**
+1. Detects parent project and warns about nested namespace
+2. Asks user for confirmation
+3. If confirmed, extracts inheritable config values from parent:
+   - `extract_parent_config()`: Sources parent config in isolated subshell
+   - Extracts: MODEL, TEMPERATURE, MAX_TOKENS, SYSTEM_PROMPTS, OUTPUT_FORMAT
+   - Does NOT inherit: project.txt, workflows, context settings
+4. Displays inherited values to user
+5. Creates new project config with inherited defaults
+
+**Benefits:**
+- Multi-project workflows maintain consistent configuration
+- Related subprojects automatically use parent settings
+- User can still edit config afterward to customize
+- Safe: Subshell isolation prevents side effects
+
+**Example:**
+```bash
+# In /research/neuroai-project with custom config
+cd subprojects/experiment-1
+workflow init .
+# Prompts user, inherits MODEL, SYSTEM_PROMPTS, etc.
+```
+
 ### Create Workflow
 
 ```bash
