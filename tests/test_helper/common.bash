@@ -2,6 +2,18 @@
 
 # Common test utilities for workflow.sh tests
 
+# Source workflow.sh functions for unit testing
+# This sources the script in a way that defines functions but doesn't execute main logic
+source_workflow_functions() {
+    local script_path="$1"
+
+    # Source with set +e temporarily to avoid issues
+    set +e
+    # Use eval to source only function definitions
+    eval "$(grep -E '^(sanitize|filecat|find_project_root|list_workflows|extract_parent_config)\(\)' -A 200 "$script_path" | sed '/^[a-z_]*() {/,/^}/!d')"
+    set -e
+}
+
 # Setup test environment with temp directories and mocked dependencies
 setup_test_env() {
     # Create isolated temp directory
