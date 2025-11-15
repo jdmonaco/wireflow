@@ -27,6 +27,7 @@ set -e
 SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
 source "$SCRIPT_DIR/lib/utils.sh"
 source "$SCRIPT_DIR/lib/core.sh"
+source "$SCRIPT_DIR/lib/api.sh"
 
 # =============================================================================
 # Default Configuration
@@ -391,14 +392,6 @@ fi
 # API Request Setup
 # =============================================================================
 
-API_KEY="${ANTHROPIC_API_KEY}"
-
-# Check if API key is set
-if [[ -z "$API_KEY" ]]; then
-    echo "Error: ANTHROPIC_API_KEY environment variable is not set"
-    exit 1
-fi
-
 # Read prompt files
 SYSTEM_PROMPT=$(<"$SYSTEM_PROMPT_FILE")
 
@@ -422,25 +415,9 @@ if [[ "$OUTPUT_FORMAT" != "md" ]]; then
     USER_PROMPT="${USER_PROMPT}"$'\n'"<output-format>${OUTPUT_FORMAT}</output-format>"
 fi
 
+# JSON-escape prompts
 SYSTEM_JSON=$(escape_json "$SYSTEM_PROMPT")
 USER_JSON=$(escape_json "$USER_PROMPT")
-
-# Build JSON payload
-JSON_PAYLOAD=$(cat <<EOF
-{
-  "model": "$MODEL",
-  "max_tokens": $MAX_TOKENS,
-  "temperature": $TEMPERATURE,
-  "system": $SYSTEM_JSON,
-  "messages": [
-    {
-      "role": "user",
-      "content": $USER_JSON
-    }
-  ]
-}
-EOF
-)
 
 # Backup any previous output files
 if [[ -f "$OUTPUT_FILE" ]]; then
@@ -454,82 +431,28 @@ fi
 # API Request Execution
 # =============================================================================
 
+# Validate API key
+anthropic_validate "$ANTHROPIC_API_KEY" || exit 1
+
+# Execute API request (stream or single mode)
 if [[ "$STREAM_MODE" == true ]]; then
-    # Streaming mode
-    echo "Sending Messages API request (streaming)..."
-    echo "---"
-    echo ""
-
-    # Initialize output file
-    > "$OUTPUT_FILE"
-
-    curl -Ns https://api.anthropic.com/v1/messages \
-        -H "content-type: application/json" \
-        -H "x-api-key: $API_KEY" \
-        -H "anthropic-version: 2023-06-01" \
-        -d "$(echo "$JSON_PAYLOAD" | jq '. + {stream: true}')" | while IFS= read -r line; do
-        # Skip empty lines
-        [[ -z "$line" ]] && continue
-
-        # Parse SSE format (lines start with "data: ")
-        if [[ "$line" == data:* ]]; then
-            json_data="${line#data: }"
-
-            # Skip ping events
-            [[ "$json_data" == "[DONE]" ]] && continue
-
-            # Extract event type
-            event_type=$(echo "$json_data" | jq -r '.type // empty')
-
-            case "$event_type" in
-                "content_block_delta")
-                    # Extract and print text incrementally
-                    delta_text=$(echo "$json_data" | jq -r '.delta.text // empty')
-                    if [[ -n "$delta_text" ]]; then
-                        printf '%s' "$delta_text"
-                        printf '%s' "$delta_text" >> "$OUTPUT_FILE"
-                    fi
-                    ;;
-                "message_stop")
-                    printf '\n'
-                    ;;
-                "error")
-                    echo ""
-                    echo "API Error:"
-                    echo "$json_data" | jq '.error'
-                    exit 1
-                    ;;
-            esac
-        fi
-    done
-
-    echo ""
-    echo "---"
-
+    anthropic_execute_stream \
+        api_key="$ANTHROPIC_API_KEY" \
+        model="$MODEL" \
+        max_tokens="$MAX_TOKENS" \
+        temperature="$TEMPERATURE" \
+        system_prompt="$SYSTEM_JSON" \
+        user_prompt="$USER_JSON" \
+        output_file="$OUTPUT_FILE" || exit 1
 else
-    # Single-batch mode
-    echo -n "Sending Messages API request... "
-
-    response=$(curl -s https://api.anthropic.com/v1/messages \
-        -H "content-type: application/json" \
-        -H "x-api-key: $API_KEY" \
-        -H "anthropic-version: 2023-06-01" \
-        -d "$JSON_PAYLOAD")
-
-    echo "done!"
-
-    # Check for errors
-    if echo "$response" | jq -e '.error' > /dev/null 2>&1; then
-        echo "API Error:"
-        echo "$response" | jq '.error'
-        exit 1
-    fi
-
-    # Extract and save response
-    echo "$response" | jq -r '.content[0].text' > "$OUTPUT_FILE"
-
-    # Display with less
-    less "$OUTPUT_FILE"
+    anthropic_execute_single \
+        api_key="$ANTHROPIC_API_KEY" \
+        model="$MODEL" \
+        max_tokens="$MAX_TOKENS" \
+        temperature="$TEMPERATURE" \
+        system_prompt="$SYSTEM_JSON" \
+        user_prompt="$USER_JSON" \
+        output_file="$OUTPUT_FILE" || exit 1
 fi
 
 # =============================================================================

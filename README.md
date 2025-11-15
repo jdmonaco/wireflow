@@ -1,6 +1,6 @@
-# Workflow - AI-Assisted Writing Tool
+# Workflow - A CLI Tool for Persistent, Configurable AI-Assisted Project Development
 
-A portable CLI tool for managing AI-assisted manuscript development workflows using the Anthropic Messages API. Features git-like project structure, flexible configuration cascading, context aggregation, and workflow chaining.
+A portable CLI tool for managing AI-assisted research and project development workflows using the Anthropic Messages API. Features git-like project structure, flexible configuration cascading, context aggregation, and workflow chaining.
 
 ## Features
 
