@@ -119,7 +119,7 @@ list_workflows() {
     # List entries, excluding special files/directories
     local workflows
     workflows=$(ls -1 "$project_root/.workflow" 2>/dev/null | \
-                grep -v '^config$\|^prompts$\|^output$\|^project.txt$')
+                grep -E -v '^(config|prompts|output|project\.txt)$')
 
     # Return workflows if found, otherwise return 1
     if [[ -n "$workflows" ]]; then
@@ -450,8 +450,12 @@ list_workflows_cmd() {
     echo "Workflows in $PROJECT_ROOT:"
     echo ""
 
-    if list_workflows; then
-        list_workflows | while read -r workflow; do
+    # Capture workflow list to avoid calling list_workflows twice
+    local workflow_list
+    workflow_list=$(list_workflows) || true
+
+    if [[ -n "$workflow_list" ]]; then
+        echo "$workflow_list" | while read -r workflow; do
             # Check if workflow has required files
             local status=""
             if [[ ! -f "$PROJECT_ROOT/.workflow/$workflow/task.txt" ]]; then
