@@ -20,15 +20,17 @@ cd ~/research/my-analysis
 
 ### What Gets Created
 
-When you run `workflow init`, it creates:
+When you run `workflow init`, it creates the following file structure:
 
 ```
 your-project/
 └── .workflow/
-    ├── config           # Project-level configuration
-    ├── project.txt      # Optional project description
-    ├── prompts/         # Project-specific system prompts (optional)
-    └── workflows/       # Directory for individual workflows
+    ├── config            # Project-level configuration
+    ├── project.txt       # Project description, appended to system prompt
+    ├── prompts/          # Cache for project-wide system prompts
+    ├── <workflow-foo>/   # Individual workflow directories
+    ├── <workflow-bar>/   #   (created via `workflow new <workflow-name> ...`)
+    └── ...               # 
 ```
 
 ## Initial Setup Flow
