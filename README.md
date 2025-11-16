@@ -18,6 +18,8 @@ A portable CLI tool for managing AI-assisted research and project development wo
 
 ### Install
 
+To install `workflow`, clone the [repo](https://github.com/jdmonaco/workflow) and link the script into your `PATH`. For example:
+
 ```bash
 # Clone repository
 git clone https://github.com/jdmonaco/workflow.git
@@ -100,7 +102,7 @@ Global (~/.config/workflow/config)
     ↓
 Project (.workflow/config)
     ↓
-Workflow (.workflow/workflows/<name>/config)
+Workflow (.workflow/<workflow_name>/config)
     ↓
 CLI Flags (--model, --temperature, etc.)
 ```
@@ -151,7 +153,7 @@ Created by `workflow init`:
 
 - `.workflow/config` - Project-level settings
 - `.workflow/project.txt` - Project description (optional)
-- `.workflow/workflows/` - Individual workflows
+- `.workflow/<workflow-name>/` - Individual workflows
 
 ## Help
 

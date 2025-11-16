@@ -18,6 +18,8 @@ Workflow is a portable bash-based tool for managing AI-assisted research and pro
 
 ## Quick Start
 
+To install `workflow`, clone the [repo](https://github.com/jdmonaco/workflow) and link the script into your `PATH`. For example:
+
 ```bash
 # Clone repository
 git clone https://github.com/jdmonaco/workflow.git
