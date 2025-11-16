@@ -76,7 +76,7 @@ Description:
         - prompts/            System prompt cache
         - output/             Hardlinks to workflow outputs
 
-    Opens project.txt and config in \$EDITOR for editing.
+    Opens project.txt and config for interactive editing.
 
     If initializing inside an existing workflow project, detects parent
     and offers config inheritance.
@@ -113,8 +113,8 @@ Options:
 
 Description:
     Creates .workflow/<name>/ directory with:
-        - task.txt        Task description (opens in \$EDITOR)
-        - config          Workflow configuration (opens in \$EDITOR)
+        - task.txt        Task description (opens in editor)
+        - config          Workflow configuration (opens in editor)
 
     Workflow config supports:
         - CONTEXT_PATTERN    Glob pattern for context files
@@ -142,7 +142,7 @@ show_help_edit() {
     cat <<EOF
 usage: workflow edit [<name>]
 
-Edit workflow or project files in \$EDITOR.
+Edit workflow or project files in interactive text editor.
 
 Arguments:
     <name>                Workflow name (optional)

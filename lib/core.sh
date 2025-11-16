@@ -1,11 +1,9 @@
-#!/usr/bin/env bash
-
 # =============================================================================
 # Workflow Core Functions
 # =============================================================================
 # Core workflow subcommand implementations for the workflow CLI tool.
 # This file is sourced by workflow.sh.
-# Dependencies: lib/utils.sh (must be sourced first)
+# Dependencies: lib/utils.sh, lib/config.sh, lib/edit.sh
 # =============================================================================
 
 # Source utility and config functions if not already loaded
@@ -15,6 +13,9 @@ if ! declare -f sanitize > /dev/null; then
 fi
 if ! declare -f load_global_config > /dev/null; then
     source "$SCRIPT_LIB_DIR/config.sh"
+fi
+if ! declare -f edit_files > /dev/null; then
+    source "$SCRIPT_LIB_DIR/edit.sh"
 fi
 
 # =============================================================================
@@ -138,8 +139,8 @@ CONFIG_EOF
     echo ""
     echo "Opening project description and config in editor..."
 
-    # Open both files in vim with vertical split
-    ${EDITOR:-vim} -O "$target_dir/.workflow/project.txt" "$target_dir/.workflow/config"
+    # Open both files for interactive editing
+    edit_files "$target_dir/.workflow/project.txt" "$target_dir/.workflow/config"
 
     echo ""
     echo "Next steps:"
@@ -226,8 +227,8 @@ WORKFLOW_CONFIG_EOF
     echo ""
     echo "Opening task and config files in editor..."
 
-    # Open both files in vim with vertical split
-    ${EDITOR:-vim} -O "$WORKFLOW_DIR/task.txt" "$WORKFLOW_DIR/config"
+    # Open both files for interactive editing
+    edit_files "$WORKFLOW_DIR/task.txt" "$WORKFLOW_DIR/config"
 }
 
 # =============================================================================
@@ -246,7 +247,7 @@ edit_workflow() {
     # If no workflow name provided, edit project files
     if [[ -z "$workflow_name" ]]; then
         echo "Editing project configuration..."
-        ${EDITOR:-vim} -O "$PROJECT_ROOT/.workflow/project.txt" "$PROJECT_ROOT/.workflow/config"
+        edit_files "$PROJECT_ROOT/.workflow/project.txt" "$PROJECT_ROOT/.workflow/config"
         return 0
     fi
 
@@ -268,7 +269,7 @@ edit_workflow() {
     fi
 
     echo "Editing workflow: $workflow_name"
-    ${EDITOR:-vim} -O "$WORKFLOW_DIR/task.txt" "$WORKFLOW_DIR/config"
+    edit_files "$WORKFLOW_DIR/task.txt" "$WORKFLOW_DIR/config"
 }
 
 # =============================================================================
