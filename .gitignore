@@ -1,5 +1,8 @@
-chats/
+# Local-only files
+notes/
+old/
 venv/
+CLAUDE.local.md
 
 # MkDocs build output
 site/
