@@ -816,3 +816,55 @@ workflow run 00-workshop-context --dry-run
 - Workflow configs are bash scripts - can include shell logic
 - Command-line context options augment (not replace) config
 - Hardlinks updated atomically for safe concurrent access
+
+## Development Guidelines
+
+### Documentation Update Protocol
+
+When making API-level or interface changes (new features, major enhancements, behavior changes), ensure updates are reflected in **all** relevant locations:
+
+**Required Updates:**
+
+1. **README.md** - Brief mention of new features or changes to quick start
+2. **CLAUDE.md** - Technical implementation details and architecture changes
+3. **docs/**/*.md** - User-facing documentation:
+   - `docs/index.md` - Update features list if applicable
+   - `docs/getting-started/` - Update if affects installation or quick start
+   - `docs/user-guide/` - Update relevant usage guides
+   - `docs/reference/` - Update CLI reference and technical specs
+4. **lib/help.sh** - Update help text for affected subcommands
+5. **Code comments** - Update in `workflow.sh` and `lib/*.sh`
+6. **Library headers** - Update file headers in `lib/*.sh` if module changes
+7. **Tests** - Add/update tests in `tests/*.bats`
+
+**Critical Synchronization:**
+
+- **README.md ↔ docs/index.md**: Keep features, quick start, and core concepts synchronized
+  - Not identical, but should not contradict
+  - README is briefer, index.md can be more detailed
+  - Both should accurately reflect current capabilities
+
+**Documentation Hierarchy:**
+
+```
+README.md          → Brief overview, link to full docs
+docs/index.md      → Landing page, feature overview
+docs/getting-started/ → Installation, tutorials
+docs/user-guide/   → Comprehensive usage
+docs/reference/    → Complete technical reference
+lib/help.sh        → CLI help text
+CLAUDE.md          → Implementation details, architecture
+Code comments      → Inline documentation
+```
+
+**Update Checklist for New Features:**
+
+- [ ] Implement feature in code
+- [ ] Add tests in `tests/*.bats`
+- [ ] Update help text in `lib/help.sh`
+- [ ] Update relevant docs in `docs/`
+- [ ] Update README.md if user-facing
+- [ ] Update CLAUDE.md with technical details
+- [ ] Update code comments and headers
+- [ ] Verify README.md and docs/index.md are synchronized
+- [ ] Test with `mkdocs serve` (no warnings)
