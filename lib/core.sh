@@ -7,7 +7,7 @@
 # =============================================================================
 
 # Source utility and config functions if not already loaded
-SCRIPT_LIB_DIR="$(dirname "${BASH_SOURCE[0]}")"
+SCRIPT_LIB_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 if ! declare -f sanitize > /dev/null; then
     source "$SCRIPT_LIB_DIR/utils.sh"
 fi
