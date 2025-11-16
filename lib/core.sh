@@ -269,7 +269,20 @@ edit_workflow() {
     fi
 
     echo "Editing workflow: $workflow_name"
-    edit_files "$WORKFLOW_DIR/task.txt" "$WORKFLOW_DIR/config"
+
+    # Check for output file and include it first if it exists
+    local files_to_edit=()
+    local output_file
+    # Output file is at .workflow/output/<workflow_name>.*
+    output_file=$(find "$PROJECT_ROOT/.workflow/output" -maxdepth 1 -type f -name "${workflow_name}.*" 2>/dev/null | head -1)
+    if [[ -n "$output_file" ]]; then
+        files_to_edit+=("$output_file")
+    fi
+
+    # Add task and config
+    files_to_edit+=("$WORKFLOW_DIR/task.txt" "$WORKFLOW_DIR/config")
+
+    edit_files "${files_to_edit[@]}"
 }
 
 # =============================================================================

@@ -4,6 +4,21 @@
 
 This directory contains `workflow.sh`, a portable CLI tool for managing AI-assisted manuscript development workflows using the Anthropic Messages API. The tool uses a git-like project structure with `.workflow/` directories and supports flexible configuration cascading, context aggregation, and workflow chaining.
 
+### Architecture
+
+The tool is implemented as a modular bash application:
+
+- **`workflow.sh`** - Main entry point and argument parsing
+- **`lib/`** - Modular library components:
+  - `lib/core.sh` - Core subcommand implementations (init, new, edit, list, config, run)
+  - `lib/config.sh` - Configuration management and cascade
+  - `lib/help.sh` - Help system and documentation
+  - `lib/task.sh` - Task mode (lightweight execution)
+  - `lib/edit.sh` - Cross-platform editor selection
+  - `lib/utils.sh` - Utility functions (file processing, project discovery)
+  - `lib/api.sh` - Anthropic API interaction
+- **`tests/`** - Bats test suite with 190+ tests
+
 ## Directory Structure
 
 ```
@@ -270,6 +285,73 @@ Follows git-style help format:
 
 **Testing:**
 - `tests/help.bats` - 18 tests covering main help, subcommand help, and -h flags
+
+## Editor Selection
+
+The workflow tool provides cross-platform, user-preference-aware editor selection for interactive file editing.
+
+### Editor Selection Priority
+
+**Location:** `lib/edit.sh`
+
+The `edit_files()` function selects an editor using this priority order:
+
+1. **`$VISUAL`** - User's preferred visual editor (highest priority)
+2. **`$EDITOR`** - User's preferred command-line editor
+3. **Platform-specific defaults:**
+   - macOS: `vim`, `nano`, `vi`
+   - Linux: `vim`, `nano`, `vi`
+   - Windows/WSL: `vim`, `nano`, `code`, `vi`
+4. **Common editor detection:** Checks for available editors:
+   - `vim`, `nvim`, `emacs`, `nano`, `code`, `subl`, `atom`, `vi`
+5. **Safe fallback:** `vi` (POSIX standard, universally available)
+
+### Usage
+
+```bash
+edit_files file1 [file2 ...]
+```
+
+**Examples:**
+```bash
+# Edit project files
+edit_files .workflow/project.txt .workflow/config
+
+# Edit workflow files
+edit_files .workflow/analyze-data/task.txt .workflow/analyze-data/config
+```
+
+### Integration
+
+Used by these subcommands:
+- `workflow init` - Opens `project.txt` and `config` after initialization
+- `workflow new` - Opens `task.txt` and `config` after workflow creation
+- `workflow edit` - Opens project or workflow files for editing
+
+### Cross-Platform Compatibility
+
+**macOS:**
+- Prefers `vim` if available (common in developer environments)
+- Falls back to `nano` (more user-friendly for non-vim users)
+
+**Linux:**
+- Similar to macOS: `vim` → `nano` → `vi`
+
+**Windows/WSL:**
+- Additionally checks for VS Code (`code`)
+- Accommodates Windows-based editors
+
+### User Customization
+
+Users can override default behavior via environment variables:
+
+```bash
+# In ~/.bashrc or ~/.zshrc
+export VISUAL=code        # Use VS Code for all edits
+export EDITOR=emacs       # Use Emacs as fallback
+```
+
+**No configuration needed:** The function automatically detects available editors and makes intelligent choices.
 
 ## Configuration
 
