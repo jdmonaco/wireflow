@@ -21,11 +21,12 @@ teardown() {
     run bash "$WORKFLOW_SCRIPT" help
 
     assert_success
-    assert_output --partial "Usage: workflow <subcommand>"
+    assert_output --partial "Usage: workflow"
     assert_output --partial "init"
     assert_output --partial "new"
     assert_output --partial "edit"
     assert_output --partial "cat"
+    assert_output --partial "open"
     assert_output --partial "list"
     assert_output --partial "config"
     assert_output --partial "run"
@@ -83,6 +84,15 @@ teardown() {
     assert_output --partial "Usage: workflow"
     assert_output --partial "cat"
     assert_output --partial "Display workflow output"
+}
+
+@test "help: 'workflow help open' shows open help" {
+    run bash "$WORKFLOW_SCRIPT" help open
+
+    assert_success
+    assert_output --partial "Usage: workflow"
+    assert_output --partial "open"
+    assert_output --partial "default application"
 }
 
 @test "help: 'workflow help list' shows list help" {
@@ -158,6 +168,14 @@ teardown() {
     assert_success
     assert_output --partial "Usage: workflow"
     assert_output --partial "cat"
+}
+
+@test "help: 'workflow open -h' shows open help" {
+    run bash "$WORKFLOW_SCRIPT" open -h
+
+    assert_success
+    assert_output --partial "Usage: workflow"
+    assert_output --partial "open"
 }
 
 @test "help: 'workflow list -h' shows list help" {

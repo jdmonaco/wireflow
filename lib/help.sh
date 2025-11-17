@@ -25,6 +25,7 @@ Available subcommands:
     new NAME         Create new workflow
     edit [NAME]      Edit workflow or project files
     cat NAME         Display workflow output
+    open NAME        Open workflow output in default app (macOS)
     list, ls         List workflows in project
     config [NAME]    View/edit configuration
     run NAME         Execute workflow with full context
@@ -209,6 +210,47 @@ Examples:
 See also:
     $SCRIPT_NAME help run
     $SCRIPT_NAME help list
+EOF
+}
+
+show_help_open() {
+    cat <<EOF
+Usage: $SCRIPT_NAME open <name>
+
+Open workflow output in default application (macOS only).
+
+Arguments:
+    <name>                Workflow name (required)
+
+Options:
+    -h, --help            Show this help
+
+Description:
+    Opens the workflow result file using the macOS 'open' command,
+    which launches the default application for the file type.
+
+    File type behavior:
+    - .md files open in default Markdown editor/viewer
+    - .json files open in default JSON viewer
+    - .html files open in default browser
+    - .txt files open in default text editor
+    - Other formats open with registered application
+
+    Reads from: .workflow/output/<name>.<format>
+
+Requirements:
+    - macOS system (uses 'open' command)
+    - Initialized workflow project
+    - Workflow output must exist
+
+Examples:
+    $SCRIPT_NAME open report           # Open report.md in editor
+    $SCRIPT_NAME open data-viz         # Open data-viz.html in browser
+    $SCRIPT_NAME open analysis         # Open analysis.json in viewer
+
+See also:
+    $SCRIPT_NAME help cat
+    $SCRIPT_NAME help run
 EOF
 }
 

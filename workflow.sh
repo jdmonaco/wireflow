@@ -100,6 +100,19 @@ case "$1" in
         cat_workflow "$2"
         exit 0
         ;;
+    open)
+        if [[ "$2" == "-h" || "$2" == "--help" ]]; then
+            show_help_open
+            exit 0
+        fi
+        if [[ -z "$2" ]]; then
+            echo "Error: Workflow name required"
+            echo "Usage: workflow open NAME"
+            exit 1
+        fi
+        open_workflow "$2"
+        exit 0
+        ;;
     list|ls)
         if [[ "$2" == "-h" || "$2" == "--help" ]]; then
             show_help_list
@@ -177,6 +190,7 @@ case "$1" in
                 new) show_help_new ;;
                 edit) show_help_edit ;;
                 cat) show_help_cat ;;
+                open) show_help_open ;;
                 list|ls) show_help_list ;;
                 config) show_help_config ;;
                 run) show_help_run ;;

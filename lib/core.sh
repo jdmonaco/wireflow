@@ -360,6 +360,49 @@ cat_workflow() {
 }
 
 # =============================================================================
+# Open Subcommand - Open Workflow Output in Default Application
+# =============================================================================
+
+open_workflow() {
+    local workflow_name="$1"
+
+    # Find project root
+    PROJECT_ROOT=$(find_project_root) || {
+        echo "Error: Not in workflow project (no .workflow/ directory found)" >&2
+        echo "Run 'workflow init' to initialize a project" >&2
+        exit 1
+    }
+
+    # Find output file in .workflow/output/
+    local output_file
+    output_file=$(find "$PROJECT_ROOT/.workflow/output" -maxdepth 1 -type f -name "${workflow_name}.*" 2>/dev/null | head -1)
+
+    if [[ -z "$output_file" ]]; then
+        echo "Error: No output found for workflow: $workflow_name" >&2
+        echo "Available workflows:" >&2
+        if list_workflows; then
+            list_workflows | sed 's/^/  /' >&2
+        else
+            echo "  (none)" >&2
+        fi
+        echo "" >&2
+        echo "Run the workflow first: workflow run $workflow_name" >&2
+        exit 1
+    fi
+
+    # Check if open command exists (macOS)
+    if ! command -v open >/dev/null 2>&1; then
+        echo "Error: 'open' command not found (macOS only)" >&2
+        echo "Use 'workflow cat $workflow_name' to view output instead" >&2
+        exit 1
+    fi
+
+    # Open with system default application
+    echo "Opening: $output_file"
+    open "$output_file"
+}
+
+# =============================================================================
 # Config Subcommand - Display and Edit Configuration
 # =============================================================================
 
