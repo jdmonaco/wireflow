@@ -1,4 +1,4 @@
-# Simple AI Workflows in the Terminal with Bash and Text
+# A CLI Tool for AI Workflows in the Terminal
 
 A flexible, configurable CLI tool for building and managing AI workflows for research and project development using the Anthropic API.
 
