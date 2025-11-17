@@ -89,7 +89,7 @@ find_project_root() {
 }
 
 # Find all project roots from current directory upward
-# Returns space-separated list of absolute paths (closest first)
+# Returns newline-separated list of absolute paths (closest first)
 # Useful for nested project context aggregation
 find_all_project_roots() {
     local dir="$PWD"
@@ -102,9 +102,9 @@ find_all_project_roots() {
         dir="$(dirname "$dir")"
     done
 
-    # Return all roots (space-separated)
+    # Return all roots (newline-separated to handle spaces in paths)
     if [[ ${#roots[@]} -gt 0 ]]; then
-        echo "${roots[@]}"
+        printf '%s\n' "${roots[@]}"
         return 0
     else
         return 1
@@ -145,9 +145,9 @@ aggregate_nested_project_descriptions() {
     # Clear cache file
     > "$cache_file"
 
-    # Convert space-separated string to array
+    # Convert newline-separated string to array
     local -a roots_array
-    read -ra roots_array <<< "$all_roots"
+    mapfile -t roots_array <<< "$all_roots"
 
     # Process in reverse order (top-level first)
     local processed_any=false
