@@ -84,11 +84,6 @@ case "$1" in
             show_help_edit
             exit 0
         fi
-        if [[ -z "$2" ]]; then
-            echo "Error: Workflow name required"
-            echo "Usage: workflow edit NAME"
-            exit 1
-        fi
         edit_workflow "$2"
         exit 0
         ;;
