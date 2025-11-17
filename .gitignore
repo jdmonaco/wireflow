@@ -1,8 +1,12 @@
 # Local-only files
+CLAUDE.local.md
+venv/
+dev/
 notes/
 old/
-venv/
-CLAUDE.local.md
+
+# Workflows
+.workflow/
 
 # MkDocs build output
 site/

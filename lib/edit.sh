@@ -45,10 +45,10 @@ supports_multiple_files() {
 edit_files() {
     local files=("$@")
     local editor=""
-    local editor_args=()
+    local num_files="${#files[@]}"
     
     # Validate that files array is not empty
-    if [ ${#files[@]} -eq 0 ]; then
+    if [ $num_files -eq 0 ]; then
         echo "Error: No files specified" >&2
         return 1
     fi
@@ -75,23 +75,31 @@ edit_files() {
         return 1
     fi
     
-    # Handle multiple files
-    if [ ${#files[@]} -gt 1 ]; then
-        if is_vim_like "$editor"; then
-            # Vim-like editors: use vertical splits
-            editor_args=("-O" "--")
-        elif ! supports_multiple_files "$editor"; then
-            # Editors that don't handle multiple files well: edit sequentially
-            echo "Note: Opening files sequentially (editor doesn't support splits)" >&2
-            for file in "${files[@]}"; do
-                "$editor" "$file" || return $?
-            done
-            return 0
+    # Call the editor -- single file and multiple file handling
+    if [ $num_files -eq 1 ]; then
+        "$editor" "${files[@]}"
+    elif is_vim_like "$editor"; then
+        # Vim-like editors: use vertical and horizontal splits
+        if [ $num_files -eq 2 ]; then
+            "$editor" -O "${files[@]}"
+        elif [ $num_files -eq 3 ]; then
+            "$editor" "${files[0]}" -c "vsplit ${files[1]} | wincmd l | split ${files[2]} | 1wincmd w"
+        elif [ $num_files -eq 4 ]; then
+            vim -O2 "${files[0]}" "${files[1]}" -c "wincmd l | split ${files[3]} | wincmd h | split ${files[2]} | 1wincmd w"
+        else
+            "$editor" "${files[@]}"
         fi
+    elif ! supports_multiple_files "$editor"; then
+        # Editors that don't handle multiple files well: edit sequentially
+        echo "Note: Opening files sequentially (editor doesn't support splits)" >&2
+        for file in "${files[@]}"; do
+            "$editor" "$file" || return $?
+        done
+        return 0
+    else
         # Else: editor can handle multiple files (like emacs), pass them all
+        "$editor" "${files[@]}"
     fi
     
-    # Open the editor
-    "$editor" "${editor_args[@]}" "${files[@]}"
     return $?
 }
