@@ -18,7 +18,7 @@ A flexible, configurable CLI tool for building and managing AI workflows for res
 
 ### Install
 
-To install `workflow`, clone the [repo](https://github.com/jdmonaco/workflow) and link the script into your `PATH`. For example:
+First, clone the [repo](https://github.com/jdmonaco/workflow) and then link the script into your `PATH`. For example:
 
 ```bash
 # Clone repository
