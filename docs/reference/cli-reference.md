@@ -15,6 +15,8 @@ workflow <subcommand> [options]
 | `init` | Initialize workflow project |
 | `new` | Create new workflow |
 | `edit` | Edit workflow or project files |
+| `cat` | Display workflow output to stdout |
+| `open` | Open workflow output in default app (macOS) |
 | `list`, `ls` | List workflows in project |
 | `config` | View/edit configuration |
 | `run` | Execute workflow with full context |
@@ -247,6 +249,135 @@ workflow edit analyze-data
 ### See Also
 
 - [`workflow config`](#workflow-config) - View configuration
+
+---
+
+## `workflow cat`
+
+Display workflow output to stdout.
+
+### Usage
+
+```bash
+workflow cat <name>
+```
+
+### Arguments
+
+| Argument | Description | Required |
+|----------|-------------|----------|
+| `<name>` | Workflow name | ✅ Yes |
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `-h`, `--help` | Show help |
+
+### Description
+
+Outputs the workflow result file to stdout for viewing or piping to other commands. Useful for quick viewing or shell pipeline processing.
+
+Reads from `.workflow/output/<name>.<format>` (automatically detects format).
+
+### Requirements
+
+Must be run within an initialized workflow project. Workflow must have been run at least once (output must exist).
+
+### Examples
+
+```bash
+# View output
+workflow cat 01-analysis
+
+# Search in output
+workflow cat data-summary | grep "findings"
+
+# Pipe to pager
+workflow cat report | less
+
+# Process JSON
+workflow cat extract | jq .results
+
+# Save to file
+workflow cat draft > published.md
+```
+
+### See Also
+
+- [`workflow run`](#workflow-run) - Execute workflows
+- [`workflow open`](#workflow-open) - Open in default app (macOS)
+
+---
+
+## `workflow open`
+
+Open workflow output in default application (macOS only).
+
+### Usage
+
+```bash
+workflow open <name>
+```
+
+### Arguments
+
+| Argument | Description | Required |
+|----------|-------------|----------|
+| `<name>` | Workflow name | ✅ Yes |
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `-h`, `--help` | Show help |
+
+### Description
+
+Opens the workflow result file using the macOS `open` command, which launches the default application for the file type.
+
+**File type behavior:**
+
+- `.md` files open in default Markdown editor/viewer
+- `.json` files open in default JSON viewer
+- `.html` files open in default browser
+- `.txt` files open in default text editor
+- Other formats open with registered application
+
+Reads from `.workflow/output/<name>.<format>` (automatically detects format).
+
+### Requirements
+
+- macOS system (uses `open` command)
+- Initialized workflow project
+- Workflow output must exist
+
+### Examples
+
+```bash
+# Open Markdown in editor
+workflow open report
+
+# Open HTML in browser
+workflow open data-viz
+
+# Open JSON in viewer
+workflow open analysis
+```
+
+### Platform Notes
+
+This command is **macOS-specific**. On other platforms:
+
+- **Linux:** Use `workflow cat <name> | xdg-open -` or similar
+- **Windows/WSL:** Use `workflow cat <name>` and open manually
+
+The command checks for `open` availability and fails gracefully with a helpful message suggesting `workflow cat` as an alternative.
+
+### See Also
+
+- [`workflow cat`](#workflow-cat) - Display to stdout
+- [`workflow run`](#workflow-run) - Execute workflows
 
 ---
 
