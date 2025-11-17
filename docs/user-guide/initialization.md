@@ -39,8 +39,8 @@ After running `workflow init`, the tool:
 
 1. **Creates `.workflow/` structure** with necessary directories
 2. **Opens editor** (vim by default) with two files:
-   - `project.txt` - Describe your project (optional)
-   - `config` - Set project-level configuration
+    - `project.txt` - Describe your project (optional)
+    - `config` - Set project-level configuration
 
 ### The Editor Experience
 
