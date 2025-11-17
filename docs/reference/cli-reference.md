@@ -552,7 +552,7 @@ workflow run <name> [options]
 | Option | Description | Repeatable |
 |--------|-------------|------------|
 | `--context-file <file>` | Add context file (relative to PWD) | ✅ Yes |
-| `--context-pattern <glob>` | Add files matching pattern (relative to PWD) | ✅ Yes |
+| `--context-pattern <glob>` | Add files matching pattern (relative to PWD) | ❌ No |
 | `--depends-on <workflow>` | Include output from another workflow | ✅ Yes |
 
 ### API Options
@@ -678,7 +678,7 @@ workflow task -i <text> [options]
 | Option | Description | Repeatable |
 |--------|-------------|------------|
 | `--context-file <file>` | Add context file (relative to PWD) | ✅ Yes |
-| `--context-pattern <glob>` | Add files matching pattern (relative to PWD) | ✅ Yes |
+| `--context-pattern <glob>` | Add files matching pattern (relative to PWD) | ❌ No |
 
 ### API Options
 
