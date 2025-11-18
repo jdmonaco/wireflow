@@ -440,7 +440,7 @@ Available workflows in /path/to/project/.workflow:
 
 ## `workflow config`
 
-Display configuration with source tracking and option to edit.
+Display configuration with source tracking. Optionally prompt to edit files.
 
 ### Usage
 
@@ -458,7 +458,7 @@ workflow config [<name>] [options]
 
 | Option | Description |
 |--------|-------------|
-| `--no-edit` | Skip interactive edit prompt |
+| `--edit` | Prompt to edit configuration files |
 | `-h`, `--help` | Show help |
 
 ### Behavior
@@ -467,29 +467,30 @@ workflow config [<name>] [options]
 
 - Shows project configuration
 - Lists all workflows
-- Source tracking: `(global)`, `(project)`
+- Source tracking: `(global)`, `(ancestor:path)`, `(project)`
 
 **With `<name>` (workflow config):**
 
 - Shows workflow configuration
-- Full cascade: global → project → workflow
+- Full cascade: global → ancestors → project → workflow
 - Shows context sources (`CONTEXT_PATTERN`, `CONTEXT_FILES`, `DEPENDS_ON`)
 
 ### Configuration Cascade
 
 ```
-1. Global:   ~/.config/workflow/config
-2. Project:  .workflow/config
-3. Workflow: .workflow/<name>/config
-4. CLI flags (highest priority)
+1. Global:      ~/.config/workflow/config
+2. Ancestors:   Parent project configs (oldest to newest)
+3. Project:     .workflow/config
+4. Workflow:    .workflow/<name>/config
+5. CLI flags:   (highest priority)
 ```
 
 ### Source Indicators
 
 | Indicator | Meaning |
 |-----------|---------|
-| `(default)` | Hard-coded default value |
 | `(global)` | From `~/.config/workflow/config` |
+| `(ancestor:path)` | From ancestor project config |
 | `(project)` | From `.workflow/config` |
 | `(workflow)` | From `.workflow/<name>/config` |
 
@@ -502,25 +503,32 @@ workflow config
 # Show workflow config
 workflow config 01-analysis
 
-# Skip edit prompt
-workflow config --no-edit
+# Show config and prompt to edit
+workflow config --edit
 ```
 
 ### Sample Output
 
 ```
-Configuration for workflow: 01-analysis
+Current Workflow:
+  Name: 01-analysis
+  Location: ~/projects/research/.workflow/01-analysis
 
-MODEL: claude-3-opus-4-20250514 (project)
-TEMPERATURE: 0.3 (workflow)
-MAX_TOKENS: 8192 (default)
-STREAM_MODE: true (default)
-SYSTEM_PROMPTS: base, research (project)
-OUTPUT_FORMAT: md (default)
+Configuration Cascade:
+  Global:   ~/.config/workflow/config
+  Ancestor: ~/projects/.workflow/config
+  Project:  ~/projects/research/.workflow/config
+  Workflow: ~/projects/research/.workflow/01-analysis/config
 
-Workflow-specific settings:
+Effective Configuration:
+  MODEL: claude-opus-4 (ancestor:projects)
+  TEMPERATURE: 0.3 (workflow)
+  MAX_TOKENS: 8192 (project)
+  SYSTEM_PROMPTS: base research (project)
+  OUTPUT_FORMAT: md (global)
+
+Context Sources:
   CONTEXT_PATTERN: data/*.csv
-  CONTEXT_FILES: notes.md
   DEPENDS_ON: 00-context
 ```
 
