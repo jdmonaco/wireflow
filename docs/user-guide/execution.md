@@ -340,7 +340,7 @@ Build workflow chains by including outputs from previous workflows.
 workflow run 02-analysis --depends-on 01-context
 ```
 
-This automatically includes `.workflow/01-context/output/response.*` as context.
+This automatically includes `.workflow/01-context/output.*` as context.
 
 ### Multiple Dependencies
 
@@ -518,8 +518,8 @@ nano .workflow/draft/task.txt  # Refine instructions
 workflow run draft --context-file outline.md --stream
 
 # Compare outputs
-diff .workflow/draft/output/<name>.md \
-     .workflow/draft/output/<name>.md-*.*
+diff .workflow/draft/output.md \
+     .workflow/draft/output.md-*.*
 ```
 
 ### Progressive Refinement

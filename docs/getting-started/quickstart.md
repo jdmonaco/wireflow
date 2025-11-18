@@ -91,7 +91,7 @@ workflow run extract-actions --context-file notes.txt --stream
 
 ### Step 6: View the Output
 
-The response is saved to `.workflow/extract-actions/output/extract-actions.md`. Use the `cat` subcommand for easy viewing:
+The response is saved to `.workflow/extract-actions/output.md`. Use the `cat` subcommand for easy viewing:
 
 ```bash
 workflow cat extract-actions
@@ -100,7 +100,7 @@ workflow cat extract-actions
 Or access the file directly:
 
 ```bash
-cat .workflow/extract-actions/output/extract-actions.md
+cat .workflow/extract-actions/output.md
 ```
 
 ## What Just Happened?

@@ -368,10 +368,10 @@ For structured formats (JSON, CSV), validate outputs:
 
 ```bash
 # Validate JSON
-jq empty .workflow/extract/output/<name>.json
+jq empty .workflow/extract/output.json
 
 # Check CSV structure
-head .workflow/export/output/response.csv
+head .workflow/export/output.csv
 ```
 
 ### Version Control

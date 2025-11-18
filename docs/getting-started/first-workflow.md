@@ -121,7 +121,7 @@ Watch as Claude analyzes the code in real-time!
 ### Review the Output
 
 ```bash
-cat .workflow/01-analyze-code/output/<name>.md
+cat .workflow/01-analyze-code/output.md
 ```
 
 You should see a structured analysis of your module.
@@ -178,7 +178,7 @@ workflow run 02-generate-docs \
 ### Review the Generated Documentation
 
 ```bash
-cat .workflow/02-generate-docs/output/<name>.md
+cat .workflow/02-generate-docs/output.md
 ```
 
 You now have a complete README draft!
@@ -230,7 +230,7 @@ workflow run 03-usage-examples \
 ### Save the Examples
 
 ```bash
-cat .workflow/03-usage-examples/output/<name>.md > examples.py
+cat .workflow/03-usage-examples/output.md > examples.py
 ```
 
 ## Understanding What You Built
@@ -252,18 +252,15 @@ code-docs-demo/
     ├── 01-analyze-code/
     │   ├── task.txt                   # Analysis task
     │   ├── config                     # Workflow config
-    │   └── output/
-    │       └── <name>.md            # Analysis output
+    │   └── output.md                  # Analysis output
     ├── 02-generate-docs/
     │   ├── task.txt                   # Documentation task
     │   ├── config                     # Workflow config
-    │   └── output/
-    │       └── <name>.md            # README content
+    │   └── output.md                  # README content
     └── 03-usage-examples/
         ├── task.txt                   # Examples task
         ├── config                     # Workflow config
-        └── output/
-            └── <name>.md            # Example code
+        └── output.md                  # Example code
 ```
 
 ### The Workflow Chain
@@ -316,14 +313,14 @@ The previous output is automatically saved as `<name>-TIMESTAMP.md`.
 ### View Output History
 
 ```bash
-ls -lt .workflow/02-generate-docs/output/
+ls -lt .workflow/02-generate-docs/
 ```
 
 ### Compare Outputs
 
 ```bash
-diff .workflow/02-generate-docs/output/<name>.md \
-     .workflow/02-generate-docs/output/<name>-20241115143022.md
+diff .workflow/02-generate-docs/output.md \
+     .workflow/02-generate-docs/output-20241115143022.md
 ```
 
 ## Advanced Techniques

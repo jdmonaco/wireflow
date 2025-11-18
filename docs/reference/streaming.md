@@ -109,7 +109,7 @@ $ workflow run analysis
 Building context...
 Sending Messages API request...
 [... waiting ...]
-Response saved to: .workflow/analysis/output/<name>.md
+Response saved to: .workflow/analysis/output.md
 
 [Opens in less with complete response]
 ```
@@ -268,7 +268,7 @@ Streaming interrupted. Partial output saved.
 Partial output is in the file:
 
 ```bash
-cat .workflow/analysis/output/<name>.md
+cat .workflow/analysis/output.md
 # Shows everything generated before interrupt
 ```
 
@@ -340,10 +340,10 @@ Streaming saves incrementally, but check:
 
 ```bash
 # Verify file exists
-ls .workflow/analysis/output/<name>.md
+ls .workflow/analysis/output.md
 
 # Check size
-ls -lh .workflow/analysis/output/<name>.md
+ls -lh .workflow/analysis/output.md
 ```
 
 If file is empty, interrupt may have occurred before first flush.

@@ -418,14 +418,14 @@ Supported formats: `md`, `markdown`, `txt`, `json`, `html`, `xml`, `csv`, `yaml`
 
 ```bash
 # Latest output
-cat .workflow/analysis-01/output/<name>.md
+cat .workflow/analysis-01/output.md
 
 # View all versions
 ls -lt .workflow/analysis-01/output/
 
 # Compare versions
-diff .workflow/analysis-01/output/<name>.md \
-     .workflow/analysis-01/output/<name>-20241115143022.md
+diff .workflow/analysis-01/output.md \
+     .workflow/analysis-01/output.md
 ```
 
 ## Deleting Workflows

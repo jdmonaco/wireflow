@@ -60,21 +60,21 @@ Your project files and folders are treated as read-only. All `workflow` files ar
 
 ## What You Can Do
 
-**Persistent Workflows** - Create reusable workflows for iterative development:
+**Persistent Workflows:** Create reusable workflows for iterative development:
 
 ```bash
 workflow new analyze-data
 workflow run analyze-data --context-pattern "data/*.csv" --stream
 ```
 
-**One-Off Tasks** - Execute lightweight tasks without workflow persistence:
+**One-Off Tasks:** Execute lightweight tasks without workflow persistence:
 
 ```bash
 workflow task -i "Extract key points" --context-file notes.md
 workflow task summarize --context-pattern "*.md"
 ```
 
-**Workflow Chains** - Build dependent pipelines with automatic context passing:
+**Workflow Chains:** Build dependent pipelines with automatic context passing:
 
 ```bash
 workflow run 02-analysis --depends-on 01-context --stream

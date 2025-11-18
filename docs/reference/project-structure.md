@@ -475,7 +475,7 @@ chmod 644 .workflow/*/output/*
 
 ```bash
 # Remove backups older than 7 days
-find .workflow/*/output/ -name "*-*.*" -mtime +7 -delete
+find .workflow/*/ -name "output-*.*" -mtime +7 -delete
 ```
 
 ### Remove Workflow

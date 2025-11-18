@@ -339,10 +339,10 @@ export EDITOR=nano
 
 ```bash
 # Check file size
-ls -lh .workflow/analysis/output/<name>.md
+ls -lh .workflow/analysis/output.md
 
 # View file
-cat .workflow/analysis/output/<name>.md
+cat .workflow/analysis/output.md
 
 # Check for API errors
 # Look at workflow command output for error messages

@@ -53,7 +53,7 @@ workflow run analyze-results --stream
 ### View Output
 
 ```bash
-cat .workflow/analyze-results/output/<name>.md
+cat .workflow/analyze-results/output.md
 ```
 
 ## Example 2: Chained Workflows
@@ -261,7 +261,7 @@ workflow run 01-analyze --stream
 workflow run 02-generate-readme --stream
 
 # Copy generated README
-cp .workflow/02-generate-readme/output/<name>.md README.md
+cp .workflow/02-generate-readme/output.md README.md
 ```
 
 ## Example 5: Nested Projects
@@ -482,7 +482,7 @@ workflow run draft-v1 --context-file outline.md --stream
 ### Review Output
 
 ```bash
-cat .workflow/draft-v1/output/<name>.md
+cat .workflow/draft-v1/output.md
 # Read, identify issues
 ```
 
@@ -519,8 +519,8 @@ Previous output is automatically backed up to `<name>-TIMESTAMP.md`.
 
 ```bash
 ls -lt .workflow/draft-v1/output/
-diff .workflow/draft-v1/output/<name>.md \
-     .workflow/draft-v1/output/<name>-20241115143022.md
+diff .workflow/draft-v1/output.md \
+     .workflow/draft-v1/output.md
 ```
 
 ## Example 9: Research Pipeline

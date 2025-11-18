@@ -351,7 +351,7 @@ workflow list  # Still works!
 rsync -av --exclude='.workflow/*/output/' my-project/ shared-project/
 ```
 
-Or add `.workflow/*/output/` to `.gitignore`.
+Or add `.workflow/*/output.gitignore`.
 
 ## Troubleshooting
 

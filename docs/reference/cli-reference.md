@@ -944,8 +944,8 @@ workflow edit analysis
 workflow run analysis --stream
 
 # Compare with previous
-diff .workflow/analysis/output/<name>.md \
-     .workflow/analysis/output/<name>.md-*.*
+diff .workflow/analysis/output.md \
+     .workflow/analysis/output.md-*.*
 ```
 
 ### Scripting Workflows

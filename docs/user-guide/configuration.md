@@ -453,7 +453,7 @@ workflow run analysis --context-file local-notes.md
 # Looks for: /home/user/project/subdir/local-notes.md
 ```
 
-**This is standard CLI behavior** - same as `cp`, `cat`, etc.
+**This is standard CLI behavior:** Same as `cp`, `cat`, etc.
 
 ### Glob Pattern Features
 
