@@ -207,7 +207,7 @@ aggregate_context "task" "$CONTEXT_PROMPT_FILE" "$PROJECT_ROOT"
 # Task Mode - API Request Setup - Build Final Prompts
 # =============================================================================
 
-build_prompts "$SYSTEM_PROMPT_FILE" "$PROJECT_ROOT" "$CONTEXT_PROMPT_FILE" "$TASK_PROMPT" "$OUTPUT_FORMAT"
+build_prompts "$SYSTEM_PROMPT_FILE" "$PROJECT_ROOT" "$CONTEXT_PROMPT_FILE" "$TASK_PROMPT"
 
 # =============================================================================
 # Token Estimation (if requested)

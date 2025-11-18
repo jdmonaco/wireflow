@@ -49,7 +49,11 @@ build_system_prompt() {
     temp_prompt=$(mktemp)
     local build_success=true
 
-    # Concatenate all specified prompts
+    # Write opening XML tag
+    echo "<system-prompts>" >> "$temp_prompt"
+    echo "" >> "$temp_prompt"
+
+    # Concatenate all specified prompts (no extra indentation)
     for prompt_name in "${SYSTEM_PROMPTS[@]}"; do
         local prompt_file="$WORKFLOW_PROMPT_PREFIX/${prompt_name}.txt"
         if [[ ! -f "$prompt_file" ]]; then
@@ -58,7 +62,11 @@ build_system_prompt() {
             break
         fi
         cat "$prompt_file" >> "$temp_prompt"
+        echo "" >> "$temp_prompt"
     done
+
+    # Write closing XML tag
+    echo "</system-prompts>" >> "$temp_prompt"
 
     # Handle build result
     if [[ "$build_success" == true ]]; then
@@ -206,37 +214,60 @@ handle_dry_run_mode() {
 # =============================================================================
 
 # Build final system and user prompts for API request
-# Combines system prompt with project descriptions
-# Combines context with task for user prompt
+# Creates hierarchical XML structure following Anthropic best practices
+#
+# SYSTEM_PROMPT structure:
+#   <system>
+#     <system-prompts>...</system-prompts>
+#     <project-description>...</project-description>
+#     <current-datetime>...</current-datetime>
+#   </system>
+#
+# USER_PROMPT structure:
+#   <user>
+#     <context>...</context>
+#     <task>...</task>
+#   </user>
 #
 # Args:
-#   $1 - system_prompt_file: Path to system prompt file
+#   $1 - system_prompt_file: Path to system prompt file (already contains <system-prompts> wrapper)
 #   $2 - project_root: Project root directory (or empty if no project)
 #   $3 - context_prompt_file: Path to context file
 #   $4 - task_source: Path to task file OR task string content
-#   $5 - output_format: Output format (for format hint)
 # Sets global variables:
-#   SYSTEM_PROMPT: Final system prompt
-#   USER_PROMPT: Final user prompt
+#   SYSTEM_PROMPT: Final system prompt with XML structure
+#   USER_PROMPT: Final user prompt with XML structure
 build_prompts() {
     local system_file="$1"
     local project_root="$2"
     local context_file="$3"
     local task_source="$4"
-    local output_format="$5"
 
-    # Read system prompt
-    SYSTEM_PROMPT=$(<"$system_file")
+    # Read system prompts (already wrapped in <system-prompts> tags by build_system_prompt)
+    local system_prompts_content
+    system_prompts_content=$(<"$system_file")
 
-    # Append aggregated project descriptions from nested hierarchy
+    # Start building complete system prompt
+    SYSTEM_PROMPT="<system>"$'\n'
+    SYSTEM_PROMPT+="${system_prompts_content}"$'\n'
+
+    # Add aggregated project descriptions from nested hierarchy
     if [[ -n "$project_root" ]] && aggregate_nested_project_descriptions "$project_root"; then
         local project_desc_cache="$project_root/.workflow/prompts/project.txt"
         local project_desc
         project_desc=$(<"$project_desc_cache")
-        SYSTEM_PROMPT="${SYSTEM_PROMPT}"$'\n'"<project-description>"$'\n'"${project_desc}</project-description>"
+        SYSTEM_PROMPT+=$'\n'"<project-description>"$'\n'"${project_desc}</project-description>"$'\n'
     fi
 
-    # Build user prompt: combine context with task
+    # Add current datetime
+    local current_datetime
+    current_datetime=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+    SYSTEM_PROMPT+=$'\n'"<current-datetime>${current_datetime}</current-datetime>"$'\n'
+
+    # Close system prompt
+    SYSTEM_PROMPT+=$'\n'"</system>"
+
+    # Build user prompt with XML structure
     local task_content
     if [[ -f "$task_source" ]]; then
         # Task is a file
@@ -246,23 +277,25 @@ build_prompts() {
         task_content="$task_source"
     fi
 
+    # Start building user prompt
+    USER_PROMPT="<user>"$'\n'
+
+    # Add context section if context exists
     if [[ -s "$context_file" ]]; then
-        # Run mode uses filecat for context, task mode uses plain cat
-        if [[ -f "$task_source" ]]; then
-            # Task is a file - use filecat for both
-            USER_PROMPT="$(filecat "$context_file" "$task_source")"
-        else
-            # Task is inline - concatenate context + task
-            USER_PROMPT="$(cat "$context_file")"$'\n'"$task_content"
-        fi
-    else
-        USER_PROMPT="$task_content"
+        local context_content
+        context_content=$(<"$context_file")
+        USER_PROMPT+=$'\n'"<context>"$'\n'
+        USER_PROMPT+="${context_content}"$'\n'
+        USER_PROMPT+="</context>"$'\n'
     fi
 
-    # Add output format hint for non-markdown formats
-    if [[ "$output_format" != "md" ]]; then
-        USER_PROMPT="${USER_PROMPT}"$'\n'"<output-format>${output_format}</output-format>"
-    fi
+    # Add task section
+    USER_PROMPT+=$'\n'"<task>"$'\n'
+    USER_PROMPT+="${task_content}"$'\n'
+    USER_PROMPT+="</task>"$'\n'
+
+    # Close user prompt
+    USER_PROMPT+=$'\n'"</user>"
 }
 
 # =============================================================================

@@ -343,17 +343,17 @@ EOF
     assert_file_exists ".workflow/output/test-workflow.txt"
 }
 
-@test "run: appends format hint for non-markdown formats" {
-    echo 'OUTPUT_FORMAT="json"' >> .workflow/test-workflow/config
+@test "run: new workflow creates task.txt with output-format skeleton" {
+    # Create a fresh workflow to verify skeleton is created by new_workflow()
+    bash "$WORKFLOW_SCRIPT" new skeleton-test > /dev/null 2>&1
 
-    bash "$WORKFLOW_SCRIPT" run test-workflow --count-tokens > /dev/null
-
-    # The format hint should be appended to the user prompt
-    # We can't easily check the internal state, but we can verify the workflow runs
-    run bash "$WORKFLOW_SCRIPT" run test-workflow
-
-    assert_success
-    assert_file_exists ".workflow/test-workflow/output.json"
+    # Verify task.txt was created with all skeleton sections
+    run cat .workflow/skeleton-test/task.txt
+    assert_output --partial "<description>"
+    assert_output --partial "<guidance>"
+    assert_output --partial "<instructions>"
+    assert_output --partial "<output-format>"
+    assert_output --partial "</output-format>"
 }
 
 # =============================================================================
@@ -476,7 +476,9 @@ EOF
     bash "$WORKFLOW_SCRIPT" run test-workflow --count-tokens > /dev/null
 
     run cat .workflow/prompts/system.txt
-    assert_output "MODIFIED BASE PROMPT"
+    assert_output --partial "MODIFIED BASE PROMPT"
+    assert_output --partial "<system-prompts>"
+    assert_output --partial "</system-prompts>"
 }
 
 @test "run: appends project.txt to system prompt when non-empty" {
