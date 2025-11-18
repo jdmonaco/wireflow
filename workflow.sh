@@ -60,7 +60,7 @@ fi
 case "$1" in
     init)
         if [[ "$2" == "-h" || "$2" == "--help" ]]; then
-            show_help_init
+            show_quick_help_init
             exit 0
         fi
         init_project "$2"
@@ -68,7 +68,7 @@ case "$1" in
         ;;
     new)
         if [[ "$2" == "-h" || "$2" == "--help" ]]; then
-            show_help_new
+            show_quick_help_new
             exit 0
         fi
         if [[ -z "$2" ]]; then
@@ -81,7 +81,7 @@ case "$1" in
         ;;
     edit)
         if [[ "$2" == "-h" || "$2" == "--help" ]]; then
-            show_help_edit
+            show_quick_help_edit
             exit 0
         fi
         edit_workflow "$2"
@@ -89,7 +89,7 @@ case "$1" in
         ;;
     cat)
         if [[ "$2" == "-h" || "$2" == "--help" ]]; then
-            show_help_cat
+            show_quick_help_cat
             exit 0
         fi
         if [[ -z "$2" ]]; then
@@ -102,7 +102,7 @@ case "$1" in
         ;;
     open)
         if [[ "$2" == "-h" || "$2" == "--help" ]]; then
-            show_help_open
+            show_quick_help_open
             exit 0
         fi
         if [[ -z "$2" ]]; then
@@ -115,7 +115,7 @@ case "$1" in
         ;;
     list|ls)
         if [[ "$2" == "-h" || "$2" == "--help" ]]; then
-            show_help_list
+            show_quick_help_list
             exit 0
         fi
         list_workflows_cmd
@@ -131,7 +131,7 @@ case "$1" in
         while [[ $# -gt 0 ]]; do
             case "$1" in
                 -h|--help)
-                    show_help_config
+                    show_quick_help_config
                     exit 0
                     ;;
                 --edit)
@@ -159,7 +159,7 @@ case "$1" in
     run)
         shift  # Remove 'run' from args
         if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-            show_help_run
+            show_quick_help_run
             exit 0
         fi
         if [[ -z "$1" ]]; then
@@ -174,7 +174,7 @@ case "$1" in
     task)
         shift  # Remove 'task' from args
         if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-            show_help_task
+            show_quick_help_task
             exit 0
         fi
         # Parse task name or --inline flag
