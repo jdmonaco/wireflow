@@ -546,6 +546,11 @@ trap 'rm -f "$temp_file"' EXIT
 - Linux (bash 4.x, 5.x)
 - WSL (bash 4.x, 5.x)
 
+**Development note:**
+- When working on macOS, use `/opt/homebrew/bin/bash` for testing and development
+- System bash (`/bin/bash`) is version 3.2 and lacks required features
+- Tests require Homebrew bash for associative array support
+
 ### API Request Construction
 
 **Implementation** (`lib/api.sh`):

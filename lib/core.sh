@@ -31,16 +31,7 @@ init_project() {
         exit 1
     fi
 
-    # Initialize config values from global config
-    load_global_config
-    INHERITED_MODEL="$MODEL"
-    INHERITED_TEMPERATURE="$TEMPERATURE"
-    INHERITED_MAX_TOKENS="$MAX_TOKENS"
-    INHERITED_OUTPUT_FORMAT="$OUTPUT_FORMAT"
-    INHERITED_SYSTEM_PROMPTS="${SYSTEM_PROMPTS[*]}"
-    INHERITED_SOURCE="global config"
-
-    # Check for parent project (overrides global if nested)
+    # Check for parent project
     PARENT_ROOT=$(cd "$target_dir" && find_project_root 2>/dev/null) || true
     if [[ -n "$PARENT_ROOT" ]]; then
         echo "Initializing nested project inside existing project at:"
@@ -48,72 +39,31 @@ init_project() {
         echo ""
         echo "This will:"
         echo "  - Create a separate workflow namespace"
-        echo "  - Inherit configuration defaults from parent"
+        echo "  - Inherit configuration from full ancestor cascade"
+        echo "  - Use 'workflow config' to see effective configuration"
         read -p "Continue? [y/N] " -n 1 -r
         echo
         [[ ! $REPLY =~ ^[Yy]$ ]] && exit 0
-
         echo ""
-        echo "Inheriting configuration from parent..."
-        INHERITED_SOURCE="parent project"
-
-        # Extract config from parent (overrides global)
-        while IFS='=' read -r key value; do
-            case "$key" in
-                MODEL)
-                    # Only override if parent has explicit non-empty value
-                    [[ -n "$value" ]] && INHERITED_MODEL="$value"
-                    ;;
-                TEMPERATURE)
-                    [[ -n "$value" ]] && INHERITED_TEMPERATURE="$value"
-                    ;;
-                MAX_TOKENS)
-                    [[ -n "$value" ]] && INHERITED_MAX_TOKENS="$value"
-                    ;;
-                OUTPUT_FORMAT)
-                    [[ -n "$value" ]] && INHERITED_OUTPUT_FORMAT="$value"
-                    ;;
-                SYSTEM_PROMPTS)
-                    [[ -n "$value" ]] && INHERITED_SYSTEM_PROMPTS="$value"
-                    ;;
-            esac
-        done < <(extract_config "$PARENT_ROOT/.workflow/config")
     fi
-
-    # Display inherited configuration
-    echo "Configuration inherited from $INHERITED_SOURCE:"
-    echo "  MODEL: $INHERITED_MODEL"
-    echo "  TEMPERATURE: $INHERITED_TEMPERATURE"
-    echo "  MAX_TOKENS: $INHERITED_MAX_TOKENS"
-    echo "  SYSTEM_PROMPTS: $INHERITED_SYSTEM_PROMPTS"
-    echo "  OUTPUT_FORMAT: $INHERITED_OUTPUT_FORMAT"
-    echo ""
 
     # Create .workflow structure
     mkdir -p "$target_dir/.workflow/prompts"
     mkdir -p "$target_dir/.workflow/output"
 
     # Create config file with transparent pass-through
-    # Note: Both top-level and nested projects use empty values for pass-through
-    # The INHERITED_* values show what the parent had, but we pass through for transparency
     local parent_note=""
     [[ -n "$PARENT_ROOT" ]] && parent_note="# Nested under parent project: $PARENT_ROOT"$'\n'
 
     cat > "$target_dir/.workflow/config" <<CONFIG_EOF
 # Project-level workflow configuration
 ${parent_note}
-# API Configuration
 # Configuration cascade: global → ancestor projects → this project → workflow
 # Leave values empty to inherit from cascade, or set explicit values to override.
 #
-# Current inherited values (from $INHERITED_SOURCE):
-#   MODEL: $INHERITED_MODEL
-#   TEMPERATURE: $INHERITED_TEMPERATURE
-#   MAX_TOKENS: $INHERITED_MAX_TOKENS
-#   SYSTEM_PROMPTS: $INHERITED_SYSTEM_PROMPTS
-#   OUTPUT_FORMAT: $INHERITED_OUTPUT_FORMAT
+# Run 'workflow config' to see current effective configuration.
 #
-# To inherit from cascade (recommended):
+# API Configuration (leave empty to inherit, recommended):
 MODEL=
 TEMPERATURE=
 MAX_TOKENS=
@@ -181,7 +131,8 @@ new_workflow() {
     cat > "$WORKFLOW_DIR/config" <<WORKFLOW_CONFIG_EOF
 # Workflow-specific configuration
 # Configuration cascade: global → ancestor projects → project → this workflow
-# These values override inherited defaults from the cascade
+#
+# Run 'workflow config <name>' to see current effective configuration.
 
 # Context aggregation methods (uncomment and configure as needed):
 # Note: Paths in CONTEXT_PATTERN and CONTEXT_FILES are relative to project root
@@ -202,8 +153,7 @@ new_workflow() {
 #     "01-outline-draft"
 # )
 
-# API overrides (leave empty to inherit from cascade)
-# Leave empty to inherit (recommended):
+# API overrides (leave empty to inherit from cascade, recommended):
 MODEL=
 TEMPERATURE=
 MAX_TOKENS=
