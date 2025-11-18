@@ -387,17 +387,17 @@ Outputs are saved in `.workflow/<name>/output/`:
 
 ```
 .workflow/analysis-01/output/
-├── response.md                      # Latest output
-├── response.md.backup.20241115_143022  # Previous version
-└── response.md.backup.20241115_141530  # Older version
+├── <name>.md                      # Latest output
+├── <name>.md.backup.20241115_143022  # Previous version
+└── <name>.md.backup.20241115_141530  # Older version
 ```
 
 ### Automatic Backups
 
 Each time you re-run a workflow:
 
-- Previous output is renamed to `response.<ext>.backup.TIMESTAMP`
-- New output is written to `response.<ext>`
+- Previous output is renamed to `<name>.<ext>.backup.TIMESTAMP`
+- New output is written to `<name>.<ext>`
 - All backups are preserved
 
 ### Output Formats
@@ -418,14 +418,14 @@ Supported formats: `md`, `markdown`, `txt`, `json`, `html`, `xml`, `csv`, `yaml`
 
 ```bash
 # Latest output
-cat .workflow/analysis-01/output/response.md
+cat .workflow/analysis-01/output/<name>.md
 
 # View all versions
 ls -lt .workflow/analysis-01/output/
 
 # Compare versions
-diff .workflow/analysis-01/output/response.md \
-     .workflow/analysis-01/output/response.md.backup.20241115_143022
+diff .workflow/analysis-01/output/<name>.md \
+     .workflow/analysis-01/output/<name>.md.backup.20241115_143022
 ```
 
 ## Deleting Workflows

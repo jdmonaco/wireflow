@@ -5,7 +5,7 @@ A flexible, configurable CLI tool for building and managing AI workflows for res
 ## Features
 
 - 🎯 **Git-like Structure:** Uses `.workflow/` directories with automatic project root discovery, allowing you to run workflow commands from anywhere within your project tree.
-- 🔧 **Flexible Configuration:** Four-tier cascade system (global → project → workflow → CLI overrides) with pass-through inheritance, enabling centralized defaults with granular customization where needed.
+- 🔧 **Flexible Configuration:** Multi-tier cascade system (global → ancestor projects → project → workflow → CLI overrides) with pass-through inheritance, enabling centralized defaults with granular customization where needed.
 - 🔗 **Workflow Dependencies:** Chain workflows together with `--depends-on` for sequential processing, automatically passing outputs as context to dependent workflows.
 - 📦 **Context Aggregation:** Powerful context management using glob patterns, explicit file lists, or workflow outputs, giving Claude comprehensive project awareness.
 - 🚀 **Portable:** Modular bash-based tool works anywhere in your project tree, with automatic project root discovery just like git.
@@ -57,16 +57,16 @@ Your project files and folders are treated as read-only. All `workflow` files ar
 
 ## Documentation
 
-**📚 Complete documentation:** [https://docs.example.com](https://docs.example.com)
+**📚 Complete documentation:** [https://docs.joemona.co/workflow/](https://docs.joemona.co/workflow/)
 
 ### Quick Links
 
-- **[Installation Guide](docs/getting-started/installation.md):** Detailed setup instructions
-- **[Quick Start Guide](docs/getting-started/quickstart.md):** Get running in 5 minutes
-- **[User Guide](docs/user-guide/initialization.md):** Complete usage documentation
-- **[CLI Reference](docs/reference/cli-reference.md):** All commands and options
-- **[Examples](docs/user-guide/examples.md):** Real-world usage patterns
-- **[Troubleshooting](docs/troubleshooting.md):** Common issues and solutions
+- **[Installation Guide](https://docs.joemona.co/workflow/getting-started/installation/):** Detailed setup instructions
+- **[Quick Start Guide](https://docs.joemona.co/workflow/getting-started/quickstart/):** Get running in 5 minutes
+- **[User Guide](https://docs.joemona.co/workflow/user-guide/initialization/):** Complete usage documentation
+- **[CLI Reference](https://docs.joemona.co/workflow/reference/cli-reference/):** All commands and options
+- **[Examples](https://docs.joemona.co/workflow/user-guide/examples/):** Real-world usage patterns
+- **[Troubleshooting](https://docs.joemona.co/workflow/troubleshooting/):** Common issues and solutions
 
 ## Core Concepts
 
@@ -97,10 +97,12 @@ workflow run 02-report --depends-on 01-analysis --stream
 
 ### Configuration
 
-Four-tier cascade with pass-through:
+Multi-tier cascade with pass-through:
 
 ```
 Global (~/.config/workflow/config)
+    ↓
+Ancestor Projects (grandparent → parent)
     ↓
 Project (.workflow/config)
     ↓
@@ -167,7 +169,7 @@ workflow <subcommand> -h   # Quick help
 
 ## Contributing
 
-Contributions welcome! See [CONTRIBUTING.md](docs/contributing.md) for guidelines.
+Contributions welcome! See [CONTRIBUTING.md](https://docs.joemona.co/workflow/contributing/) for guidelines.
 
 ## License
 

@@ -91,10 +91,10 @@ workflow run extract-actions --context-file notes.txt --stream
 
 ### Step 6: View the Output
 
-The response is saved to `.workflow/extract-actions/output/response.md`:
+The response is saved to `.workflow/extract-actions/output/<name>.md`:
 
 ```bash
-cat .workflow/extract-actions/output/response.md
+cat .workflow/extract-actions/output/<name>.md
 ```
 
 ## What Just Happened?
@@ -111,7 +111,7 @@ The workflow:
 - Read your task from `task.txt`
 - Gathered context from `notes.txt`
 - Sent everything to Claude
-- Saved the response to `output/response.md`
+- Saved the response to `output/<name>.md`
 - Kept a backup of any previous output
 
 ## Key Concepts

@@ -53,7 +53,7 @@ workflow run analyze-results --stream
 ### View Output
 
 ```bash
-cat .workflow/analyze-results/output/response.md
+cat .workflow/analyze-results/output/<name>.md
 ```
 
 ## Example 2: Chained Workflows
@@ -261,7 +261,7 @@ workflow run 01-analyze --stream
 workflow run 02-generate-readme --stream
 
 # Copy generated README
-cp .workflow/02-generate-readme/output/response.md README.md
+cp .workflow/02-generate-readme/output/<name>.md README.md
 ```
 
 ## Example 5: Nested Projects
@@ -449,9 +449,9 @@ DEPENDS_ON=(summary-report)
 ### Execute
 
 ```bash
-workflow run extract-metrics --stream      # Creates response.json
-workflow run summary-report --stream        # Creates response.md
-workflow run presentation --stream          # Creates response.html
+workflow run extract-metrics --stream      # Creates <name>.json
+workflow run summary-report --stream        # Creates <name>.md
+workflow run presentation --stream          # Creates <name>.html
 ```
 
 Cross-format dependencies work seamlessly - JSON feeds into Markdown, Markdown feeds into HTML.
@@ -482,7 +482,7 @@ workflow run draft-v1 --context-file outline.md --stream
 ### Review Output
 
 ```bash
-cat .workflow/draft-v1/output/response.md
+cat .workflow/draft-v1/output/<name>.md
 # Read, identify issues
 ```
 
@@ -513,14 +513,14 @@ Tone: Friendly but informative
 workflow run draft-v1 --stream
 ```
 
-Previous output is automatically backed up to `response.md.backup.TIMESTAMP`.
+Previous output is automatically backed up to `<name>.md.backup.TIMESTAMP`.
 
 ### Compare Versions
 
 ```bash
 ls -lt .workflow/draft-v1/output/
-diff .workflow/draft-v1/output/response.md \
-     .workflow/draft-v1/output/response.md.backup.20241115_143022
+diff .workflow/draft-v1/output/<name>.md \
+     .workflow/draft-v1/output/<name>.md.backup.20241115_143022
 ```
 
 ## Example 9: Research Pipeline
@@ -682,7 +682,7 @@ workflow edit workflow-name
 workflow run workflow-name --stream
 
 # Compare
-diff output/response.md output/response.md.backup.*
+diff output/<name>.md output/<name>.md.backup.*
 ```
 
 ## Tips for Effective Workflows

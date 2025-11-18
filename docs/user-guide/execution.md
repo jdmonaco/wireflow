@@ -105,8 +105,8 @@ workflow run 01-analysis --system-prompts "base,research,stats"
 Change output file extension:
 
 ```bash
-workflow run 01-analysis --format-hint json  # Creates response.json
-workflow run 01-analysis --format-hint txt   # Creates response.txt
+workflow run 01-analysis --format-hint json  # Creates <name>.json
+workflow run 01-analysis --format-hint txt   # Creates <name>.txt
 ```
 
 ### Estimate Tokens (Dry Run)
@@ -418,7 +418,7 @@ Outputs are saved in two places:
 **Primary location:**
 
 ```
-.workflow/<name>/output/response.<format>
+.workflow/<name>/output/<name>.<format>
 ```
 
 **Hardlinked copy:**
@@ -435,9 +435,9 @@ Each re-run creates timestamped backups:
 
 ```
 .workflow/analysis/output/
-├── response.md                           # Latest
-├── response.md.backup.20241115_143022    # Previous
-└── response.md.backup.20241115_141530    # Older
+├── <name>.md                           # Latest
+├── <name>.md.backup.20241115_143022    # Previous
+└── <name>.md.backup.20241115_141530    # Older
 ```
 
 ### Output Formats
@@ -445,9 +445,9 @@ Each re-run creates timestamped backups:
 Specify output format with `--format-hint`:
 
 ```bash
-workflow run analysis --format-hint json    # response.json
-workflow run analysis --format-hint txt     # response.txt
-workflow run analysis --format-hint html    # response.html
+workflow run analysis --format-hint json    # <name>.json
+workflow run analysis --format-hint txt     # <name>.txt
+workflow run analysis --format-hint html    # <name>.html
 ```
 
 Or set in config:
@@ -462,7 +462,7 @@ OUTPUT_FORMAT=json
 If a dependency has a different format, it's still included:
 
 ```bash
-workflow run 01-data --format-hint json  # Creates response.json
+workflow run 01-data --format-hint json  # Creates <name>.json
 workflow run 02-analysis --depends-on 01-data --format-hint md
 # Includes the JSON file as context
 ```
@@ -518,8 +518,8 @@ nano .workflow/draft/task.txt  # Refine instructions
 workflow run draft --context-file outline.md --stream
 
 # Compare outputs
-diff .workflow/draft/output/response.md \
-     .workflow/draft/output/response.md.backup.*
+diff .workflow/draft/output/<name>.md \
+     .workflow/draft/output/<name>.md.backup.*
 ```
 
 ### Progressive Refinement

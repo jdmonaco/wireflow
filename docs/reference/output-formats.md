@@ -132,22 +132,22 @@ No automatic post-processing. Output is saved as-is from Claude.
 
 ## Output File Naming
 
-Format: `response.<format>`
+Format: `<name>.<format>`
 
 ### Examples
 
 | Format | Filename |
 |--------|----------|
-| `md` | `response.md` |
-| `json` | `response.json` |
-| `txt` | `response.txt` |
-| `html` | `response.html` |
+| `md` | `<name>.md` |
+| `json` | `<name>.json` |
+| `txt` | `<name>.txt` |
+| `html` | `<name>.html` |
 | `py` | `response.py` |
 
 ### Location
 
 ```
-.workflow/<name>/output/response.<format>
+.workflow/<name>/output/<name>.<format>
 ```
 
 Also hardlinked to:
@@ -200,7 +200,7 @@ Extract performance metrics from logs as JSON array with fields:
 - success (boolean)
 ```
 
-**Output** (`response.json`):
+**Output** (`<name>.json`):
 
 ```json
 [
@@ -251,7 +251,7 @@ DEPENDS_ON=(data-analysis)
 Create an HTML report with embedded CSS, tables for statistics, and visualization recommendations.
 ```
 
-**Output** (`response.html`):
+**Output** (`<name>.html`):
 
 ```html
 <!DOCTYPE html>
@@ -368,7 +368,7 @@ For structured formats (JSON, CSV), validate outputs:
 
 ```bash
 # Validate JSON
-jq empty .workflow/extract/output/response.json
+jq empty .workflow/extract/output/<name>.json
 
 # Check CSV structure
 head .workflow/export/output/response.csv

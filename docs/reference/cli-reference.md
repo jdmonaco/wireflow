@@ -603,9 +603,9 @@ Executes workflow by:
 
 | Location | Description |
 |----------|-------------|
-| `.workflow/<name>/output/response.<format>` | Primary output location |
+| `.workflow/<name>/output/<name>.<format>` | Primary output location |
 | `.workflow/output/<name>.<format>` | Hardlinked copy |
-| `.workflow/<name>/output/response.<format>.backup.TIMESTAMP` | Previous versions |
+| `.workflow/<name>/output/<name>.<format>.backup.TIMESTAMP` | Previous versions |
 
 Previous outputs are automatically backed up with timestamps.
 
@@ -944,8 +944,8 @@ workflow edit analysis
 workflow run analysis --stream
 
 # Compare with previous
-diff .workflow/analysis/output/response.md \
-     .workflow/analysis/output/response.md.backup.*
+diff .workflow/analysis/output/<name>.md \
+     .workflow/analysis/output/<name>.md.backup.*
 ```
 
 ### Scripting Workflows

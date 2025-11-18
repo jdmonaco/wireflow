@@ -43,16 +43,18 @@ project-root/
 ├── .workflow/
 │   ├── config                    # Project-level configuration
 │   ├── project.txt               # Optional project description
-│   ├── prompts/system.txt        # Cached system prompt
+│   ├── prompts/
+│   │   ├── system.txt            # Cached system prompt
+│   │   └── project.txt           # Cached nested project descriptions
 │   ├── output/                   # Hardlinks to workflow outputs
-│   │   └── <name>.<format>       # → ../<name>/output/response.<format>
-│   └── <workflow-name>/          # Individual workflows
+│   │   └── <name>.<format>       # → ../<name>/output/<name>.<format>
+│   └── <name>/                   # Individual workflows
 │       ├── config                # Workflow configuration
 │       ├── task.txt              # Task prompt
 │       ├── context/              # Optional context files
 │       └── output/
-│           ├── response.<format>
-│           └── response.<format>.backup.TIMESTAMP
+│           ├── <name>.<format>
+│           └── <name>.<format>.backup.TIMESTAMP
 └── (project files...)
 ```
 
@@ -233,7 +235,7 @@ Simple character-based approximation (reasonable for English text).
 
 ```bash
 # Primary location
-output_file=".workflow/$workflow_name/output/response.$format"
+output_file=".workflow/$workflow_name/output/$workflow_name.$format"
 
 # Create hardlink
 ln "$output_file" ".workflow/output/$workflow_name.$format"

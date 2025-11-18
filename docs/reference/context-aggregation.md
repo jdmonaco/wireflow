@@ -141,7 +141,7 @@ Dependencies are resolved to:
 Which is a hardlink to:
 
 ```
-.workflow/<workflow-name>/output/response.<format>
+.workflow/<workflow-name>/output/<name>.<format>
 ```
 
 ### Cross-Format Dependencies
@@ -425,8 +425,8 @@ Instead of copying files or including large outputs directly, use `--depends-on`
 
 ```bash
 # Inefficient:
-cp .workflow/preprocessing/output/response.md context/
-workflow run analysis --context-file context/response.md
+cp .workflow/preprocessing/output/<name>.md context/
+workflow run analysis --context-file context/<name>.md
 
 # Better:
 workflow run analysis --depends-on preprocessing

@@ -16,30 +16,30 @@ my-project/
 │   ├── prompts/                         # System prompt cache
 │   │   └── system.txt                   # Cached composed system prompt
 │   ├── output/                          # Hardlinks to workflow outputs
-│   │   ├── 00-context.md                # → workflows/00-context/output/response.md
-│   │   ├── 01-analysis.md               # → workflows/01-analysis/output/response.md
-│   │   └── 02-report.md                 # → workflows/02-report/output/response.md
+│   │   ├── 00-context.md                # → workflows/00-context/output/<name>.md
+│   │   ├── 01-analysis.md               # → workflows/01-analysis/output/<name>.md
+│   │   └── 02-report.md                 # → workflows/02-report/output/<name>.md
 │   └── workflows/                       # Individual workflows
 │       ├── 00-context/
 │       │   ├── task.txt                 # Task description
 │       │   ├── config                   # Workflow configuration
 │       │   ├── context/                 # Optional context files
 │       │   └── output/                  # Workflow outputs
-│       │       ├── response.md          # Latest output
-│       │       ├── response.md.backup.20241115_143022
-│       │       └── response.md.backup.20241115_141530
+│       │       ├── <name>.md          # Latest output
+│       │       ├── <name>.md.backup.20241115_143022
+│       │       └── <name>.md.backup.20241115_141530
 │       ├── 01-analysis/
 │       │   ├── task.txt
 │       │   ├── config
 │       │   ├── context/
 │       │   └── output/
-│       │       └── response.md
+│       │       └── <name>.md
 │       └── 02-report/
 │           ├── task.txt
 │           ├── config
 │           ├── context/
 │           └── output/
-│               └── response.md
+│               └── <name>.md
 ├── data/                                # Project content (example)
 ├── references/                          # Project content (example)
 └── README.md                            # Project content (example)
@@ -128,7 +128,7 @@ Hardlink directory for quick access to workflow outputs.
 
 **Created by:** First workflow run
 
-**Contents:** Hardlinks to `.workflow/<name>/output/response.<format>`
+**Contents:** Hardlinks to `.workflow/<name>/output/<name>.<format>`
 
 **Purpose:**
 
@@ -139,9 +139,9 @@ Hardlink directory for quick access to workflow outputs.
 
 ```
 .workflow/output/
-├── 00-context.md      # → workflows/00-context/output/response.md
-├── 01-analysis.md     # → workflows/01-analysis/output/response.md
-└── 02-report.json     # → workflows/02-report/output/response.json
+├── 00-context.md      # → workflows/00-context/output/<name>.md
+├── 01-analysis.md     # → workflows/01-analysis/output/<name>.md
+└── 02-report.json     # → workflows/02-report/output/<name>.json
 ```
 
 ### `.workflow/`
@@ -231,8 +231,8 @@ Output directory for workflow responses.
 
 **Contents:**
 
-- `response.<format>` - Latest output
-- `response.<format>.backup.TIMESTAMP` - Previous versions
+- `<name>.<format>` - Latest output
+- `<name>.<format>.backup.TIMESTAMP` - Previous versions
 
 **Hardlink:** Also accessible at `.workflow/output/<name>.<format>`
 
@@ -305,22 +305,22 @@ Optional named task directory.
 
 ### Output Files
 
-Format: `response.<format>`
+Format: `<name>.<format>`
 
 Where `<format>` is determined by `OUTPUT_FORMAT` config or `--format-hint` flag.
 
 **Examples:**
 
-- `response.md` (Markdown)
-- `response.json` (JSON)
-- `response.txt` (Plain text)
-- `response.html` (HTML)
+- `<name>.md` (Markdown)
+- `<name>.json` (JSON)
+- `<name>.txt` (Plain text)
+- `<name>.html` (HTML)
 
 ### Backup Files
 
-Format: `response.<format>.backup.YYYYMMDD_HHMMSS`
+Format: `<name>.<format>.backup.YYYYMMDD_HHMMSS`
 
-**Example:** `response.md.backup.20241115_143022`
+**Example:** `<name>.md.backup.20241115_143022`
 
 ## Path Resolution Rules
 
@@ -428,7 +428,7 @@ research-project/
 
 Output hardlinks do **not** duplicate data:
 
-- `.workflow/<name>/output/response.md`
+- `.workflow/<name>/output/<name>.md`
 - `.workflow/output/<name>.md`
 
 Both files are **hardlinks** pointing to the same data on disk.
@@ -439,10 +439,10 @@ Each workflow run creates a timestamped backup:
 
 ```
 output/
-├── response.md                        # Latest (e.g., 50 KB)
-├── response.md.backup.20241115_143022 # Previous (50 KB)
-├── response.md.backup.20241115_141530 # Older (48 KB)
-└── response.md.backup.20241115_135812 # Oldest (45 KB)
+├── <name>.md                        # Latest (e.g., 50 KB)
+├── <name>.md.backup.20241115_143022 # Previous (50 KB)
+├── <name>.md.backup.20241115_141530 # Older (48 KB)
+└── <name>.md.backup.20241115_135812 # Oldest (45 KB)
 ```
 
 **Total:** 193 KB for 4 versions

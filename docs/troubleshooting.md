@@ -339,10 +339,10 @@ export EDITOR=nano
 
 ```bash
 # Check file size
-ls -lh .workflow/analysis/output/response.md
+ls -lh .workflow/analysis/output/<name>.md
 
 # View file
-cat .workflow/analysis/output/response.md
+cat .workflow/analysis/output/<name>.md
 
 # Check for API errors
 # Look at workflow command output for error messages
@@ -379,13 +379,13 @@ nano .workflow/analysis/config
 Backups only created on **re-run**:
 
 ```bash
-# First run: Creates response.md
+# First run: Creates <name>.md
 workflow run analysis
 
 # Second run: Creates backup
 workflow run analysis
 ls .workflow/analysis/output/
-# Now you'll see response.md.backup.TIMESTAMP
+# Now you'll see <name>.md.backup.TIMESTAMP
 ```
 
 ## Global Config Issues

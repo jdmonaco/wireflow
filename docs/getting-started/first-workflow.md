@@ -121,7 +121,7 @@ Watch as Claude analyzes the code in real-time!
 ### Review the Output
 
 ```bash
-cat .workflow/01-analyze-code/output/response.md
+cat .workflow/01-analyze-code/output/<name>.md
 ```
 
 You should see a structured analysis of your module.
@@ -178,7 +178,7 @@ workflow run 02-generate-docs \
 ### Review the Generated Documentation
 
 ```bash
-cat .workflow/02-generate-docs/output/response.md
+cat .workflow/02-generate-docs/output/<name>.md
 ```
 
 You now have a complete README draft!
@@ -230,7 +230,7 @@ workflow run 03-usage-examples \
 ### Save the Examples
 
 ```bash
-cat .workflow/03-usage-examples/output/response.md > examples.py
+cat .workflow/03-usage-examples/output/<name>.md > examples.py
 ```
 
 ## Understanding What You Built
@@ -254,17 +254,17 @@ code-docs-demo/
         │   ├── task.txt               # Analysis task
         │   ├── config                 # Workflow config
         │   └── output/
-        │       └── response.md        # Analysis output
+        │       └── <name>.md        # Analysis output
         ├── 02-generate-docs/
         │   ├── task.txt               # Documentation task
         │   ├── config                 # Workflow config
         │   └── output/
-        │       └── response.md        # README content
+        │       └── <name>.md        # README content
         └── 03-usage-examples/
             ├── task.txt               # Examples task
             ├── config                 # Workflow config
             └── output/
-                └── response.md        # Example code
+                └── <name>.md        # Example code
 ```
 
 ### The Workflow Chain
@@ -312,7 +312,7 @@ workflow run 02-generate-docs \
   --stream
 ```
 
-The previous output is automatically saved as `response.md.backup.TIMESTAMP`.
+The previous output is automatically saved as `<name>.md.backup.TIMESTAMP`.
 
 ### View Output History
 
@@ -323,8 +323,8 @@ ls -lt .workflow/02-generate-docs/output/
 ### Compare Outputs
 
 ```bash
-diff .workflow/02-generate-docs/output/response.md \
-     .workflow/02-generate-docs/output/response.md.backup.20241115_143022
+diff .workflow/02-generate-docs/output/<name>.md \
+     .workflow/02-generate-docs/output/<name>.md.backup.20241115_143022
 ```
 
 ## Advanced Techniques
@@ -371,7 +371,7 @@ workflow run 01-analyze-code \
   --stream
 ```
 
-The response will be saved as `response.json` instead of `response.md`.
+The response will be saved as `<name>.json` instead of `<name>.md`.
 
 ## What You Learned
 
