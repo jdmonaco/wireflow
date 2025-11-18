@@ -15,12 +15,12 @@ workflow <subcommand> [options]
 | `init` | Initialize workflow project |
 | `new` | Create new workflow |
 | `edit` | Edit workflow or project files |
-| `cat` | Display workflow output to stdout |
-| `open` | Open workflow output in default app (macOS) |
-| `list`, `ls` | List workflows in project |
 | `config` | View/edit configuration |
 | `run` | Execute workflow with full context |
 | `task` | Execute one-off task (lightweight) |
+| `cat` | Display workflow output to stdout |
+| `open` | Open workflow output in default app (macOS) |
+| `list`, `ls` | List workflows in project |
 | `help` | Show help for subcommands |
 
 ### Global Options

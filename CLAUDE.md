@@ -661,6 +661,33 @@ Code comments           → Inline documentation
 - Both must reflect current capabilities
 - README briefer, index.md more detailed
 
+### Canonical Subcommand Ordering
+
+**All subcommand listings must use this order:**
+
+1. `init` - Project initialization
+2. `new` - Create workflows
+3. `edit` - Edit workflows/config
+4. `config` - View/manage configuration
+5. `run` - Execute workflows
+6. `task` - Quick execution
+7. `cat` - View output
+8. `open` - View output in app
+9. `list` - List workflows
+10. `help` - Documentation
+
+**Rationale:**
+- Follows natural workflow progression (setup → prepare → execute → review → utility)
+- Groups related commands (run/task, cat/open)
+- Improves readability and scannability
+- Consistent across all help messages, docs, and tables
+
+**Apply to:**
+- Main help message (lib/help.sh)
+- Subcommand tables in docs
+- Quick reference tables
+- README command lists
+
 ### Documentation Style Guidelines
 
 **Key Features (README.md and docs/index.md only):**

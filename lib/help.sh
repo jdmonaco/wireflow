@@ -24,12 +24,13 @@ Available subcommands:
     init [dir]       Initialize workflow project
     new NAME         Create new workflow
     edit [NAME]      Edit workflow or project files
-    cat NAME         Display workflow output
-    open NAME        Open workflow output in default app (macOS)
-    list, ls         List workflows in project
     config [NAME]    View/edit configuration
     run NAME         Execute workflow with full context
     task NAME|TEXT   Execute one-off task (lightweight)
+    cat NAME         Display workflow output
+    open NAME        Open workflow output in default app (macOS)
+    list, ls         List workflows in project
+    help [CMD]       Show help for subcommand
 
 Use '$SCRIPT_NAME help <subcommand>' for detailed help on a specific command.
 Use '$SCRIPT_NAME <subcommand> -h' for quick help.

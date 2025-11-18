@@ -91,10 +91,16 @@ workflow run extract-actions --context-file notes.txt --stream
 
 ### Step 6: View the Output
 
-The response is saved to `.workflow/extract-actions/output/<name>.md`:
+The response is saved to `.workflow/extract-actions/output/extract-actions.md`. Use the `cat` subcommand for easy viewing:
 
 ```bash
-cat .workflow/extract-actions/output/<name>.md
+workflow cat extract-actions
+```
+
+Or access the file directly:
+
+```bash
+cat .workflow/extract-actions/output/extract-actions.md
 ```
 
 ## What Just Happened?
@@ -111,7 +117,7 @@ The workflow:
 - Read your task from `task.txt`
 - Gathered context from `notes.txt`
 - Sent everything to Claude
-- Saved the response to `output/<name>.md`
+- Saved the response to `output/extract-actions.md`
 - Kept a backup of any previous output
 
 ## Key Concepts
@@ -241,11 +247,13 @@ You now know the basics! Here's what to explore next:
 |---------|-------------|
 | `workflow init <dir>` | Initialize a workflow project |
 | `workflow new <name>` | Create a new workflow |
-| `workflow list` | List all workflows |
 | `workflow edit <name>` | Edit workflow task |
+| `workflow config <name>` | View configuration |
 | `workflow run <name>` | Execute a workflow |
 | `workflow task -i "<text>"` | Quick one-off task |
-| `workflow config <name>` | View configuration |
+| `workflow cat <name>` | Display workflow output |
+| `workflow open <name>` | Open workflow output in default app |
+| `workflow list` | List all workflows |
 | `workflow help` | Show help |
 
 ---
