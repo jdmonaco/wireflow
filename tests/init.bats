@@ -37,9 +37,9 @@ teardown() {
     assert_equal "$OUTPUT_FORMAT" ""
     assert_equal "${#SYSTEM_PROMPTS[@]}" "0"  # Empty array
 
-    # Config should contain comments showing inherited defaults
+    # Config should contain empty values for pass-through
     run cat .workflow/config
-    assert_output --partial "Current inherited defaults:"
+    assert_output --partial "Run 'workflow config' to see current effective configuration"
     assert_output --partial "MODEL="
     assert_output --partial "TEMPERATURE="
 }
@@ -83,16 +83,12 @@ EOF
 
     assert_success
     assert_output --partial "Initializing nested project"
-    assert_output --partial "Inheriting configuration"
-    assert_output --partial "claude-opus-4"
-    assert_output --partial "0.5"
+    assert_output --partial "Inherit configuration from full ancestor cascade"
 
     # Verify config uses empty values for transparent pass-through
     source .workflow/config
     assert_equal "$MODEL" ""
     assert_equal "$TEMPERATURE" ""
-    # But the display should have shown inherited values during init
-    # (checked earlier in assert_output)
 }
 
 @test "init: nested project can decline inheritance" {

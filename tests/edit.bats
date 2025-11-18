@@ -31,8 +31,10 @@ teardown() {
 @test "edit: opens project files when no name provided" {
     run bash "$WORKFLOW_SCRIPT" edit
 
-    assert_failure
-    assert_output --partial "Workflow name required"
+    assert_success
+    # With mocked EDITOR=echo, output shows what would be opened
+    assert_output --partial ".workflow/project.txt"
+    assert_output --partial ".workflow/config"
 }
 
 @test "edit: fails when workflow doesn't exist" {

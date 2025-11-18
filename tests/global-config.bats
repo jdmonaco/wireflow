@@ -89,7 +89,7 @@ EOF
     bash "$WORKFLOW_SCRIPT" new test-workflow
 
     # Check config command shows override
-    run bash "$WORKFLOW_SCRIPT" config --no-edit
+    run bash "$WORKFLOW_SCRIPT" config
 
     assert_success
     assert_output --partial "claude-opus-4"
@@ -118,7 +118,7 @@ SYSTEM_PROMPTS=()
 EOF
 
     # Check workflow config shows workflow override
-    run bash "$WORKFLOW_SCRIPT" config --no-edit test-workflow
+    run bash "$WORKFLOW_SCRIPT" config test-workflow
 
     assert_success
     assert_output --partial "claude-haiku-4"
@@ -140,7 +140,7 @@ EOF
     # API validation should use env var value
     # (We can't test this directly without calling API, but we can verify
     # the config file was created and environment setup works)
-    run bash "$WORKFLOW_SCRIPT" config --no-edit
+    run bash "$WORKFLOW_SCRIPT" config
 
     assert_success
 }
@@ -182,12 +182,12 @@ EOF
     run bash "$WORKFLOW_SCRIPT" init .
 
     assert_success
-    assert_output --partial "Configuration inherited from global config"
-    assert_output --partial "claude-opus-4"
-    assert_output --partial "0.3"
-    assert_output --partial "16384"
-    assert_output --partial "json"
-    assert_output --partial "base Custom"
+    assert_output --partial "Initialized workflow project"
+
+    # Verify config file was created with empty values (pass-through inheritance)
+    source .workflow/config
+    assert_equal "$MODEL" ""
+    assert_equal "$TEMPERATURE" ""
 }
 
 @test "global-config: nested project inherits from parent not global" {
@@ -208,17 +208,20 @@ EOF
     run bash -c "echo 'y' | bash '$WORKFLOW_SCRIPT' init ."
 
     assert_success
-    assert_output --partial "parent project"
-    assert_output --partial "claude-opus-4"
-    # Should inherit from parent, not global
-    assert_output --partial "base NeuroAI"
+    assert_output --partial "existing project"
+    assert_output --partial "Inherit configuration from full ancestor cascade"
+
+    # Verify config uses empty values for transparent pass-through
+    source .workflow/config
+    assert_equal "$MODEL" ""
+    assert_equal "$TEMPERATURE" ""
 }
 
 @test "global-config: config command shows global tier" {
     # Create project
     bash "$WORKFLOW_SCRIPT" init .
 
-    run bash "$WORKFLOW_SCRIPT" config --no-edit
+    run bash "$WORKFLOW_SCRIPT" config
 
     assert_success
     assert_output --partial "Configuration Cascade:"
@@ -233,7 +236,7 @@ EOF
     bash "$WORKFLOW_SCRIPT" init .
     bash "$WORKFLOW_SCRIPT" new test-workflow
 
-    run bash "$WORKFLOW_SCRIPT" config --no-edit test-workflow
+    run bash "$WORKFLOW_SCRIPT" config test-workflow
 
     assert_success
     assert_output --partial "Configuration Cascade:"
