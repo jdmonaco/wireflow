@@ -421,45 +421,8 @@ estimate_tokens "$SYSTEM_PROMPT_FILE" "$TASK_PROMPT_FILE" "$CONTEXT_PROMPT_FILE"
 
 handle_dry_run_mode "run" "$WORKFLOW_DIR"
 
-# JSON-escape prompts
-SYSTEM_JSON=$(escape_json "$SYSTEM_PROMPT")
-USER_JSON=$(escape_json "$USER_PROMPT")
-
-# Backup any previous output files
-if [[ -f "$OUTPUT_FILE" ]]; then
-    echo "Backing up previous output file..."
-    OUTPUT_BAK="${OUTPUT_FILE%.*}-$(date +"%Y%m%d%H%M%S").${OUTPUT_FILE##*.}"
-    mv -v "$OUTPUT_FILE" "$OUTPUT_BAK"
-    echo ""
-fi
-
-# =============================================================================
-# API Request Execution
-# =============================================================================
-
-# Validate API key
-anthropic_validate "$ANTHROPIC_API_KEY" || exit 1
-
-# Execute API request (stream or single mode)
-if [[ "$STREAM_MODE" == true ]]; then
-    anthropic_execute_stream \
-        api_key="$ANTHROPIC_API_KEY" \
-        model="$MODEL" \
-        max_tokens="$MAX_TOKENS" \
-        temperature="$TEMPERATURE" \
-        system_prompt="$SYSTEM_JSON" \
-        user_prompt="$USER_JSON" \
-        output_file="$OUTPUT_FILE" || exit 1
-else
-    anthropic_execute_single \
-        api_key="$ANTHROPIC_API_KEY" \
-        model="$MODEL" \
-        max_tokens="$MAX_TOKENS" \
-        temperature="$TEMPERATURE" \
-        system_prompt="$SYSTEM_JSON" \
-        user_prompt="$USER_JSON" \
-        output_file="$OUTPUT_FILE" || exit 1
-fi
+# Execute API request
+execute_api_request "run" "$OUTPUT_FILE" ""
 
 # =============================================================================
 # Post-Processing

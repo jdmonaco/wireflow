@@ -242,42 +242,8 @@ else
     trap "rm -f $OUTPUT_FILE" EXIT
 fi
 
-# JSON-escape prompts
-SYSTEM_JSON=$(escape_json "$SYSTEM_PROMPT")
-USER_JSON=$(escape_json "$USER_PROMPT")
-
-# =============================================================================
-# Task Mode - API Request Execution
-# =============================================================================
-
-# Validate API key
-anthropic_validate "$ANTHROPIC_API_KEY" || exit 1
-
-# Execute API request (stream or single mode)
-if [[ "$STREAM_MODE" == true ]]; then
-    anthropic_execute_stream \
-        api_key="$ANTHROPIC_API_KEY" \
-        model="$MODEL" \
-        max_tokens="$MAX_TOKENS" \
-        temperature="$TEMPERATURE" \
-        system_prompt="$SYSTEM_JSON" \
-        user_prompt="$USER_JSON" \
-        output_file="$OUTPUT_FILE" || exit 1
-else
-    anthropic_execute_single \
-        api_key="$ANTHROPIC_API_KEY" \
-        model="$MODEL" \
-        max_tokens="$MAX_TOKENS" \
-        temperature="$TEMPERATURE" \
-        system_prompt="$SYSTEM_JSON" \
-        user_prompt="$USER_JSON" \
-        output_file="$OUTPUT_FILE" || exit 1
-
-    # In non-stream mode, display output if no explicit output file
-    if [[ -z "$OUTPUT_FILE_PATH" ]]; then
-        cat "$OUTPUT_FILE"
-    fi
-fi
+# Execute API request
+execute_api_request "task" "$OUTPUT_FILE" "$OUTPUT_FILE_PATH"
 
 # =============================================================================
 # Task Mode - Post-Processing

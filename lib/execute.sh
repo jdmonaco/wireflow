@@ -367,3 +367,73 @@ aggregate_context() {
         fi
     fi
 }
+
+# =============================================================================
+# API Request Execution
+# =============================================================================
+
+# Execute API request with mode-specific output handling
+# Validates API key, escapes prompts, and executes streaming or single-shot request
+#
+# Args:
+#   $1 - mode: "run" or "task"
+#   $2 - output_file: Path to output file
+#   $3 - output_file_path: Explicit output file path (task mode, optional)
+# Requires:
+#   SYSTEM_PROMPT: Final system prompt
+#   USER_PROMPT: Final user prompt
+#   ANTHROPIC_API_KEY: API key
+#   MODEL: Model name
+#   MAX_TOKENS: Token limit
+#   TEMPERATURE: Temperature setting
+#   STREAM_MODE: Boolean flag
+# Side effects:
+#   Backs up existing output file (run mode only)
+#   Executes API request
+#   Displays to stdout (task mode, non-stream, no explicit file)
+execute_api_request() {
+    local mode="$1"
+    local output_file="$2"
+    local output_file_path="${3:-}"
+
+    # JSON-escape prompts
+    SYSTEM_JSON=$(escape_json "$SYSTEM_PROMPT")
+    USER_JSON=$(escape_json "$USER_PROMPT")
+
+    # Run mode: Backup any previous output files before API call
+    if [[ "$mode" == "run" && -f "$output_file" ]]; then
+        echo "Backing up previous output file..."
+        local output_bak="${output_file%.*}-$(date +"%Y%m%d%H%M%S").${output_file##*.}"
+        mv -v "$output_file" "$output_bak"
+        echo ""
+    fi
+
+    # Validate API key
+    anthropic_validate "$ANTHROPIC_API_KEY" || exit 1
+
+    # Execute API request (stream or single mode)
+    if [[ "$STREAM_MODE" == true ]]; then
+        anthropic_execute_stream \
+            api_key="$ANTHROPIC_API_KEY" \
+            model="$MODEL" \
+            max_tokens="$MAX_TOKENS" \
+            temperature="$TEMPERATURE" \
+            system_prompt="$SYSTEM_JSON" \
+            user_prompt="$USER_JSON" \
+            output_file="$output_file" || exit 1
+    else
+        anthropic_execute_single \
+            api_key="$ANTHROPIC_API_KEY" \
+            model="$MODEL" \
+            max_tokens="$MAX_TOKENS" \
+            temperature="$TEMPERATURE" \
+            system_prompt="$SYSTEM_JSON" \
+            user_prompt="$USER_JSON" \
+            output_file="$output_file" || exit 1
+
+        # Task mode: Display output to stdout if no explicit output file
+        if [[ "$mode" == "task" && -z "$output_file_path" ]]; then
+            cat "$output_file"
+        fi
+    fi
+}

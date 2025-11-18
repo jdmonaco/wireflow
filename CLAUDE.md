@@ -26,11 +26,12 @@ lib/
 ├── help.sh             # Help text for all subcommands
 ├── task.sh             # Task mode (lightweight execution without workflow dirs)
 ├── edit.sh             # Cross-platform editor selection
+├── execute.sh          # Shared execution logic (prompts, context, API requests)
 ├── utils.sh            # Utilities (file processing, project discovery, sanitization)
 └── api.sh              # Anthropic API interaction (streaming and batch)
 tests/
 ├── test_helper/        # Bats support libraries (git submodules)
-├── *.bats             # Test files (190+ tests)
+├── *.bats             # Test files (205 tests)
 └── common.sh          # Shared test utilities
 ```
 
@@ -392,6 +393,29 @@ Stops at `$HOME` or `/` to avoid escaping user space.
 - Handles both streaming and non-streaming modes
 - Displays actual token counts from response
 
+### lib/execute.sh
+
+**Shared execution logic:**
+
+Eliminates duplication between run mode (workflow.sh) and task mode (lib/task.sh) by extracting common execution functions. All functions are mode-aware with a `mode` parameter ("run" or "task") for mode-specific behavior.
+
+**Functions:**
+
+- `build_system_prompt()` - Concatenates prompt files from SYSTEM_PROMPTS array, atomic write
+- `estimate_tokens()` - Token estimation for system, task, and context prompts
+- `handle_dry_run_mode()` - Saves prompts to files (workflow dir or temp) and opens in editor
+- `build_prompts()` - Combines system + project descriptions, context + task
+- `aggregate_context(mode)` - Mode-aware context aggregation from multiple sources
+  - Run mode: dependencies + config patterns/files + CLI patterns/files
+  - Task mode: CLI patterns/files only
+- `execute_api_request(mode)` - Unified API execution with mode-specific output handling
+  - Run mode: backs up existing output before API call
+  - Task mode: displays to stdout in non-stream mode if no explicit file
+
+**Design rationale:**
+
+The refactoring eliminated ~352 lines of duplication while preserving exact behavior. An orchestrator function was considered but rejected to maintain clarity and flexibility. The explicit execution sequence in workflow.sh and lib/task.sh makes the flow easier to understand and modify.
+
 ## Development Workflows
 
 ### Testing
@@ -549,9 +573,10 @@ trap 'rm -f "$temp_file"' EXIT
 - WSL (bash 4.x, 5.x)
 
 **Development note:**
-- When working on macOS, use `/opt/homebrew/bin/bash` for testing and development
+- Development environment PATH is configured to use Homebrew bash (`/opt/homebrew/bin/bash`) by default
 - System bash (`/bin/bash`) is version 3.2 and lacks required features
-- Tests require Homebrew bash for associative array support
+- Tests require Homebrew bash 4.0+ for associative array support
+- No need to explicitly call `/opt/homebrew/bin/bash` in Bash tool calls
 
 ### API Request Construction
 
