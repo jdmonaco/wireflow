@@ -510,28 +510,7 @@ estimate_tokens "$SYSTEM_PROMPT_FILE" "$TASK_PROMPT_FILE" "$CONTEXT_PROMPT_FILE"
 # Dry-Run Mode - Save Prompts and Inspect
 # =============================================================================
 
-if [[ "$DRY_RUN" == true ]]; then
-    # Save final prompts to workflow directory
-    DRY_RUN_SYSTEM="$WORKFLOW_DIR/dry-run-system.txt"
-    DRY_RUN_USER="$WORKFLOW_DIR/dry-run-user.txt"
-
-    echo "$SYSTEM_PROMPT" > "$DRY_RUN_SYSTEM"
-    echo "$USER_PROMPT" > "$DRY_RUN_USER"
-
-    echo "Dry-run mode: Prompts saved for inspection"
-    echo "  System prompt: $DRY_RUN_SYSTEM"
-    echo "  User prompt:   $DRY_RUN_USER"
-    echo ""
-
-    # If count-tokens was also requested, prompt before opening
-    if [[ "$COUNT_TOKENS" == true ]]; then
-        read -p "Press Enter to inspect prompts in editor (or Ctrl+C to cancel): " -r
-        echo ""
-    fi
-
-    edit_files "$DRY_RUN_SYSTEM" "$DRY_RUN_USER"
-    exit 0
-fi
+handle_dry_run_mode "run" "$WORKFLOW_DIR"
 
 # JSON-escape prompts
 SYSTEM_JSON=$(escape_json "$SYSTEM_PROMPT")

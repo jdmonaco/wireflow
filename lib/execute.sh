@@ -142,3 +142,61 @@ estimate_tokens() {
 
     return 0
 }
+
+# =============================================================================
+# Dry-Run Mode Handling
+# =============================================================================
+
+# Handle dry-run mode: save prompts to files and open in editor
+# Only activates if DRY_RUN flag is set
+#
+# Args:
+#   $1 - mode: "run" or "task"
+#   $2 - workflow_dir: Workflow directory (for run mode) or empty (for task mode)
+# Requires:
+#   DRY_RUN: Boolean flag
+#   COUNT_TOKENS: Boolean flag
+#   SYSTEM_PROMPT: Final system prompt string
+#   USER_PROMPT: Final user prompt string
+# Returns:
+#   Exits script (does not return)
+handle_dry_run_mode() {
+    local mode="$1"
+    local workflow_dir="$2"
+
+    # Skip if not in dry-run mode
+    [[ "$DRY_RUN" != true ]] && return 0
+
+    local dry_run_system
+    local dry_run_user
+
+    if [[ "$mode" == "run" ]]; then
+        # Run mode: Save to workflow directory
+        dry_run_system="$workflow_dir/dry-run-system.txt"
+        dry_run_user="$workflow_dir/dry-run-user.txt"
+    else
+        # Task mode: Save to temp files with cleanup trap
+        dry_run_system=$(mktemp -t dry-run-system.XXXXXX)
+        dry_run_user=$(mktemp -t dry-run-user.XXXXXX)
+        trap "rm -f '$dry_run_system' '$dry_run_user'" EXIT
+    fi
+
+    # Save prompts
+    echo "$SYSTEM_PROMPT" > "$dry_run_system"
+    echo "$USER_PROMPT" > "$dry_run_user"
+
+    echo "Dry-run mode: Prompts saved for inspection"
+    echo "  System prompt: $dry_run_system"
+    echo "  User prompt:   $dry_run_user"
+    echo ""
+
+    # If count-tokens was also requested, prompt before opening
+    if [[ "$COUNT_TOKENS" == true ]]; then
+        read -p "Press Enter to inspect prompts in editor (or Ctrl+C to cancel): " -r
+        echo ""
+    fi
+
+    # Open in editor
+    edit_files "$dry_run_system" "$dry_run_user"
+    exit 0
+}
