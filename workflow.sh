@@ -29,6 +29,7 @@ source "$SCRIPT_DIR/lib/utils.sh"
 source "$SCRIPT_DIR/lib/config.sh"
 source "$SCRIPT_DIR/lib/help.sh"
 source "$SCRIPT_DIR/lib/core.sh"
+source "$SCRIPT_DIR/lib/execute.sh"
 source "$SCRIPT_DIR/lib/api.sh"
 
 # =============================================================================
@@ -394,51 +395,7 @@ if [[ ! -f "$TASK_PROMPT_FILE" ]]; then
 fi
 
 # Build system prompt from current configuration
-if [[ -z "$WORKFLOW_PROMPT_PREFIX" ]]; then
-    echo "Error: WORKFLOW_PROMPT_PREFIX environment variable is not set"
-    echo "Set WORKFLOW_PROMPT_PREFIX to the directory containing your *.txt prompt files"
-    exit 1
-fi
-
-if [[ ! -d "$WORKFLOW_PROMPT_PREFIX" ]]; then
-    echo "Error: System prompt directory not found: $WORKFLOW_PROMPT_PREFIX"
-    exit 1
-fi
-
-echo "Building system prompt from: ${SYSTEM_PROMPTS[*]}"
-
-# Ensure prompts directory exists
-mkdir -p "$(dirname "$SYSTEM_PROMPT_FILE")"
-
-# Try to build system prompt to temp file
-TEMP_SYSTEM_PROMPT=$(mktemp)
-BUILD_SUCCESS=true
-
-for prompt_name in "${SYSTEM_PROMPTS[@]}"; do
-    prompt_file="$WORKFLOW_PROMPT_PREFIX/${prompt_name}.txt"
-    if [[ ! -f "$prompt_file" ]]; then
-        echo "Error: System prompt file not found: $prompt_file"
-        BUILD_SUCCESS=false
-        break
-    fi
-    cat "$prompt_file" >> "$TEMP_SYSTEM_PROMPT"
-done
-
-if [[ "$BUILD_SUCCESS" == true ]]; then
-    # Build succeeded - update cache
-    mv "$TEMP_SYSTEM_PROMPT" "$SYSTEM_PROMPT_FILE"
-    echo "System prompt built successfully"
-else
-    # Build failed - try fallback to cached version
-    rm -f "$TEMP_SYSTEM_PROMPT"
-
-    if [[ -f "$SYSTEM_PROMPT_FILE" ]]; then
-        echo "Warning: Using cached system prompt (rebuild failed)"
-    else
-        echo "Error: Cannot build system prompt and no cached version available"
-        exit 1
-    fi
-fi
+build_system_prompt "$SYSTEM_PROMPT_FILE" || exit 1
 
 # =============================================================================
 # Context Aggregation
