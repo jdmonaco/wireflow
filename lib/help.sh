@@ -19,6 +19,7 @@ show_help() {
 Usage: $SCRIPT_NAME <subcommand> [options]
 
 Workflow - A CLI tool for building AI workflows anywhere
+Version: $WORKFLOW_VERSION
 
 Available subcommands:
     init [dir]       Initialize workflow project
@@ -37,6 +38,7 @@ Use '$SCRIPT_NAME <subcommand> -h' for quick help.
 
 Common options:
     -h, --help       Show help message
+    -v, --version    Show version information
 
 Examples:
     $SCRIPT_NAME init .

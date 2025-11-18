@@ -69,6 +69,29 @@ teardown() {
     assert_output --partial "Create a new workflow"
 }
 
+@test "help: --version flag shows version" {
+    run bash "$WORKFLOW_SCRIPT" --version
+
+    assert_success
+    assert_output --partial "workflow version"
+    assert_output --partial "0.1.0"
+}
+
+@test "help: -v flag shows version" {
+    run bash "$WORKFLOW_SCRIPT" -v
+
+    assert_success
+    assert_output --partial "workflow version"
+    assert_output --partial "0.1.0"
+}
+
+@test "help: main help shows version" {
+    run bash "$WORKFLOW_SCRIPT" --help
+
+    assert_success
+    assert_output --partial "Version: 0.1.0"
+}
+
 @test "help: 'workflow help edit' shows edit help" {
     run bash "$WORKFLOW_SCRIPT" help edit
 

@@ -497,6 +497,32 @@ When making interface changes (new features, behavior changes):
 2. Test both streaming and batch modes
 3. Update token estimation if request structure changes
 
+### Version Management
+
+**Current version:** 0.1.0 (pre-release)
+
+**Location:** `WORKFLOW_VERSION` constant in `workflow.sh` (line 5)
+
+**Semantic versioning strategy:**
+- **0.x.x** - Pre-release (API may change)
+- **1.0.0** - First stable release
+- **MAJOR** - Breaking changes to CLI interface or config format
+- **MINOR** - New features (backward compatible)
+- **PATCH** - Bug fixes (backward compatible)
+
+**Updating version:**
+
+1. Edit `WORKFLOW_VERSION` in `workflow.sh`
+2. Add entry to `CHANGELOG.md` with date and changes
+3. Update version in `README.md` and `docs/index.md`
+4. Commit: `git commit -m "chore: Bump version to X.Y.Z"`
+5. Tag: `git tag -a vX.Y.Z -m "Release version X.Y.Z"`
+
+**Version display:**
+- `workflow --version` or `workflow -v` - Shows version number
+- `workflow --help` - Includes version in header
+- CHANGELOG.md - Tracks all version history
+
 ## Technical Details
 
 ### Configuration Sourcing Safety

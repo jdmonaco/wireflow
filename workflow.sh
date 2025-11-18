@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
+# Version
+WORKFLOW_VERSION="0.1.0"
+
 # =============================================================================
 # Workflow - AI-Assisted Research and Project Development Tool
 # =============================================================================
@@ -59,6 +62,14 @@ fi
 
 # Parse subcommand
 case "$1" in
+    --version|-v)
+        echo "workflow version $WORKFLOW_VERSION"
+        exit 0
+        ;;
+    --help|-h)
+        show_help
+        exit 0
+        ;;
     init)
         if [[ "$2" == "-h" || "$2" == "--help" ]]; then
             show_quick_help_init
