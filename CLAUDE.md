@@ -287,7 +287,7 @@ fi
 **Subcommand implementations:**
 
 - `init_project()` - Create `.workflow/` structure, handle nested projects
-- `new_workflow()` - Create workflow directory and files
+- `new_workflow()` - Create workflow directory with task.txt XML skeleton and config template
 - `edit_workflow()` - Open files in editor (includes output if available)
 - `list_workflows()` - List workflow directories (excludes config, prompts, output)
 - `show_config()` - Display configuration with source tracking

@@ -124,8 +124,24 @@ new_workflow() {
     # Create workflow directory
     mkdir -p "$WORKFLOW_DIR"
 
-    # Create empty task file
-    touch "$WORKFLOW_DIR/task.txt"
+    # Create task file with XML skeleton
+    cat > "$WORKFLOW_DIR/task.txt" <<'TASK_SKELETON_EOF'
+<description>
+  Brief 1-2 sentence overview of this workflow's purpose
+</description>
+
+<guidance>
+  High-level strategic guidance for approaching this task
+</guidance>
+
+<instructions>
+  Detailed step-by-step instructions or requirements
+</instructions>
+
+<output-format>
+  Specific formatting requirements or structure for the output
+</output-format>
+TASK_SKELETON_EOF
 
     # Create workflow config file
     cat > "$WORKFLOW_DIR/config" <<WORKFLOW_CONFIG_EOF

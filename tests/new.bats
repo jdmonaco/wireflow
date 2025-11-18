@@ -39,13 +39,13 @@ teardown() {
     assert_output --partial "Paths in CONTEXT_PATTERN and CONTEXT_FILES are relative to project root"
 }
 
-@test "new: creates empty task.txt" {
+@test "new: creates task.txt with skeleton" {
     bash "$WORKFLOW_SCRIPT" new test-workflow
 
     assert_file_exists ".workflow/test-workflow/task.txt"
 
-    # Should be empty (just created)
-    [[ ! -s ".workflow/test-workflow/task.txt" ]]
+    # Should contain XML skeleton (not empty)
+    [[ -s ".workflow/test-workflow/task.txt" ]]
 }
 
 @test "new: fails when workflow name not provided" {
@@ -92,4 +92,46 @@ teardown() {
 
     assert_success
     assert_dir_exists ".workflow/01-my-workflow"
+}
+
+@test "new: task.txt created with XML skeleton" {
+    run bash "$WORKFLOW_SCRIPT" new test-workflow
+
+    assert_success
+    assert_file_exists ".workflow/test-workflow/task.txt"
+
+    # Verify XML skeleton sections exist
+    run cat ".workflow/test-workflow/task.txt"
+    assert_output --partial "<description>"
+    assert_output --partial "</description>"
+    assert_output --partial "<guidance>"
+    assert_output --partial "</guidance>"
+    assert_output --partial "<instructions>"
+    assert_output --partial "</instructions>"
+    assert_output --partial "<output-format>"
+    assert_output --partial "</output-format>"
+}
+
+@test "new: task.txt skeleton has placeholder text" {
+    run bash "$WORKFLOW_SCRIPT" new test-workflow
+
+    assert_success
+
+    # Verify placeholder guidance text exists
+    run cat ".workflow/test-workflow/task.txt"
+    assert_output --partial "Brief 1-2 sentence overview"
+    assert_output --partial "High-level strategic guidance"
+    assert_output --partial "Detailed step-by-step instructions"
+    assert_output --partial "Specific formatting requirements"
+}
+
+@test "new: task.txt skeleton has proper empty lines" {
+    run bash "$WORKFLOW_SCRIPT" new test-workflow
+
+    assert_success
+
+    # Verify empty lines between sections (count should be 3)
+    local empty_line_count
+    empty_line_count=$(grep -c "^$" ".workflow/test-workflow/task.txt" || true)
+    [[ "$empty_line_count" -eq 3 ]]
 }

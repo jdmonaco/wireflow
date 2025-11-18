@@ -36,20 +36,60 @@ After running `workflow new`, the tool opens your editor (vim by default) with t
 1. **`task.txt`** - Write your task/prompt here
 2. **`config`** - Set workflow-specific configuration
 
+### Task.txt XML Skeleton
+
+The `task.txt` file is created with an XML skeleton to help structure your workflow:
+
+```xml
+<description>
+  Brief 1-2 sentence overview of this workflow's purpose
+</description>
+
+<guidance>
+  High-level strategic guidance for approaching this task
+</guidance>
+
+<instructions>
+  Detailed step-by-step instructions or requirements
+</instructions>
+
+<output-format>
+  Specific formatting requirements or structure for the output
+</output-format>
+```
+
+**Structure explanation:**
+- **`<description>`:** Brief summary of what this workflow does
+- **`<guidance>`:** Strategic approach or methodology to use
+- **`<instructions>`:** Detailed requirements, steps, or specifications
+- **`<output-format>`:** Format requirements for the generated output
+
+Replace the placeholder text with your specific task details. The XML structure helps organize complex workflows and provides clear semantic sections for Claude to follow.
+
 ### Example Task Description
 
-In `task.txt`, write clear instructions for Claude:
+Here's an example of a filled-out task for data analysis:
 
-```
-Analyze the provided dataset and create a summary report including:
+```xml
+<description>
+  Analyze a dataset and create a comprehensive summary report
+</description>
 
-1. Data overview (rows, columns, data types)
-2. Statistical summary of numerical columns
-3. Identification of missing or anomalous values
-4. Key patterns or correlations
-5. Recommendations for further analysis
+<guidance>
+  Focus on statistical rigor and actionable insights. Prioritize identifying patterns that could inform business decisions.
+</guidance>
 
-Format the output as a structured markdown report with sections and tables.
+<instructions>
+  1. Data overview (rows, columns, data types)
+  2. Statistical summary of numerical columns
+  3. Identification of missing or anomalous values
+  4. Key patterns or correlations
+  5. Recommendations for further analysis
+</instructions>
+
+<output-format>
+  Structured markdown report with sections, tables, and bullet points
+</output-format>
 ```
 
 ### Example Workflow Configuration
