@@ -77,3 +77,68 @@ build_system_prompt() {
         fi
     fi
 }
+
+# =============================================================================
+# Token Estimation
+# =============================================================================
+
+# Estimate token count for system, task, and context prompts
+# Only estimates if COUNT_TOKENS flag is set
+# Exits if COUNT_TOKENS without DRY_RUN (standalone estimation)
+#
+# Args:
+#   $1 - system_prompt_file: Path to system prompt file
+#   $2 - task_source: Path to task file OR string content
+#   $3 - context_prompt_file: Path to context file
+# Requires:
+#   COUNT_TOKENS: Boolean flag
+#   DRY_RUN: Boolean flag
+# Returns:
+#   0 normally, or exits if COUNT_TOKENS && !DRY_RUN
+estimate_tokens() {
+    local system_file="$1"
+    local task_source="$2"
+    local context_file="$3"
+
+    # Skip if not requested
+    [[ "$COUNT_TOKENS" != true ]] && return 0
+
+    # System tokens
+    local syswc systc
+    syswc=$(wc -w < "$system_file")
+    systc=$((syswc * 13 / 10 + 4096))
+    echo "Estimated system tokens: $systc"
+
+    # Task tokens (handle file or string)
+    local taskwc tasktc
+    if [[ -f "$task_source" ]]; then
+        taskwc=$(wc -w < "$task_source")
+    else
+        taskwc=$(echo "$task_source" | wc -w)
+    fi
+    tasktc=$((taskwc * 13 / 10 + 4096))
+    echo "Estimated task tokens: $tasktc"
+
+    # Context tokens
+    local contexttc
+    if [[ -s "$context_file" ]]; then
+        local contextwc
+        contextwc=$(wc -w < "$context_file")
+        contexttc=$((contextwc * 13 / 10 + 4096))
+        echo "Estimated context tokens: $contexttc"
+    else
+        contexttc=0
+    fi
+
+    # Total
+    local total_tokens=$((systc + tasktc + contexttc))
+    echo "Estimated total input tokens: $total_tokens"
+    echo ""
+
+    # Exit if only counting tokens (not combined with dry-run)
+    if [[ "$DRY_RUN" == false ]]; then
+        exit 0
+    fi
+
+    return 0
+}

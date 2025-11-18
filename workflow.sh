@@ -504,32 +504,7 @@ fi
 # Token Estimation (if requested)
 # =============================================================================
 
-if [[ "$COUNT_TOKENS" == true ]]; then
-    SYSWC=$(wc -w < "$SYSTEM_PROMPT_FILE")
-    SYSTC=$((SYSWC * 13 / 10 + 4096))
-    echo "Estimated system tokens: $SYSTC"
-
-    TASKWC=$(wc -w < "$TASK_PROMPT_FILE")
-    TASKTC=$((TASKWC * 13 / 10 + 4096))
-    echo "Estimated task tokens: $TASKTC"
-
-    if [[ -s "$CONTEXT_PROMPT_FILE" ]]; then
-        CONTEXTWC=$(wc -w < "$CONTEXT_PROMPT_FILE")
-        CONTEXTTC=$((CONTEXTWC * 13 / 10 + 4096))
-        echo "Estimated context tokens: $CONTEXTTC"
-    else
-        CONTEXTTC=0
-    fi
-
-    TOTAL_INPUT_TOKENS=$((SYSTC + TASKTC + CONTEXTTC))
-    echo "Estimated total input tokens: $TOTAL_INPUT_TOKENS"
-    echo ""
-
-    # Exit if only counting tokens (not combined with dry-run)
-    if [[ "$DRY_RUN" == false ]]; then
-        exit 0
-    fi
-fi
+estimate_tokens "$SYSTEM_PROMPT_FILE" "$TASK_PROMPT_FILE" "$CONTEXT_PROMPT_FILE"
 
 # =============================================================================
 # Dry-Run Mode - Save Prompts and Inspect
