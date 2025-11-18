@@ -350,7 +350,7 @@ class WorkflowConfig:
 
 Explicit task instructions work better than relying solely on format hints:
 
-✅ **Good:**
+- ✅ **Good:**
 
 ```
 Extract data as JSON array with fields: id, name, value

@@ -689,7 +689,7 @@ diff output/<name>.md output/<name>.md.backup.*
 
 ### Use Descriptive Names
 
-✅ Good: `01-preprocess-data`, `02-exploratory-analysis`, `03-statistical-tests`
+- ✅ Good: `01-preprocess-data`, `02-exploratory-analysis`, `03-statistical-tests`
 ❌ Poor: `workflow1`, `test`, `tmp`
 
 ### Chain Related Work

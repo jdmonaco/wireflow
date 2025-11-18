@@ -599,7 +599,7 @@ Press **Ctrl+C** to interrupt during streaming:
 
 ### When to Use Workflow Mode
 
-✅ Use `workflow run` when:
+- ✅ Use `workflow run` when:
 
 - Building iterative, evolving content
 - Creating workflow dependencies
@@ -609,7 +609,7 @@ Press **Ctrl+C** to interrupt during streaming:
 
 ### When to Use Task Mode
 
-✅ Use `workflow task` when:
+- ✅ Use `workflow task` when:
 
 - Quick, one-off queries
 - Temporary analysis
@@ -619,7 +619,7 @@ Press **Ctrl+C** to interrupt during streaming:
 
 ### Context Best Practices
 
-✅ **Do:**
+- ✅ **Do:**
 
 - Use glob patterns for sets of related files
 - Order context logically (chronological or hierarchical)
@@ -635,14 +635,14 @@ Press **Ctrl+C** to interrupt during streaming:
 
 ### Streaming Best Practices
 
-✅ **Use streaming when:**
+- ✅ **Use streaming when:**
 
 - You want real-time feedback
 - Working interactively
 - Long responses expected
 - Testing and iterating
 
-✅ **Use batch mode when:**
+- ✅ **Use batch mode when:**
 
 - Running automated pipelines
 - Want atomic file writes

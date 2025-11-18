@@ -70,7 +70,7 @@ Press Ctrl+C → Partial output saved.
 
 ### Use Cases
 
-✅ **Use streaming for:**
+- ✅ **Use streaming for:**
 
 - Interactive development
 - Watching progress on long responses
@@ -116,7 +116,7 @@ Response saved to: .workflow/analysis/output/<name>.md
 
 ### Use Cases
 
-✅ **Use batch for:**
+- ✅ **Use batch for:**
 
 - Automated scripts
 - Consistent file writes

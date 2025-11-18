@@ -101,7 +101,7 @@ Writing Style:
 
 ### When to Use `project.txt`
 
-✅ **Good use cases:**
+- ✅ **Good use cases:**
 
 - Research projects with specific domain knowledge
 - Code projects with architectural patterns
@@ -210,16 +210,14 @@ my-research/                    # Parent project
 ├── .workflow/
 │   ├── config
 │   ├── project.txt
-│   └── workflows/
-│       ├── 01-literature-review/
-│       └── 02-data-analysis/
+│   ├── 01-literature-review/
+│   └── 02-data-analysis/
 │
 └── sub-analysis/               # Nested project
     ├── .workflow/              # Independent workflow project
     │   ├── config              # Can inherit from parent
     │   ├── project.txt         # Separate context
-    │   └── workflows/
-    │       └── analysis-01/
+    │   └── analysis-01/
     └── data/
 ```
 
@@ -281,7 +279,7 @@ Shows current project configuration values.
 
 ### Project Organization
 
-✅ **Do:**
+- ✅ **Do:**
 
 - One `.workflow/` per logical project
 - Use descriptive project names

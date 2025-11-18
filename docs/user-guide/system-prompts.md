@@ -282,7 +282,7 @@ Writing Style:
 
 ### When to Use `project.txt`
 
-✅ **Use when:**
+- ✅ **Use when:**
 
 - Workflows need consistent project context
 - Project has domain-specific conventions
@@ -369,7 +369,7 @@ This is a neuroscience project. All analysis uses Python and NumPy.
 
 ### Writing Effective Prompts
 
-✅ **Do:**
+- ✅ **Do:**
 
 - Be specific and concrete
 - Use clear section headings

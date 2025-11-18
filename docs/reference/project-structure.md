@@ -16,30 +16,29 @@ my-project/
 │   ├── prompts/                         # System prompt cache
 │   │   └── system.txt                   # Cached composed system prompt
 │   ├── output/                          # Hardlinks to workflow outputs
-│   │   ├── 00-context.md                # → workflows/00-context/output/<name>.md
-│   │   ├── 01-analysis.md               # → workflows/01-analysis/output/<name>.md
-│   │   └── 02-report.md                 # → workflows/02-report/output/<name>.md
-│   └── workflows/                       # Individual workflows
-│       ├── 00-context/
-│       │   ├── task.txt                 # Task description
-│       │   ├── config                   # Workflow configuration
-│       │   ├── context/                 # Optional context files
-│       │   └── output/                  # Workflow outputs
-│       │       ├── <name>.md          # Latest output
-│       │       ├── <name>.md.backup.20241115_143022
-│       │       └── <name>.md.backup.20241115_141530
-│       ├── 01-analysis/
-│       │   ├── task.txt
-│       │   ├── config
-│       │   ├── context/
-│       │   └── output/
-│       │       └── <name>.md
-│       └── 02-report/
-│           ├── task.txt
-│           ├── config
-│           ├── context/
-│           └── output/
-│               └── <name>.md
+│   │   ├── 00-context.md                # → 00-context/output/<name>.md
+│   │   ├── 01-analysis.md               # → 01-analysis/output/<name>.md
+│   │   └── 02-report.md                 # → 02-report/output/<name>.md
+│   ├── 00-context/                      # Individual workflow
+│   │   ├── task.txt                     # Task description
+│   │   ├── config                       # Workflow configuration
+│   │   ├── context/                     # Optional context files
+│   │   └── output/                      # Workflow outputs
+│   │       ├── <name>.md              # Latest output
+│   │       ├── <name>.md.backup.20241115_143022
+│   │       └── <name>.md.backup.20241115_141530
+│   ├── 01-analysis/                     # Individual workflow
+│   │   ├── task.txt
+│   │   ├── config
+│   │   ├── context/
+│   │   └── output/
+│   │       └── <name>.md
+│   └── 02-report/                       # Individual workflow
+│       ├── task.txt
+│       ├── config
+│       ├── context/
+│       └── output/
+│           └── <name>.md
 ├── data/                                # Project content (example)
 ├── references/                          # Project content (example)
 └── README.md                            # Project content (example)
@@ -139,18 +138,18 @@ Hardlink directory for quick access to workflow outputs.
 
 ```
 .workflow/output/
-├── 00-context.md      # → workflows/00-context/output/<name>.md
-├── 01-analysis.md     # → workflows/01-analysis/output/<name>.md
-└── 02-report.json     # → workflows/02-report/output/<name>.json
+├── 00-context.md      # → 00-context/output/<name>.md
+├── 01-analysis.md     # → 01-analysis/output/<name>.md
+└── 02-report.json     # → 02-report/output/<name>.json
 ```
 
-### `.workflow/`
+### `.workflow/<name>/`
 
-Container directory for all workflows.
+Individual workflow directories.
 
-**Created by:** `workflow init`
+**Created by:** `workflow new <name>`
 
-**Contents:** Subdirectories, one per workflow
+**Contents:** Workflow-specific files (task.txt, config, context/, output/)
 
 **Naming:** Workflow names (alphanumeric, hyphens, underscores)
 
@@ -387,10 +386,10 @@ Run `workflow` commands from **anywhere** in your project tree.
 ### Files to Commit
 
 ```
-✅ .workflow/config
-✅ .workflow/project.txt
-✅ .workflow/*/task.txt
-✅ .workflow/*/config
+- ✅ .workflow/config
+- ✅ .workflow/project.txt
+- ✅ .workflow/*/task.txt
+- ✅ .workflow/*/config
 ❌ .workflow/*/output/
 ❌ .workflow/prompts/system.txt
 ❌ .workflow/output/
@@ -404,13 +403,11 @@ Projects can be nested inside other projects:
 research-project/
 ├── .workflow/                    # Parent project
 │   ├── config
-│   └── workflows/
-│       └── 01-literature-review/
+│   └── 01-literature-review/
 └── experiment-1/
     ├── .workflow/                # Nested project (independent)
     │   ├── config                # Can inherit from parent
-    │   └── workflows/
-    │       └── 01-preprocess/
+    │   └── 01-preprocess/
     └── data/
 ```
 

@@ -261,9 +261,8 @@ CONTEXT_FILES=("data/subset/specific.csv")
 # Project structure:
 /home/user/project/
 ├── .workflow/
-│   └── workflows/
-│       └── analysis/
-│           └── config  # CONTEXT_PATTERN="data/*.csv"
+│   └── analysis/
+│       └── config  # CONTEXT_PATTERN="data/*.csv"
 └── data/
     └── results.csv
 
@@ -408,7 +407,7 @@ DEPENDS_ON=(01-analyze-a 01-analyze-b)
 
 ### Be Specific
 
-✅ **Good:** `data/2024-01/*.csv` - Specific subset
+- ✅ **Good:** `data/2024-01/*.csv` - Specific subset
 ❌ **Poor:** `**/*` - Everything (too much context)
 
 ### Order Matters

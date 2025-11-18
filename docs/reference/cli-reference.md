@@ -86,7 +86,7 @@ Creates `.workflow/` directory structure with:
 - `project.txt` - Project description (optional)
 - `prompts/` - System prompt cache
 - `output/` - Hardlinks to workflow outputs
-- `workflows/` - Directory for individual workflows
+- `<name>/` - Individual workflow directories
 
 Opens `project.txt` and `config` in `$EDITOR` for editing.
 

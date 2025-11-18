@@ -285,14 +285,14 @@ workflow run analysis
 
 ### When to Use CLI Flags
 
-✅ **Use CLI flags for:**
+- ✅ **Use CLI flags for:**
 
 - One-time experiments
 - Temporary overrides
 - Testing different parameters
 - Quick adjustments
 
-✅ **Use config files for:**
+- ✅ **Use config files for:**
 
 - Persistent settings
 - Workflow defaults
@@ -432,9 +432,8 @@ CONTEXT_FILES=("notes/analysis.md" "refs/paper.pdf")
 # Project structure
 /home/user/project/
 ├── .workflow/
-│   └── workflows/
-│       └── analysis/
-│           └── config  # CONTEXT_PATTERN="data/*.csv"
+│   └── analysis/
+│       └── config  # CONTEXT_PATTERN="data/*.csv"
 └── data/
     ├── file1.csv
     └── file2.csv
@@ -636,7 +635,7 @@ Projects inherit appropriate defaults based on which environment.
 
 ### Configuration Strategy
 
-✅ **Do:**
+- ✅ **Do:**
 
 - Use global config for your personal defaults
 - Use project config for project-wide settings

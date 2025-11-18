@@ -464,7 +464,7 @@ Then edit the task and config for the new workflow.
 
 ### Workflow Design
 
-✅ **Do:**
+- ✅ **Do:**
 
 - Keep tasks focused and specific
 - Use descriptive names
@@ -481,7 +481,7 @@ Then edit the task and config for the new workflow.
 
 ### Task Descriptions
 
-✅ **Good task descriptions:**
+- ✅ **Good task descriptions:**
 
 - Clear, specific instructions
 - Structured output requirements

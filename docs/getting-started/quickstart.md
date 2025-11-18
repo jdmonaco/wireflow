@@ -129,12 +129,11 @@ my-analysis/
 ├── notes.txt                  # Your content
 └── .workflow/                 # Workflow project root
     ├── config                 # Project-level config
-    └── workflows/
-        └── extract-actions/   # Individual workflow
-            ├── task.txt       # Task/prompt
-            ├── config         # Workflow config
-            ├── context/       # Context files
-            └── output/        # Generated outputs
+    └── extract-actions/       # Individual workflow
+        ├── task.txt           # Task/prompt
+        ├── config             # Workflow config
+        ├── context/           # Context files
+        └── output/            # Generated outputs
 ```
 
 ### Modes of Operation

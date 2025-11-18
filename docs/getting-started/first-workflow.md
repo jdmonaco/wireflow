@@ -249,22 +249,21 @@ code-docs-demo/
 ├── examples.py                        # Generated examples
 └── .workflow/
     ├── config                         # Project config
-    └── workflows/
-        ├── 01-analyze-code/
-        │   ├── task.txt               # Analysis task
-        │   ├── config                 # Workflow config
-        │   └── output/
-        │       └── <name>.md        # Analysis output
-        ├── 02-generate-docs/
-        │   ├── task.txt               # Documentation task
-        │   ├── config                 # Workflow config
-        │   └── output/
-        │       └── <name>.md        # README content
-        └── 03-usage-examples/
-            ├── task.txt               # Examples task
-            ├── config                 # Workflow config
-            └── output/
-                └── <name>.md        # Example code
+    ├── 01-analyze-code/
+    │   ├── task.txt                   # Analysis task
+    │   ├── config                     # Workflow config
+    │   └── output/
+    │       └── <name>.md            # Analysis output
+    ├── 02-generate-docs/
+    │   ├── task.txt                   # Documentation task
+    │   ├── config                     # Workflow config
+    │   └── output/
+    │       └── <name>.md            # README content
+    └── 03-usage-examples/
+        ├── task.txt                   # Examples task
+        ├── config                     # Workflow config
+        └── output/
+            └── <name>.md            # Example code
 ```
 
 ### The Workflow Chain
@@ -377,15 +376,15 @@ The response will be saved as `<name>.json` instead of `<name>.md`.
 
 You now know how to:
 
-✅ Initialize workflow projects
-✅ Create multiple related workflows
-✅ Chain workflows with `--depends-on`
-✅ Add context from files
-✅ Configure model parameters
-✅ Use streaming for real-time feedback
-✅ Iterate on outputs with automatic backups
-✅ Estimate costs before running
-✅ Use format hints for structured output
+- ✅ Initialize workflow projects
+- ✅ Create multiple related workflows
+- ✅ Chain workflows with `--depends-on`
+- ✅ Add context from files
+- ✅ Configure model parameters
+- ✅ Use streaming for real-time feedback
+- ✅ Iterate on outputs with automatic backups
+- ✅ Estimate costs before running
+- ✅ Use format hints for structured output
 
 ## Try It Yourself
 
