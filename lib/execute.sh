@@ -581,6 +581,52 @@ build_prompts() {
 # Context Aggregation
 # =============================================================================
 
+# Helper: Build content block and track document index
+# Arguments:
+#   $1 - file: File path
+#   $2 - category: "context" or "input"
+#   $3 - enable_citations: "true" or "false"
+#   $4 - doc_index_var: Name of variable holding current doc_index
+#   $5 - meta_key (optional): Additional metadata key
+#   $6 - meta_value (optional): Additional metadata value
+# Side effects:
+#   Appends block to CONTEXT_BLOCKS or INPUT_BLOCKS
+#   Appends to DOCUMENT_INDEX_MAP
+#   Increments doc_index variable
+build_and_track_document_block() {
+    local file="$1"
+    local category="$2"
+    local enable_citations="$3"
+    local doc_index_var="$4"
+    local meta_key="${5:-}"
+    local meta_value="${6:-}"
+
+    # Build the content block
+    local block
+    if [[ -n "$meta_key" && -n "$meta_value" ]]; then
+        block=$(build_content_block "$file" "$category" "$enable_citations" "$meta_key" "$meta_value")
+    else
+        block=$(build_content_block "$file" "$category" "$enable_citations")
+    fi
+
+    # Add to appropriate array
+    if [[ "$category" == "context" ]]; then
+        CONTEXT_BLOCKS+=("$block")
+    elif [[ "$category" == "input" ]]; then
+        INPUT_BLOCKS+=("$block")
+    fi
+
+    # Track document index (get current value via indirect reference)
+    local current_index="${!doc_index_var}"
+    local title
+    title=$(extract_title_from_file "$file")
+
+    DOCUMENT_INDEX_MAP+=("{\"index\": $current_index, \"source\": \"$file\", \"title\": \"$title\"}")
+
+    # Increment index (use eval to modify the variable by name)
+    eval "$doc_index_var=\$(( $current_index + 1 ))"
+}
+
 # Aggregate input and context files from various sources based on mode
 # Builds both XML text files (for debugging) and JSON content blocks (for API)
 # Aggregation order (stable → volatile): context → dependencies → input
@@ -619,6 +665,11 @@ aggregate_context() {
     > "$input_file"
     > "$context_file"
 
+    # Initialize document index tracking (for citations)
+    # Only document blocks (context and input) get indices
+    DOCUMENT_INDEX_MAP=()
+    local doc_index=0
+
     # =============================================================================
     # CONTEXT FILES AGGREGATION (most stable)
     # Order: CONTEXT_FILES → CONTEXT_PATTERN → CLI_CONTEXT_FILES → CLI_CONTEXT_PATTERN
@@ -634,13 +685,12 @@ aggregate_context() {
                 exit 1
             fi
 
-            # Add to XML file for debugging
-            contextcat "$resolved_file" >> "$context_file"
+            # Add to XML file for debugging (raw content)
+            cat "$resolved_file" >> "$context_file"
+            echo -e "\n---\n" >> "$context_file"
 
-            # Build JSON content block (document type with citations support)
-            local block
-            block=$(build_content_block "$resolved_file" "context" "$ENABLE_CITATIONS")
-            CONTEXT_BLOCKS+=("$block")
+            # Build and track document block
+            build_and_track_document_block "$resolved_file" "context" "$ENABLE_CITATIONS" "doc_index"
         done
     fi
 
@@ -653,13 +703,12 @@ aggregate_context() {
         for file in "${pattern_files[@]}"; do
             local abs_file="$project_root/$file"
             if [[ -f "$abs_file" ]]; then
-                # Add to XML file
-                contextcat "$abs_file" >> "$context_file"
+                # Add to XML file for debugging (raw content)
+                cat "$abs_file" >> "$context_file"
+                echo -e "\n---\n" >> "$context_file"
 
-                # Build JSON content block (document type with citations support)
-                local block
-                block=$(build_content_block "$abs_file" "context" "$ENABLE_CITATIONS")
-                CONTEXT_BLOCKS+=("$block")
+                # Build and track document block
+                build_and_track_document_block "$abs_file" "context" "$ENABLE_CITATIONS" "doc_index"
             fi
         done
     fi
@@ -673,13 +722,12 @@ aggregate_context() {
                 exit 1
             fi
 
-            # Add to XML file
-            contextcat "$file" >> "$context_file"
+            # Add to XML file for debugging (raw content)
+            cat "$file" >> "$context_file"
+            echo -e "\n---\n" >> "$context_file"
 
-            # Build JSON content block (document type with citations support)
-            local block
-            block=$(build_content_block "$file" "context" "$ENABLE_CITATIONS")
-            CONTEXT_BLOCKS+=("$block")
+            # Build and track document block
+            build_and_track_document_block "$file" "context" "$ENABLE_CITATIONS" "doc_index"
         done
     fi
 
@@ -691,13 +739,12 @@ aggregate_context() {
 
         for file in "${pattern_files[@]}"; do
             if [[ -f "$file" ]]; then
-                # Add to XML file
-                contextcat "$file" >> "$context_file"
+                # Add to XML file for debugging (raw content)
+                cat "$file" >> "$context_file"
+                echo -e "\n---\n" >> "$context_file"
 
-                # Build JSON content block (document type with citations support)
-                local block
-                block=$(build_content_block "$file" "context" "$ENABLE_CITATIONS")
-                CONTEXT_BLOCKS+=("$block")
+                # Build and track document block
+                build_and_track_document_block "$file" "context" "$ENABLE_CITATIONS" "doc_index"
             fi
         done
     fi
@@ -727,8 +774,9 @@ aggregate_context() {
             fi
             echo "    - $dep_file"
 
-            # Add to XML file
-            contextcat "$dep_file" >> "$context_file"
+            # Add to XML file for debugging (raw content)
+            cat "$dep_file" >> "$context_file"
+            echo -e "\n---\n" >> "$context_file"
 
             # Build JSON content block (text type, no citations for dependencies)
             local block
@@ -758,13 +806,12 @@ aggregate_context() {
                 exit 1
             fi
 
-            # Add to XML file for debugging
-            documentcat "$resolved_file" >> "$input_file"
+            # Add to XML file for debugging (raw content)
+            cat "$resolved_file" >> "$input_file"
+            echo -e "\n---\n" >> "$input_file"
 
-            # Build JSON content block (document type with citations support)
-            local block
-            block=$(build_content_block "$resolved_file" "input" "$ENABLE_CITATIONS")
-            INPUT_BLOCKS+=("$block")
+            # Build and track document block
+            build_and_track_document_block "$resolved_file" "input" "$ENABLE_CITATIONS" "doc_index"
         done
     fi
 
@@ -777,13 +824,12 @@ aggregate_context() {
         for file in "${pattern_files[@]}"; do
             local abs_file="$project_root/$file"
             if [[ -f "$abs_file" ]]; then
-                # Add to XML file
-                documentcat "$abs_file" >> "$input_file"
+                # Add to XML file for debugging (raw content)
+                cat "$abs_file" >> "$input_file"
+                echo -e "\n---\n" >> "$input_file"
 
-                # Build JSON content block (document type with citations support)
-                local block
-                block=$(build_content_block "$abs_file" "input" "$ENABLE_CITATIONS")
-                INPUT_BLOCKS+=("$block")
+                # Build and track document block
+                build_and_track_document_block "$abs_file" "input" "$ENABLE_CITATIONS" "doc_index"
             fi
         done
     fi
@@ -797,13 +843,12 @@ aggregate_context() {
                 exit 1
             fi
 
-            # Add to XML file
-            documentcat "$file" >> "$input_file"
+            # Add to XML file for debugging (raw content)
+            cat "$file" >> "$input_file"
+            echo -e "\n---\n" >> "$input_file"
 
-            # Build JSON content block (document type with citations support)
-            local block
-            block=$(build_content_block "$file" "input" "$ENABLE_CITATIONS")
-            INPUT_BLOCKS+=("$block")
+            # Build and track document block
+            build_and_track_document_block "$file" "input" "$ENABLE_CITATIONS" "doc_index"
         done
     fi
 
@@ -815,13 +860,12 @@ aggregate_context() {
 
         for file in "${pattern_files[@]}"; do
             if [[ -f "$file" ]]; then
-                # Add to XML file
-                documentcat "$file" >> "$input_file"
+                # Add to XML file for debugging (raw content)
+                cat "$file" >> "$input_file"
+                echo -e "\n---\n" >> "$input_file"
 
-                # Build JSON content block (document type with citations support)
-                local block
-                block=$(build_content_block "$file" "input" "$ENABLE_CITATIONS")
-                INPUT_BLOCKS+=("$block")
+                # Build and track document block
+                build_and_track_document_block "$file" "input" "$ENABLE_CITATIONS" "doc_index"
             fi
         done
     fi
@@ -849,6 +893,12 @@ aggregate_context() {
         else
             echo "  Use --input-file, --input-pattern, --context-file, or --context-pattern"
         fi
+    fi
+
+    # Save document index map for citations processing
+    # This maps API document indices to source file paths and titles
+    if [[ ${#DOCUMENT_INDEX_MAP[@]} -gt 0 ]]; then
+        printf '%s\n' "${DOCUMENT_INDEX_MAP[@]}" | jq -s '.' > "$DOCUMENT_MAP_FILE" 2>/dev/null || true
     fi
 }
 
@@ -956,7 +1006,10 @@ execute_api_request() {
             temperature="$TEMPERATURE" \
             system_blocks_file="$temp_system" \
             user_blocks_file="$temp_user" \
-            output_file="$output_file" || exit 1
+            output_file="$output_file" \
+            enable_citations="$ENABLE_CITATIONS" \
+            output_format="$OUTPUT_FORMAT" \
+            doc_map_file="$DOCUMENT_MAP_FILE" || exit 1
 
         # Task mode: Display output to stdout if no explicit output file
         if [[ "$mode" == "task" && -z "$output_file_path" ]]; then

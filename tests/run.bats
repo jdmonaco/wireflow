@@ -608,18 +608,22 @@ EOF
     # Configure INPUT_PATTERN (project-relative)
     echo 'INPUT_PATTERN="Data/*.csv"' >> .workflow/test-workflow/config
 
-    bash "$WORKFLOW_SCRIPT" run test-workflow
+    # Mock curl for API
+    curl() {
+        echo '{"input_tokens": 1000}'
+    }
+    export -f curl
 
-    # Check input file was created and contains document structure
+    bash "$WORKFLOW_SCRIPT" run test-workflow --count-tokens
+
+    # Check input file contains raw content with separators
     assert_file_exists ".workflow/test-workflow/input.txt"
     run cat .workflow/test-workflow/input.txt
 
-    # Verify documentcat structure (index, metadata)
-    assert_output --partial '<document index="1">'
-    assert_output --partial '<source>'
-    assert_output --partial '<document_content>'
+    # Verify both files present as raw content
     assert_output --partial "Dataset 1 content"
     assert_output --partial "Dataset 2 content"
+    assert_output --partial "---"
 }
 
 @test "run: aggregates INPUT_FILES using documentcat" {
@@ -644,14 +648,16 @@ EOF
 
     bash "$WORKFLOW_SCRIPT" run test-workflow --count-tokens
 
-    # Check input file contains both documents with sequential indexing
+    # Check input file contains both documents (raw content with separators)
     assert_file_exists ".workflow/test-workflow/input.txt"
     run cat .workflow/test-workflow/input.txt
 
-    assert_output --partial '<document index="1">'
-    assert_output --partial '<document index="2">'
+    # Both documents present as raw content
     assert_output --partial "Input document 1"
     assert_output --partial "Input document 2"
+
+    # Verify separator between files
+    assert_output --partial "---"
 }
 
 @test "run: separates INPUT_* from CONTEXT_*" {
@@ -669,16 +675,20 @@ INPUT_PATTERN="Data/*.csv"
 CONTEXT_PATTERN="References/*.md"
 EOF
 
-    bash "$WORKFLOW_SCRIPT" run test-workflow
+    # Mock curl for API
+    curl() {
+        echo '{"input_tokens": 1000}'
+    }
+    export -f curl
 
-    # Check input file contains documentcat structure
+    bash "$WORKFLOW_SCRIPT" run test-workflow --count-tokens
+
+    # Check input file contains raw content
     run cat .workflow/test-workflow/input.txt
-    assert_output --partial '<document index="1">'
     assert_output --partial "Primary data"
 
-    # Check context file contains contextcat structure
+    # Check context file contains raw content
     run cat .workflow/test-workflow/context.txt
-    assert_output --partial '<context-file>'
     assert_output --partial "Reference material"
 }
 
@@ -705,12 +715,17 @@ EOF
     # Create input file in current directory
     echo "CLI input data" > input-data.txt
 
-    bash "$WORKFLOW_SCRIPT" run test-workflow --input-file input-data.txt
+    # Mock curl for API
+    curl() {
+        echo '{"input_tokens": 1000}'
+    }
+    export -f curl
 
-    # Check input file contains CLI data
+    bash "$WORKFLOW_SCRIPT" run test-workflow --input-file input-data.txt --count-tokens
+
+    # Check input file contains CLI data (raw content)
     run cat .workflow/test-workflow/input.txt
     assert_output --partial "CLI input data"
-    assert_output --partial '<document index="1">'
 }
 
 @test "run: CLI --input-pattern works" {
@@ -719,13 +734,18 @@ EOF
     echo "Pattern input 1" > TestData/test1.dat
     echo "Pattern input 2" > TestData/test2.dat
 
-    bash "$WORKFLOW_SCRIPT" run test-workflow --input-pattern "TestData/*.dat"
+    # Mock curl for API
+    curl() {
+        echo '{"input_tokens": 1000}'
+    }
+    export -f curl
 
-    # Check input file contains pattern matches
+    bash "$WORKFLOW_SCRIPT" run test-workflow --input-pattern "TestData/*.dat" --count-tokens
+
+    # Check input file contains pattern matches (raw content)
     run cat .workflow/test-workflow/input.txt
     assert_output --partial "Pattern input 1"
     assert_output --partial "Pattern input 2"
-    assert_output --partial '<document index="1">'
 }
 
 @test "run: creates input.txt file" {

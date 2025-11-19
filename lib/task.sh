@@ -223,15 +223,17 @@ CONTEXT_PROMPT_FILE=$(mktemp)
 # Use temporary files for JSON block files (for API)
 JSON_BLOCKS_FILE=$(mktemp)
 JSON_REQUEST_FILE=$(mktemp)
+DOCUMENT_MAP_FILE=$(mktemp)
 
 # Clean up all temp files on exit
-trap "rm -f $INPUT_PROMPT_FILE $CONTEXT_PROMPT_FILE $JSON_BLOCKS_FILE $JSON_REQUEST_FILE" EXIT
+trap "rm -f $INPUT_PROMPT_FILE $CONTEXT_PROMPT_FILE $JSON_BLOCKS_FILE $JSON_REQUEST_FILE $DOCUMENT_MAP_FILE" EXIT
 
 # Content blocks arrays for JSON building
 declare -a SYSTEM_BLOCKS
 declare -a CONTEXT_BLOCKS
 declare -a DEPENDENCY_BLOCKS
 declare -a INPUT_BLOCKS
+declare -a DOCUMENT_INDEX_MAP
 
 aggregate_context "task" "$INPUT_PROMPT_FILE" "$CONTEXT_PROMPT_FILE" "$PROJECT_ROOT"
 

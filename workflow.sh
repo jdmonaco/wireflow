@@ -421,6 +421,7 @@ CONTEXT_PROMPT_FILE="$WORKFLOW_DIR/context.txt"
 # File paths - JSON block files for API (relative to PROJECT_ROOT/.workflow/)
 JSON_BLOCKS_FILE="$WORKFLOW_DIR/content_blocks.json"
 JSON_REQUEST_FILE="$WORKFLOW_DIR/request.json"
+DOCUMENT_MAP_FILE="$WORKFLOW_DIR/document_map.json"
 
 # File paths - Output and system
 OUTPUT_FILE="$WORKFLOW_DIR/output.${OUTPUT_FORMAT}"
@@ -432,6 +433,7 @@ declare -a SYSTEM_BLOCKS
 declare -a CONTEXT_BLOCKS
 declare -a DEPENDENCY_BLOCKS
 declare -a INPUT_BLOCKS
+declare -a DOCUMENT_INDEX_MAP
 
 # Validate task file exists
 if [[ ! -f "$TASK_PROMPT_FILE" ]]; then
