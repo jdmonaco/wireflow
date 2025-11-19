@@ -997,7 +997,10 @@ execute_api_request() {
             temperature="$TEMPERATURE" \
             system_blocks_file="$temp_system" \
             user_blocks_file="$temp_user" \
-            output_file="$output_file" || exit 1
+            output_file="$output_file" \
+            enable_citations="$ENABLE_CITATIONS" \
+            output_format="$OUTPUT_FORMAT" \
+            doc_map_file="$DOCUMENT_MAP_FILE" || exit 1
     else
         anthropic_execute_single \
             api_key="$ANTHROPIC_API_KEY" \

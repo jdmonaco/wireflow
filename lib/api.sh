@@ -158,6 +158,9 @@ anthropic_execute_single() {
 #   All arguments are key=value pairs (same as anthropic_execute_single):
 #   api_key, model, max_tokens, temperature
 #   system_blocks_file, user_blocks_file, output_file
+#   enable_citations=...     - "true" or "false" (optional, default: false)
+#   output_format=...        - Output format for citation formatting (optional, default: md)
+#   doc_map_file=...         - Path to document index map JSON file (optional)
 #
 # Returns:
 #   0 - Success (response written to output_file)
@@ -165,6 +168,7 @@ anthropic_execute_single() {
 #
 # Side effects:
 #   Writes to output_file
+#   Writes citations.md if citations exist
 #   Outputs streaming text to stdout in real-time
 #   Outputs progress messages
 anthropic_execute_stream() {
@@ -175,6 +179,10 @@ anthropic_execute_stream() {
         params["$key"]="$value"
         shift
     done
+
+    local enable_citations="${params[enable_citations]:-false}"
+    local output_format="${params[output_format]:-md}"
+    local doc_map_file="${params[doc_map_file]:-}"
 
     # Read JSON from files
     local system_blocks
@@ -219,6 +227,13 @@ anthropic_execute_stream() {
     local error_flag="$(mktemp)"
     rm "$error_flag"  # Remove, we'll create it if error occurs
 
+    # For citations: track events in temp file
+    local events_file=""
+    if [[ "$enable_citations" == "true" ]]; then
+        events_file=$(mktemp)
+        > "$events_file"
+    fi
+
     # Stream response and parse SSE events
     curl -Ns https://api.anthropic.com/v1/messages \
         -H "content-type: application/json" \
@@ -235,17 +250,28 @@ anthropic_execute_stream() {
             # Skip ping events
             [[ "$json_data" == "[DONE]" ]] && continue
 
+            # Save event for citations post-processing if enabled
+            if [[ "$enable_citations" == "true" && -n "$events_file" ]]; then
+                echo "$json_data" >> "$events_file"
+            fi
+
             # Extract event type
             event_type=$(echo "$json_data" | jq -r '.type // empty')
 
             case "$event_type" in
                 "content_block_delta")
-                    # Extract and print text incrementally
-                    delta_text=$(echo "$json_data" | jq -r '.delta.text // empty')
-                    if [[ -n "$delta_text" ]]; then
-                        printf '%s' "$delta_text"
-                        printf '%s' "$delta_text" >> "${params[output_file]}"
+                    # Check delta type
+                    delta_type=$(echo "$json_data" | jq -r '.delta.type // empty')
+
+                    if [[ "$delta_type" == "text_delta" ]]; then
+                        # Extract and print text incrementally
+                        delta_text=$(echo "$json_data" | jq -r '.delta.text // empty')
+                        if [[ -n "$delta_text" ]]; then
+                            printf '%s' "$delta_text"
+                            printf '%s' "$delta_text" >> "${params[output_file]}"
+                        fi
                     fi
+                    # Note: citations_delta events are logged but not processed inline
                     ;;
                 "message_stop")
                     printf '\n'
@@ -269,6 +295,87 @@ anthropic_execute_stream() {
 
     echo ""
     echo "---"
+
+    # Post-process citations if enabled
+    if [[ "$enable_citations" == "true" && -f "$events_file" ]]; then
+        echo ""
+        echo "Processing citations..."
+
+        # Reconstruct response content array from streaming events
+        local content_blocks="[]"
+        local current_block_index=-1
+        local current_block_text=""
+        local current_block_citations="[]"
+
+        while IFS= read -r event; do
+            local event_type
+            event_type=$(echo "$event" | jq -r '.type // empty')
+
+            case "$event_type" in
+                "content_block_start")
+                    # Start new content block
+                    current_block_index=$(echo "$event" | jq -r '.index')
+                    current_block_text=""
+                    current_block_citations="[]"
+                    ;;
+                "content_block_delta")
+                    local delta_type
+                    delta_type=$(echo "$event" | jq -r '.delta.type // empty')
+
+                    if [[ "$delta_type" == "text_delta" ]]; then
+                        # Accumulate text
+                        local text_delta
+                        text_delta=$(echo "$event" | jq -r '.delta.text // empty')
+                        current_block_text+="$text_delta"
+                    elif [[ "$delta_type" == "citations_delta" ]]; then
+                        # Accumulate citation
+                        local citation
+                        citation=$(echo "$event" | jq '.delta.citation')
+                        current_block_citations=$(echo "$current_block_citations" | jq ". += [$citation]")
+                    fi
+                    ;;
+                "content_block_stop")
+                    # Finalize current block
+                    local block
+                    if [[ $(echo "$current_block_citations" | jq 'length') -gt 0 ]]; then
+                        # Block has citations
+                        block=$(jq -n \
+                            --arg text "$current_block_text" \
+                            --argjson citations "$current_block_citations" \
+                            '{type: "text", text: $text, citations: $citations}')
+                    else
+                        # Block without citations
+                        block=$(jq -n \
+                            --arg text "$current_block_text" \
+                            '{type: "text", text: $text}')
+                    fi
+                    content_blocks=$(echo "$content_blocks" | jq ". += [$block]")
+                    ;;
+            esac
+        done < "$events_file"
+
+        # Build mock response structure
+        local mock_response
+        mock_response=$(jq -n --argjson content "$content_blocks" '{content: $content}')
+
+        # Parse and format citations
+        local parsed
+        parsed=$(parse_citations_response "$mock_response" "$doc_map_file")
+
+        local formatted
+        formatted=$(format_citations_output "$parsed" "$output_format")
+
+        # Overwrite output file with formatted version
+        echo "$formatted" > "${params[output_file]}"
+
+        # Write citations sidecar
+        write_citations_sidecar "$parsed" "$doc_map_file" "${params[output_file]}"
+
+        # Cleanup events file
+        rm -f "$events_file"
+
+        echo "Citations processed successfully"
+    fi
 
     return 0
 }
