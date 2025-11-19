@@ -33,6 +33,7 @@ extract_config() {
         echo "TEMPERATURE=${TEMPERATURE:-}"
         echo "MAX_TOKENS=${MAX_TOKENS:-}"
         echo "OUTPUT_FORMAT=${OUTPUT_FORMAT:-}"
+        echo "ENABLE_CITATIONS=${ENABLE_CITATIONS:-}"
         # Handle arrays - output space-separated
         echo "SYSTEM_PROMPTS=${SYSTEM_PROMPTS[*]:-}"
         echo "INPUT_PATTERN=${INPUT_PATTERN:-}"
@@ -161,6 +162,11 @@ MAX_TOKENS=4096
 # Options: md, txt, json, html, etc.
 OUTPUT_FORMAT="md"
 
+# Enable citations for document analysis
+# Default: false
+# When true, context and input documents use citations.enabled=true
+ENABLE_CITATIONS=false
+
 # =============================================================================
 # System Prompts
 # =============================================================================
@@ -288,11 +294,13 @@ load_global_config() {
     local FALLBACK_TEMPERATURE=1.0
     local FALLBACK_MAX_TOKENS=4096
     local FALLBACK_OUTPUT_FORMAT="md"
+    local FALLBACK_ENABLE_CITATIONS=false
 
     MODEL="$FALLBACK_MODEL"
     TEMPERATURE="$FALLBACK_TEMPERATURE"
     MAX_TOKENS="$FALLBACK_MAX_TOKENS"
     OUTPUT_FORMAT="$FALLBACK_OUTPUT_FORMAT"
+    ENABLE_CITATIONS="$FALLBACK_ENABLE_CITATIONS"
     SYSTEM_PROMPTS=(base)
 
     # Try to load global config if it exists
@@ -304,6 +312,7 @@ load_global_config() {
                 TEMPERATURE) [[ -n "$value" ]] && TEMPERATURE="$value" ;;
                 MAX_TOKENS) [[ -n "$value" ]] && MAX_TOKENS="$value" ;;
                 OUTPUT_FORMAT) [[ -n "$value" ]] && OUTPUT_FORMAT="$value" ;;
+                ENABLE_CITATIONS) [[ -n "$value" ]] && ENABLE_CITATIONS="$value" ;;
                 SYSTEM_PROMPTS) [[ -n "$value" ]] && SYSTEM_PROMPTS=($value) ;;
                 ANTHROPIC_API_KEY)
                     # Only use config value if env var not already set

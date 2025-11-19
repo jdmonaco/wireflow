@@ -290,6 +290,7 @@ if [[ -f "$PROJECT_ROOT/.workflow/config" ]]; then
             TEMPERATURE) [[ -n "$value" ]] && TEMPERATURE="$value" && CONFIG_SOURCE_MAP[TEMPERATURE]="$PROJECT_ROOT" ;;
             MAX_TOKENS) [[ -n "$value" ]] && MAX_TOKENS="$value" && CONFIG_SOURCE_MAP[MAX_TOKENS]="$PROJECT_ROOT" ;;
             OUTPUT_FORMAT) [[ -n "$value" ]] && OUTPUT_FORMAT="$value" && CONFIG_SOURCE_MAP[OUTPUT_FORMAT]="$PROJECT_ROOT" ;;
+            ENABLE_CITATIONS) [[ -n "$value" ]] && ENABLE_CITATIONS="$value" && CONFIG_SOURCE_MAP[ENABLE_CITATIONS]="$PROJECT_ROOT" ;;
             SYSTEM_PROMPTS) [[ -n "$value" ]] && SYSTEM_PROMPTS=($value) && CONFIG_SOURCE_MAP[SYSTEM_PROMPTS]="$PROJECT_ROOT" ;;
         esac
     done < <(extract_config "$PROJECT_ROOT/.workflow/config")
@@ -303,6 +304,7 @@ if [[ -f "$WORKFLOW_DIR/config" ]]; then
             TEMPERATURE) [[ -n "$value" ]] && TEMPERATURE="$value" && CONFIG_SOURCE_MAP[TEMPERATURE]="workflow" ;;
             MAX_TOKENS) [[ -n "$value" ]] && MAX_TOKENS="$value" && CONFIG_SOURCE_MAP[MAX_TOKENS]="workflow" ;;
             OUTPUT_FORMAT) [[ -n "$value" ]] && OUTPUT_FORMAT="$value" && CONFIG_SOURCE_MAP[OUTPUT_FORMAT]="workflow" ;;
+            ENABLE_CITATIONS) [[ -n "$value" ]] && ENABLE_CITATIONS="$value" && CONFIG_SOURCE_MAP[ENABLE_CITATIONS]="workflow" ;;
             SYSTEM_PROMPTS) [[ -n "$value" ]] && SYSTEM_PROMPTS=($value) && CONFIG_SOURCE_MAP[SYSTEM_PROMPTS]="workflow" ;;
             INPUT_PATTERN) [[ -n "$value" ]] && INPUT_PATTERN="$value" ;;
             INPUT_FILES) [[ -n "$value" ]] && INPUT_FILES=($value) ;;
@@ -385,6 +387,14 @@ while [[ $# -gt 0 ]]; do
         --output-format|--format)
             OUTPUT_FORMAT="$2"
             shift 2
+            ;;
+        --enable-citations)
+            ENABLE_CITATIONS=true
+            shift
+            ;;
+        --disable-citations)
+            ENABLE_CITATIONS=false
+            shift
             ;;
         *)
             echo "Error: Unknown option: $1"

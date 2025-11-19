@@ -93,6 +93,14 @@ while [[ $# -gt 0 ]]; do
             OUTPUT_FORMAT="$2"
             shift 2
             ;;
+        --enable-citations)
+            ENABLE_CITATIONS=true
+            shift
+            ;;
+        --disable-citations)
+            ENABLE_CITATIONS=false
+            shift
+            ;;
         -*)
             echo "Error: Unknown option: $1"
             echo "Use --help for usage information"
@@ -147,6 +155,7 @@ if [[ -n "$PROJECT_ROOT" ]]; then
                 TEMPERATURE) [[ -n "$value" ]] && TEMPERATURE="$value" ;;
                 MAX_TOKENS) [[ -n "$value" ]] && MAX_TOKENS="$value" ;;
                 OUTPUT_FORMAT) [[ -n "$value" ]] && OUTPUT_FORMAT="$value" ;;
+                ENABLE_CITATIONS) [[ -n "$value" ]] && ENABLE_CITATIONS="$value" ;;
                 SYSTEM_PROMPTS) [[ -n "$value" ]] && SYSTEM_PROMPTS=($value) ;;
             esac
         done < <(extract_config "$PROJECT_ROOT/.workflow/config")

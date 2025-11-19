@@ -637,9 +637,9 @@ aggregate_context() {
             # Add to XML file for debugging
             contextcat "$resolved_file" >> "$context_file"
 
-            # Build JSON content block
+            # Build JSON content block (document type with citations support)
             local block
-            block=$(build_text_content_block "$resolved_file" "context")
+            block=$(build_content_block "$resolved_file" "context" "$ENABLE_CITATIONS")
             CONTEXT_BLOCKS+=("$block")
         done
     fi
@@ -656,9 +656,9 @@ aggregate_context() {
                 # Add to XML file
                 contextcat "$abs_file" >> "$context_file"
 
-                # Build JSON content block
+                # Build JSON content block (document type with citations support)
                 local block
-                block=$(build_text_content_block "$abs_file" "context")
+                block=$(build_content_block "$abs_file" "context" "$ENABLE_CITATIONS")
                 CONTEXT_BLOCKS+=("$block")
             fi
         done
@@ -676,9 +676,9 @@ aggregate_context() {
             # Add to XML file
             contextcat "$file" >> "$context_file"
 
-            # Build JSON content block
+            # Build JSON content block (document type with citations support)
             local block
-            block=$(build_text_content_block "$file" "context")
+            block=$(build_content_block "$file" "context" "$ENABLE_CITATIONS")
             CONTEXT_BLOCKS+=("$block")
         done
     fi
@@ -694,9 +694,9 @@ aggregate_context() {
                 # Add to XML file
                 contextcat "$file" >> "$context_file"
 
-                # Build JSON content block
+                # Build JSON content block (document type with citations support)
                 local block
-                block=$(build_text_content_block "$file" "context")
+                block=$(build_content_block "$file" "context" "$ENABLE_CITATIONS")
                 CONTEXT_BLOCKS+=("$block")
             fi
         done
@@ -730,9 +730,9 @@ aggregate_context() {
             # Add to XML file
             contextcat "$dep_file" >> "$context_file"
 
-            # Build JSON content block
+            # Build JSON content block (text type, no citations for dependencies)
             local block
-            block=$(build_text_content_block "$dep_file" "dependency" "workflow" "$dep")
+            block=$(build_content_block "$dep_file" "dependency" "false" "workflow" "$dep")
             DEPENDENCY_BLOCKS+=("$block")
         done
 
@@ -761,9 +761,9 @@ aggregate_context() {
             # Add to XML file for debugging
             documentcat "$resolved_file" >> "$input_file"
 
-            # Build JSON content block
+            # Build JSON content block (document type with citations support)
             local block
-            block=$(build_text_content_block "$resolved_file" "input")
+            block=$(build_content_block "$resolved_file" "input" "$ENABLE_CITATIONS")
             INPUT_BLOCKS+=("$block")
         done
     fi
@@ -780,9 +780,9 @@ aggregate_context() {
                 # Add to XML file
                 documentcat "$abs_file" >> "$input_file"
 
-                # Build JSON content block
+                # Build JSON content block (document type with citations support)
                 local block
-                block=$(build_text_content_block "$abs_file" "input")
+                block=$(build_content_block "$abs_file" "input" "$ENABLE_CITATIONS")
                 INPUT_BLOCKS+=("$block")
             fi
         done
@@ -800,9 +800,9 @@ aggregate_context() {
             # Add to XML file
             documentcat "$file" >> "$input_file"
 
-            # Build JSON content block
+            # Build JSON content block (document type with citations support)
             local block
-            block=$(build_text_content_block "$file" "input")
+            block=$(build_content_block "$file" "input" "$ENABLE_CITATIONS")
             INPUT_BLOCKS+=("$block")
         done
     fi
@@ -818,9 +818,9 @@ aggregate_context() {
                 # Add to XML file
                 documentcat "$file" >> "$input_file"
 
-                # Build JSON content block
+                # Build JSON content block (document type with citations support)
                 local block
-                block=$(build_text_content_block "$file" "input")
+                block=$(build_content_block "$file" "input" "$ENABLE_CITATIONS")
                 INPUT_BLOCKS+=("$block")
             fi
         done

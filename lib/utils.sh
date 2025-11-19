@@ -294,6 +294,103 @@ escape_json() {
 }
 
 # =============================================================================
+# Title Extraction (for Citations)
+# =============================================================================
+
+# Convert filename to sentence-case title
+# Arguments:
+#   $1 - File path
+# Returns:
+#   Title string (e.g., "my-document.md" → "My Document")
+filename_to_title() {
+    local filepath="$1"
+    local filename
+    local title
+
+    # Get basename and strip extension
+    filename=$(basename "$filepath")
+    title="${filename%.*}"
+
+    # Replace dashes and underscores with spaces
+    title="${title//-/ }"
+    title="${title//_/ }"
+
+    # Capitalize each word (sentence case)
+    title=$(echo "$title" | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) tolower(substr($i,2))}1')
+
+    echo "$title"
+}
+
+# Extract title from file using multiple strategies
+# Priority: YAML frontmatter → Markdown heading → filename
+# Arguments:
+#   $1 - File path
+# Returns:
+#   Title string
+extract_title_from_file() {
+    local filepath="$1"
+
+    if [[ ! -f "$filepath" ]]; then
+        echo "Untitled"
+        return 1
+    fi
+
+    # Check if file is Markdown
+    if [[ "$filepath" =~ \.(md|markdown)$ ]]; then
+        # Strategy 1: YAML frontmatter
+        local in_frontmatter=false
+        local title_from_frontmatter=""
+
+        while IFS= read -r line; do
+            # Check for frontmatter start/end
+            if [[ "$line" == "---" ]]; then
+                if [[ "$in_frontmatter" == false ]]; then
+                    in_frontmatter=true
+                    continue
+                else
+                    # End of frontmatter
+                    break
+                fi
+            fi
+
+            # Extract title key from frontmatter
+            if [[ "$in_frontmatter" == true && "$line" =~ ^title:[[:space:]]* ]]; then
+                title_from_frontmatter="${line#title:}"
+                title_from_frontmatter="${title_from_frontmatter#"${title_from_frontmatter%%[![:space:]]*}"}"  # ltrim
+                title_from_frontmatter="${title_from_frontmatter%"${title_from_frontmatter##*[![:space:]]}"}"  # rtrim
+                # Remove quotes if present
+                title_from_frontmatter="${title_from_frontmatter#\"}"
+                title_from_frontmatter="${title_from_frontmatter%\"}"
+                title_from_frontmatter="${title_from_frontmatter#\'}"
+                title_from_frontmatter="${title_from_frontmatter%\'}"
+                break
+            fi
+        done < "$filepath"
+
+        if [[ -n "$title_from_frontmatter" ]]; then
+            echo "$title_from_frontmatter"
+            return 0
+        fi
+
+        # Strategy 2: First H1 or H2 heading
+        local heading
+        heading=$(grep -m 1 -E '^##? ' "$filepath" 2>/dev/null)
+        if [[ -n "$heading" ]]; then
+            # Strip leading # and whitespace
+            heading="${heading#\#}"
+            heading="${heading#\#}"
+            heading="${heading#"${heading%%[![:space:]]*}"}"  # ltrim
+            heading="${heading%"${heading##*[![:space:]]}"}"  # rtrim
+            echo "$heading"
+            return 0
+        fi
+    fi
+
+    # Strategy 3: Filename fallback
+    filename_to_title "$filepath"
+}
+
+# =============================================================================
 # Content Block Builders (for Anthropic Messages API)
 # =============================================================================
 
@@ -324,19 +421,23 @@ detect_file_type() {
     esac
 }
 
-# Build a text content block from a file
+# Build a content block from a file (document or text type)
+# Context and input files use "document" type (for citations support)
+# Dependencies and other blocks use "text" type
 # Arguments:
 #   $1 - File path (required)
-#   $2 - Type string: "context", "dependency", "input", or empty (optional)
-#   $3 - Additional metadata key (optional, e.g., "workflow")
-#   $4 - Additional metadata value (optional)
+#   $2 - Block category: "context", "dependency", "input", or empty
+#   $3 - Enable citations flag: "true" or "false" (for document blocks)
+#   $4 - Additional metadata key (optional, e.g., "workflow")
+#   $5 - Additional metadata value (optional)
 # Returns:
-#   JSON content block object with metadata embedded as XML in text
-build_text_content_block() {
+#   JSON content block object (document or text type)
+build_content_block() {
     local file="$1"
-    local block_type="${2:-}"
-    local meta_key="${3:-}"
-    local meta_value="${4:-}"
+    local block_category="${2:-}"
+    local enable_citations="${3:-false}"
+    local meta_key="${4:-}"
+    local meta_value="${5:-}"
 
     if [[ ! -f "$file" ]]; then
         echo "{}" >&2
@@ -351,30 +452,67 @@ build_text_content_block() {
     local content
     content=$(cat "$file")
 
-    # Build metadata XML header
-    local metadata_xml=""
-    if [[ -n "$block_type" && -n "$meta_key" && -n "$meta_value" ]]; then
-        # Has type and additional metadata
-        metadata_xml="<metadata type=\"$block_type\" $meta_key=\"$meta_value\" source=\"$abs_path\"></metadata>\n\n"
-    elif [[ -n "$block_type" ]]; then
-        # Has type only
-        metadata_xml="<metadata type=\"$block_type\" source=\"$abs_path\"></metadata>\n\n"
-    else
-        # No type, just source
-        metadata_xml="<metadata source=\"$abs_path\"></metadata>\n\n"
+    # Extract title for document blocks
+    local title
+    title=$(extract_title_from_file "$file")
+
+    # Determine if this should be a document block
+    # Context and input files are always document type (for citations support)
+    # Dependencies and system/task remain text type
+    local use_document_type=false
+    if [[ "$block_category" == "context" || "$block_category" == "input" ]]; then
+        use_document_type=true
     fi
 
-    # Combine metadata XML header with content
-    local full_text="${metadata_xml}${content}"
+    if [[ "$use_document_type" == true ]]; then
+        # Build "document" type block with citations support
+        # Use "context" field for metadata (optional, for debugging)
+        local context_metadata=""
+        if [[ -n "$meta_key" && -n "$meta_value" ]]; then
+            context_metadata="<metadata type=\"$block_category\" $meta_key=\"$meta_value\" source=\"$abs_path\"></metadata>"
+        else
+            context_metadata="<metadata type=\"$block_category\" source=\"$abs_path\"></metadata>"
+        fi
 
-    # Build JSON block with just type and text (no separate metadata field)
-    jq -n \
-        --arg type "text" \
-        --arg text "$full_text" \
-        '{
-            type: $type,
-            text: $text
-        }'
+        jq -n \
+            --arg type "document" \
+            --arg source_type "text" \
+            --arg media_type "text/plain" \
+            --arg data "$content" \
+            --arg title "$title" \
+            --arg context "$context_metadata" \
+            --argjson enabled "$enable_citations" \
+            '{
+                type: $type,
+                source: {
+                    type: $source_type,
+                    media_type: $media_type,
+                    data: $data
+                },
+                title: $title,
+                context: $context,
+                citations: {enabled: $enabled}
+            }'
+    else
+        # Build "text" type block (for dependencies, system, task)
+        # Embed metadata as XML in text content
+        local metadata_xml=""
+        if [[ -n "$block_category" && -n "$meta_key" && -n "$meta_value" ]]; then
+            metadata_xml="<metadata type=\"$block_category\" $meta_key=\"$meta_value\" source=\"$abs_path\"></metadata>\n\n"
+        elif [[ -n "$block_category" ]]; then
+            metadata_xml="<metadata type=\"$block_category\" source=\"$abs_path\"></metadata>\n\n"
+        fi
+
+        local full_text="${metadata_xml}${content}"
+
+        jq -n \
+            --arg type "text" \
+            --arg text "$full_text" \
+            '{
+                type: $type,
+                text: $text
+            }'
+    fi
 }
 
 # Build a document content block (placeholder for future PDF support)
