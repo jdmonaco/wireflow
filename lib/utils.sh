@@ -46,82 +46,6 @@ sanitize() {
     echo "$sanitized"
 }
 
-# Document aggregation with metadata for INPUT files
-# Primary documents to be analyzed or transformed
-# Outputs XML structure with document index and source path
-documentcat() {
-    # Input files are required
-    if [ $# -eq 0 ]; then
-        echo "Usage: documentcat file1 [file2 ...]" >&2
-        return 1
-    fi
-
-    local index=1
-    for file in "$@"; do
-        if [[ -f "$file" ]]; then
-            # Resolve to absolute path
-            local abs_path
-            abs_path=$(cd "$(dirname "$file")" && pwd)/$(basename "$file")
-
-            # Document with index and metadata
-            printf "  <document index=\"%d\">\n" "$index"
-            printf "    <source>%s</source>\n" "$abs_path"
-            printf "    <document_content>\n"
-
-            # Add file contents (no indentation)
-            cat "$file"
-
-            # Ensure newline before closing tag
-            [[ -n $(tail -c 1 "$file" 2>/dev/null) ]] && printf "\n"
-
-            printf "    </document_content>\n"
-            printf "  </document>\n"
-            printf "\n"
-
-            ((index++))
-        fi
-    done
-}
-
-# Context aggregation with metadata for CONTEXT files
-# Supporting information and background
-# Outputs XML structure with source path
-contextcat() {
-    # Input files are required
-    if [ $# -eq 0 ]; then
-        echo "Usage: contextcat file1 [file2 ...]" >&2
-        return 1
-    fi
-
-    for file in "$@"; do
-        if [[ -f "$file" ]]; then
-            # Resolve to absolute path
-            local abs_path
-            abs_path=$(cd "$(dirname "$file")" && pwd)/$(basename "$file")
-
-            # Context file with metadata
-            printf "  <context-file>\n"
-            printf "    <source>%s</source>\n" "$abs_path"
-            printf "    <context_content>\n"
-
-            # Add file contents (no indentation)
-            cat "$file"
-
-            # Ensure newline before closing tag
-            [[ -n $(tail -c 1 "$file" 2>/dev/null) ]] && printf "\n"
-
-            printf "    </context_content>\n"
-            printf "  </context-file>\n"
-            printf "\n"
-        fi
-    done
-}
-
-# Legacy function for backward compatibility (uses contextcat)
-filecat() {
-    contextcat "$@"
-}
-
 # =============================================================================
 # Project Root Discovery
 # =============================================================================
@@ -549,4 +473,53 @@ build_document_content_block() {
             metadata: ($metadata + {source: $source}),
             error: "Document support not yet implemented"
         }'
+}
+
+# =============================================================================
+# JSON to XML Conversion (Optional Post-Processing)
+# =============================================================================
+
+# Convert JSON files to XML using yq (optional)
+# Creates human-readable XML files alongside JSON for inspection/debugging
+# Arguments:
+#   $1 - workflow_dir: Directory containing JSON files
+# Returns:
+#   0 if conversion succeeded or yq unavailable (not an error)
+#   1 if conversion failed (should not happen, silently ignored)
+# Side effects:
+#   Creates .xml files alongside .json files if yq available
+# Note:
+#   JSON files are canonical, XML files are convenience views only
+convert_json_to_xml() {
+    local workflow_dir="$1"
+
+    # Check if yq is available
+    if ! command -v yq >/dev/null 2>&1; then
+        return 0  # Not an error, just skip conversion
+    fi
+
+    # Silently convert files (don't announce unless debugging)
+    local files=(
+        "system-blocks"
+        "user-blocks"
+        "request"
+        "document-map"
+    )
+
+    for base in "${files[@]}"; do
+        local json_file="$workflow_dir/${base}.json"
+        local xml_file="$workflow_dir/${base}.xml"
+
+        if [[ -f "$json_file" ]]; then
+            # Convert with yq (suppress errors, just skip if fails)
+            if yq -p json -o xml "$json_file" > "$xml_file" 2>/dev/null; then
+                : # Success, file created
+            else
+                # Conversion failed, remove partial file
+                rm -f "$xml_file"
+            fi
+        fi
+    done
+
+    return 0
 }

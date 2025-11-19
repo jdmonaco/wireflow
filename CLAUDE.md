@@ -194,7 +194,7 @@ aggregate_nested_project_descriptions() {
 
 ### System Prompt Composition
 
-**Dual-track architecture:** Builds both XML text files (for debugging) and JSON content blocks (for API).
+**JSON-first architecture:** Builds JSON content blocks only. XML files optionally created via `yq` conversion for human readability.
 
 **Build process (every run):**
 
@@ -202,30 +202,11 @@ aggregate_nested_project_descriptions() {
 2. Concatenate in order specified by `SYSTEM_PROMPTS` array
 3. Create JSON content block with `cache_control: {type: "ephemeral"}`
 4. Add to `SYSTEM_BLOCKS` array
-5. Write XML version to `.workflow/prompts/system.txt` for debugging
+5. Write concatenated prompts to `.workflow/prompts/system.txt` for caching
 6. Add project-description block (if exists) with cache_control
 7. Add current-date block (without cache_control - intentionally volatile)
-8. Use cached XML version as fallback if rebuild fails
 
-**XML structure (for debugging):**
-
-```xml
-<system>
-  <system-prompts>
-    [Concatenated prompt files from SYSTEM_PROMPTS array]
-  </system-prompts>
-
-  <project-description>
-    [Nested project descriptions if project.txt exists]
-  </project-description>
-
-  <current-date>
-    [UTC date in YYYY-MM-DD format]
-  </current-date>
-</system>
-```
-
-**JSON content blocks (for API):**
+**JSON content blocks (canonical):**
 
 ```json
 [
@@ -250,31 +231,13 @@ aggregate_nested_project_descriptions() {
 
 **Date format change:** Changed from datetime to date-only to prevent minute-by-minute cache invalidation.
 
+**Optional XML conversion:** After execution, `convert_json_to_xml()` creates XML files (system-blocks.xml, etc.) if `yq` is available. These are convenience views only; JSON files are canonical.
+
 ### User Prompt Composition
 
-**Dual-track architecture:** Builds both XML text files (for debugging) and JSON content blocks (for API).
+**JSON-first architecture:** Builds JSON content blocks only. XML files optionally created via `yq` conversion for human readability.
 
-**XML structure (for debugging):**
-
-```xml
-<user>
-  <documents>
-    [Input documents from INPUT_PATTERN and INPUT_FILES]
-    [Each wrapped in <document index="N"> with <source> and <document_content>]
-  </documents>
-
-  <context>
-    [Context files from CONTEXT_PATTERN, CONTEXT_FILES, and DEPENDS_ON]
-    [Each wrapped in <context-file> with <source> and <context_content>]
-  </context>
-
-  <task>
-    [Task content from task.txt or inline specification]
-  </task>
-</user>
-```
-
-**JSON content blocks (for API):**
+**JSON content blocks (canonical):**
 
 Each file becomes its own content block in the order: context → dependencies → input → task
 
@@ -311,11 +274,10 @@ Each file becomes its own content block in the order: context → dependencies �
 
 **Metadata embedding:** Each file's metadata (type, source, workflow name) is embedded as XML tags at the start of the text content, not as separate JSON fields (Anthropic API doesn't accept extra fields).
 
-**Section rules:**
-- `<documents>` XML section only appears if INPUT_* sources are configured
-- `<context>` XML section only appears if CONTEXT_* or DEPENDS_ON sources are configured
-- `<task>` section always present
-- Content blocks are created for all files regardless of XML sections
+**Aggregation rules:**
+- Content blocks created for all configured sources
+- Empty arrays if no sources configured
+- Task block always present
 
 ### API Interaction
 
@@ -550,15 +512,13 @@ fi
 **Utility functions:**
 
 - `sanitize()` - Filename to XML tag conversion
-- `documentcat()` - Wraps INPUT documents with `<document index="N">` tags and metadata
-- `contextcat()` - Wraps CONTEXT files with `<context-file>` tags and metadata
-- `filecat()` - Legacy function (uses contextcat for backward compatibility)
 - `find_project_root()` - Walk up directory tree for `.workflow/`
 - `list_workflows()` - List workflow directories
 - `escape_json()` - JSON string escaping for API payloads
 - `build_text_content_block()` - Creates JSON content block from file with embedded XML metadata
 - `build_document_content_block()` - Placeholder for future PDF support
 - `detect_file_type()` - Detects text vs document/PDF files
+- `convert_json_to_xml()` - Optional post-processing to create XML files via yq
 
 **Project discovery:**
 
@@ -606,44 +566,44 @@ Eliminates duplication between run mode (workflow.sh) and task mode (lib/task.sh
 
 **Functions:**
 
-- `build_system_prompt()` - Builds both XML and JSON content blocks for system prompts
+- `build_system_prompt()` - Builds JSON content blocks for system prompts
   - Concatenates prompt files from SYSTEM_PROMPTS array
   - Creates JSON block with cache_control for system prompts
   - Populates SYSTEM_BLOCKS array
-  - Writes XML version to `.workflow/prompts/system.txt` for debugging
+  - Writes concatenated text to `.workflow/prompts/system.txt` for caching
 - `build_project_description_block()` - Creates cached JSON block for project descriptions
 - `build_current_date_block()` - Creates uncached JSON block for current date
 - `estimate_tokens()` - Dual token estimation (heuristic + API)
+  - No parameters (reads from JSON arrays in memory)
   - Heuristic character-based estimation for quick feedback
   - Calls `anthropic_count_tokens()` for exact API count (when API key available)
   - Displays comparison between heuristic and actual counts
-- `handle_dry_run_mode()` - Saves prompts and JSON payloads for inspection
-  - Saves 4 files: XML system, XML user, JSON request, JSON blocks breakdown
+- `handle_dry_run_mode()` - Saves JSON payloads for inspection
+  - Saves 2 files: JSON request, JSON blocks breakdown
   - Opens in editor for inspection
   - Exits without making API call
-- `build_prompts()` - Builds both XML and JSON structures
+- `build_prompts(system_file, project_root, task_source)` - Builds JSON structures
   - Calls block-building functions to populate SYSTEM_BLOCKS
   - Creates TASK_BLOCK for user message
-  - Builds hierarchical XML for debugging: `<system>` with `<system-prompts>`, `<project-description>`, `<current-date>`
-  - Builds hierarchical XML for debugging: `<user>` with `<documents>`, `<context>`, `<task>`
-- `aggregate_context(mode, input_file, context_file, project_root)` - Builds content blocks and XML
+  - No XML construction (JSON-first architecture)
+- `aggregate_context(mode, project_root)` - Builds JSON content blocks
   - Order: context → dependencies → input (stable → volatile)
   - Within each: FILES → PATTERN → CLI (stable → volatile)
   - Each file becomes a JSON content block in CONTEXT_BLOCKS, DEPENDENCY_BLOCKS, or INPUT_BLOCKS
-  - Also writes XML to input_file and context_file for debugging
   - Adds cache_control at end of each section (4 total breakpoints)
   - Embeds metadata as XML tags in block text content
-- `execute_api_request(mode)` - Unified API execution
+  - Saves document-map.json for citations processing
+- `execute_api_request(mode, output_file, output_file_path)` - Unified API execution
   - Assembles content blocks arrays (SYSTEM_BLOCKS + CONTEXT_BLOCKS + DEPENDENCY_BLOCKS + INPUT_BLOCKS + TASK_BLOCK)
   - Writes JSON arrays to temporary files
   - Passes files to API functions (avoids bash parameter parsing issues)
-  - Run mode: backs up existing output before API call
+  - Run mode: backs up existing output before API call, saves JSON files after completion
   - Task mode: displays to stdout in non-stream mode if no explicit file
   - Cleans up temporary files
 
 **Design rationale:**
 
-The refactoring eliminated ~352 lines of duplication while preserving exact behavior. An orchestrator function was considered but rejected to maintain clarity and flexibility. The explicit execution sequence in workflow.sh and lib/task.sh makes the flow easier to understand and modify.
+JSON-first architecture eliminates dual-track XML/JSON building, reducing complexity by ~150 lines. XML files optionally created via yq conversion for human readability.
 
 ## Development Workflows
 

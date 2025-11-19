@@ -127,9 +127,9 @@ Save final system and user prompts to files for inspection:
 workflow run 01-analysis --dry-run
 ```
 
-This saves prompts to:
-- `.workflow/01-analysis/dry-run-system.txt` - Final system prompt
-- `.workflow/01-analysis/dry-run-user.txt` - Final user prompt (context + task)
+This saves API request files to:
+- `.workflow/01-analysis/dry-run-request.json` - Complete API request payload
+- `.workflow/01-analysis/dry-run-blocks.json` - Content blocks breakdown
 
 Then opens both files in your editor for inspection.
 

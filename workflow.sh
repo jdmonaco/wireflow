@@ -475,6 +475,9 @@ execute_api_request "run" "$OUTPUT_FILE" ""
 # Post-Processing
 # =============================================================================
 
+# Convert JSON files to XML (optional, if yq available)
+convert_json_to_xml "$WORKFLOW_DIR"
+
 echo "Response saved to: $OUTPUT_FILE"
 
 # Create/update hardlink in output directory
