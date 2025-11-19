@@ -715,3 +715,54 @@ EOF
     assert_file_exists ".workflow/test-workflow/user-blocks.json"
     assert_file_exists ".workflow/test-workflow/system-blocks.json"
 }
+
+# =============================================================================
+# Vision API Image Support Tests
+# =============================================================================
+
+@test "run: detects image file types correctly" {
+    # Test file type detection for images
+    UTILS_LIB="$(cd "$(dirname "$BATS_TEST_DIRNAME")"; pwd)/lib/utils.sh"
+    source "$UTILS_LIB"
+
+    # Image files should be detected
+    result=$(detect_file_type "test.jpg")
+    [[ "$result" == "image" ]]
+
+    result=$(detect_file_type "test.png")
+    [[ "$result" == "image" ]]
+
+    result=$(detect_file_type "test.gif")
+    [[ "$result" == "image" ]]
+
+    result=$(detect_file_type "test.webp")
+    [[ "$result" == "image" ]]
+
+    # Non-image files should not be detected as images
+    result=$(detect_file_type "test.txt")
+    [[ "$result" == "text" ]]
+
+    result=$(detect_file_type "test.md")
+    [[ "$result" == "text" ]]
+}
+
+@test "run: maps image extensions to media types" {
+    # Test media type mapping
+    UTILS_LIB="$(cd "$(dirname "$BATS_TEST_DIRNAME")"; pwd)/lib/utils.sh"
+    source "$UTILS_LIB"
+
+    result=$(get_image_media_type "test.jpg")
+    [[ "$result" == "image/jpeg" ]]
+
+    result=$(get_image_media_type "test.jpeg")
+    [[ "$result" == "image/jpeg" ]]
+
+    result=$(get_image_media_type "test.png")
+    [[ "$result" == "image/png" ]]
+
+    result=$(get_image_media_type "test.gif")
+    [[ "$result" == "image/gif" ]]
+
+    result=$(get_image_media_type "test.webp")
+    [[ "$result" == "image/webp" ]]
+}
