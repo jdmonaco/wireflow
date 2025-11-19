@@ -141,6 +141,7 @@ CLI_CONTEXT_FILES+=("$file")  # Relative to PWD
 
 - **INPUT documents** (`INPUT_PATTERN`, `INPUT_FILES`): Primary documents to be analyzed or transformed
 - **CONTEXT materials** (`CONTEXT_PATTERN`, `CONTEXT_FILES`, `DEPENDS_ON`): Supporting information and references
+- **IMAGES**: Automatically detected from INPUT/CONTEXT sources (Vision API support)
 
 **Three aggregation methods (applies to both INPUT and CONTEXT):**
 
@@ -148,27 +149,15 @@ CLI_CONTEXT_FILES+=("$file")  # Relative to PWD
 2. **Explicit files:** Array of specific paths
 3. **Workflow dependencies:** Include outputs via hardlinks (CONTEXT only)
 
-**File processing functions:**
+**Automatic image detection:**
 
-```bash
-documentcat() {
-    # For INPUT documents
-    # Sequential indexing: <document index="1">, <document index="2">
-    # Includes absolute source path in <source> tag
-    # Wraps content in <document_content> tags
-}
-
-contextcat() {
-    # For CONTEXT files
-    # No indexing, each file in <context-file> tag
-    # Includes absolute source path in <source> tag
-    # Wraps content in <context_content> tags
-}
-
-filecat() {
-    # Legacy function, uses contextcat() for backward compatibility
-}
-```
+Files with image extensions (jpg, jpeg, png, gif, webp) are automatically processed for Vision API:
+- Validated against 5MB size limit
+- Resized if >1568px on long edge (optimal performance)
+- Cached in `.workflow/<name>/cache/` with preserved paths
+- Base64-encoded for API
+- Added to IMAGE_BLOCKS array (separate from text documents)
+- NOT citable (images don't get document indices)
 
 **Dependency resolution:**
 
@@ -517,8 +506,19 @@ fi
 - `escape_json()` - JSON string escaping for API payloads
 - `build_text_content_block()` - Creates JSON content block from file with embedded XML metadata
 - `build_document_content_block()` - Placeholder for future PDF support
-- `detect_file_type()` - Detects text vs document/PDF files
+- `detect_file_type()` - Detects text vs document/PDF vs image files
 - `convert_json_to_xml()` - Optional post-processing to create pseudo-XML files (custom converter)
+
+**Vision API image functions:**
+
+- `get_image_media_type()` - Map file extension to MIME type (image/jpeg, image/png, etc.)
+- `get_image_dimensions()` - Extract width/height using ImageMagick identify
+- `validate_image_file()` - Check against API limits (5MB, 8000x8000 px)
+- `should_resize_image()` - Check if image exceeds 1568px on long edge
+- `calculate_target_dimensions()` - Compute resize dimensions maintaining aspect ratio
+- `resize_image()` - Resize using ImageMagick with geometry specification
+- `cache_image()` - Cache resized images with path preservation
+- `build_image_content_block()` - Create Vision API image block with base64 encoding
 
 **Project discovery:**
 
@@ -576,6 +576,7 @@ Eliminates duplication between run mode (workflow.sh) and task mode (lib/task.sh
 - `estimate_tokens()` - Dual token estimation (heuristic + API)
   - No parameters (reads from JSON arrays in memory)
   - Heuristic character-based estimation for quick feedback
+  - Image tokens: 1600 per image (conservative estimate for ~1.15 megapixels)
   - Calls `anthropic_count_tokens()` for exact API count (when API key available)
   - Displays comparison between heuristic and actual counts
 - `handle_dry_run_mode()` - Saves JSON payloads for inspection
@@ -586,15 +587,18 @@ Eliminates duplication between run mode (workflow.sh) and task mode (lib/task.sh
   - Calls block-building functions to populate SYSTEM_BLOCKS
   - Creates TASK_BLOCK for user message
   - No XML construction (JSON-first architecture)
-- `aggregate_context(mode, project_root)` - Builds JSON content blocks
-  - Order: context → dependencies → input (stable → volatile)
+- `aggregate_context(mode, project_root, workflow_dir)` - Builds JSON content blocks
+  - Order: context → dependencies → input → images (stable → volatile)
   - Within each: FILES → PATTERN → CLI (stable → volatile)
-  - Each file becomes a JSON content block in CONTEXT_BLOCKS, DEPENDENCY_BLOCKS, or INPUT_BLOCKS
+  - Text files → CONTEXT_BLOCKS, DEPENDENCY_BLOCKS, or INPUT_BLOCKS (citable)
+  - Image files → IMAGE_BLOCKS (Vision API, not citable)
+  - Automatic image processing: validation, resizing, caching, base64 encoding
   - Adds cache_control at end of each section (4 total breakpoints)
   - Embeds metadata as XML tags in block text content
-  - Saves document-map.json for citations processing
+  - Saves document-map.json for citations processing (text files only)
 - `execute_api_request(mode, output_file, output_file_path)` - Unified API execution
-  - Assembles content blocks arrays (SYSTEM_BLOCKS + CONTEXT_BLOCKS + DEPENDENCY_BLOCKS + INPUT_BLOCKS + TASK_BLOCK)
+  - Assembles content blocks arrays (SYSTEM_BLOCKS + CONTEXT_BLOCKS + DEPENDENCY_BLOCKS + INPUT_BLOCKS + IMAGE_BLOCKS + TASK_BLOCK)
+  - Order: text documents → images → task (per Vision API best practices)
   - Writes JSON arrays to temporary files
   - Passes files to API functions (avoids bash parameter parsing issues)
   - Run mode: backs up existing output before API call, saves JSON files after completion
