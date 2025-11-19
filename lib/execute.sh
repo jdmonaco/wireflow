@@ -777,10 +777,15 @@ aggregate_context() {
         local pattern_files
         pattern_files=($(eval "echo $CLI_INPUT_PATTERN"))
 
+        echo "  Found ${#pattern_files[@]} file(s) matching pattern" >&2
+
         for file in "${pattern_files[@]}"; do
             if [[ -f "$file" ]]; then
+                echo "    Checking file: $file (type: $(detect_file_type "$file"))" >&2
                 # Build and track document block
                 build_and_track_document_block "$file" "input" "$ENABLE_CITATIONS" "doc_index" "" "" "$project_root" "$workflow_dir"
+            else
+                echo "    Skipping non-file: $file" >&2
             fi
         done
     fi
