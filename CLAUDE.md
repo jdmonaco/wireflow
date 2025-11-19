@@ -194,7 +194,7 @@ aggregate_nested_project_descriptions() {
 
 ### System Prompt Composition
 
-**JSON-first architecture:** Builds JSON content blocks only. XML files optionally created via `yq` conversion for human readability.
+**JSON-first architecture:** Builds JSON content blocks only. Pseudo-XML files optionally created via custom converter for human readability.
 
 **Build process (every run):**
 
@@ -235,7 +235,7 @@ aggregate_nested_project_descriptions() {
 
 ### User Prompt Composition
 
-**JSON-first architecture:** Builds JSON content blocks only. XML files optionally created via `yq` conversion for human readability.
+**JSON-first architecture:** Builds JSON content blocks only. Pseudo-XML files optionally created via custom converter for human readability.
 
 **JSON content blocks (canonical):**
 
@@ -603,7 +603,7 @@ Eliminates duplication between run mode (workflow.sh) and task mode (lib/task.sh
 
 **Design rationale:**
 
-JSON-first architecture eliminates dual-track XML/JSON building, reducing complexity by ~150 lines. XML files optionally created via yq conversion for human readability.
+JSON-first architecture eliminates dual-track XML/JSON building, reducing complexity by ~150 lines. Pseudo-XML files optionally created via custom converter for human readability.
 
 ## Development Workflows
 
