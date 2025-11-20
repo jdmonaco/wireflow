@@ -99,10 +99,27 @@ CONFIG_EOF
 # =============================================================================
 new_workflow() {
     local workflow_name="$1"
+    shift
+
+    # Parse options
+    local template_task=""
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --task)
+                template_task="$2"
+                shift 2
+                ;;
+            *)
+                echo "Error: Unknown option: $1"
+                show_quick_help_new
+                exit 1
+                ;;
+        esac
+    done
 
     if [[ -z "$workflow_name" ]]; then
         echo "Error: Workflow name required"
-        echo "Usage: workflow new NAME"
+        show_quick_help_new
         exit 1
     fi
 
@@ -124,8 +141,36 @@ new_workflow() {
     # Create workflow directory
     mkdir -p "$WORKFLOW_DIR"
 
-    # Create task file with XML skeleton
-    cat > "$WORKFLOW_DIR/task.txt" <<'TASK_SKELETON_EOF'
+    # Create task file (from template or default skeleton)
+    if [[ -n "$template_task" ]]; then
+        # Load global config to get WORKFLOW_TASK_PREFIX
+        source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
+        load_global_config
+
+        if [[ -z "$WORKFLOW_TASK_PREFIX" || ! -d "$WORKFLOW_TASK_PREFIX" ]]; then
+            echo "Error: WORKFLOW_TASK_PREFIX not configured"
+            echo "Cannot use task template. Creating with default skeleton instead."
+            template_task=""  # Fall through to default
+        else
+            local template_file="$WORKFLOW_TASK_PREFIX/${template_task}.txt"
+            if [[ ! -f "$template_file" ]]; then
+                echo "Error: Task template not found: $template_task"
+                echo "File: $template_file"
+                echo ""
+                echo "Available templates:"
+                list_tasks
+                exit 1
+            fi
+
+            # Copy template to workflow task.txt
+            cp "$template_file" "$WORKFLOW_DIR/task.txt"
+            echo "Created workflow '$workflow_name' from template '$template_task'"
+        fi
+    fi
+
+    # Create default skeleton if no template specified or template failed
+    if [[ -z "$template_task" || ! -f "$WORKFLOW_DIR/task.txt" ]]; then
+        cat > "$WORKFLOW_DIR/task.txt" <<'TASK_SKELETON_EOF'
 <description>
   Brief 1-2 sentence overview of this workflow's purpose
 </description>
@@ -189,7 +234,11 @@ SYSTEM_PROMPTS=()
 OUTPUT_FORMAT=
 WORKFLOW_CONFIG_EOF
 
-    echo "Created workflow: $workflow_name"
+    # Show creation message (if not already shown from template)
+    if [[ -z "$template_task" ]]; then
+        echo "Created workflow: $workflow_name"
+    fi
+
     echo "  $WORKFLOW_DIR/task.txt"
     echo "  $WORKFLOW_DIR/config"
     echo ""
@@ -302,6 +351,145 @@ list_workflows_cmd() {
     fi
 
     echo ""
+}
+
+# =============================================================================
+# Task Template Management Functions
+# =============================================================================
+
+# List available task templates
+list_tasks() {
+    # Load global config to get WORKFLOW_TASK_PREFIX
+    source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
+    load_global_config
+
+    if [[ -z "$WORKFLOW_TASK_PREFIX" || ! -d "$WORKFLOW_TASK_PREFIX" ]]; then
+        echo "No task templates directory configured or found."
+        echo ""
+        echo "Expected location: ~/.config/workflow/tasks/"
+        echo "Set WORKFLOW_TASK_PREFIX in ~/.config/workflow/config"
+        return 1
+    fi
+
+    echo "Available task templates:"
+    echo ""
+
+    # List all .txt files in task directory
+    local task_files=("$WORKFLOW_TASK_PREFIX"/*.txt)
+
+    if [[ ! -e "${task_files[0]}" ]]; then
+        echo "  (no task templates found)"
+        echo ""
+        echo "Location: $WORKFLOW_TASK_PREFIX"
+        return 0
+    fi
+
+    for task_file in "${task_files[@]}"; do
+        local task_name=$(basename "$task_file" .txt)
+        # Extract first <description> tag content if present
+        local description=$(sed -n 's/.*<description>\s*\(.*\)<\/description>.*/\1/p' "$task_file" | head -n1 | sed 's/^[[:space:]]*//')
+
+        # If no description tag, try first non-empty line
+        if [[ -z "$description" ]]; then
+            description=$(grep -v '^[[:space:]]*$' "$task_file" | head -n1 | sed 's/^#\s*//' | sed 's/^[[:space:]]*//')
+        fi
+
+        # Format output
+        printf "  %-15s %s\n" "$task_name" "$description"
+    done
+
+    echo ""
+    echo "Location: $WORKFLOW_TASK_PREFIX"
+    echo ""
+    echo "Usage:"
+    echo "  workflow task ls              # List task templates"
+    echo "  workflow task show <name>     # Preview template in pager"
+    echo "  workflow task edit <name>     # Edit template"
+    echo "  workflow task <name> [opts]   # Execute template"
+}
+
+# Show task template in pager
+show_task() {
+    local task_name="$1"
+
+    if [[ -z "$task_name" ]]; then
+        echo "Error: Task name required"
+        echo "Usage: workflow task show NAME"
+        return 1
+    fi
+
+    # Load global config to get WORKFLOW_TASK_PREFIX
+    source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
+    load_global_config
+
+    if [[ -z "$WORKFLOW_TASK_PREFIX" || ! -d "$WORKFLOW_TASK_PREFIX" ]]; then
+        echo "Error: WORKFLOW_TASK_PREFIX not configured"
+        echo "Set WORKFLOW_TASK_PREFIX in ~/.config/workflow/config"
+        return 1
+    fi
+
+    local task_file="$WORKFLOW_TASK_PREFIX/${task_name}.txt"
+
+    if [[ ! -f "$task_file" ]]; then
+        echo "Error: Task template not found: $task_name"
+        echo "File: $task_file"
+        echo ""
+        echo "Available templates:"
+        list_tasks
+        return 1
+    fi
+
+    # Display in pager
+    echo "Task template: $task_name"
+    echo "Location: $task_file"
+    echo ""
+    echo "═══════════════════════════════════════════════════════════"
+    echo ""
+
+    # Use less if available, otherwise cat
+    if command -v less &> /dev/null; then
+        less "$task_file"
+    else
+        cat "$task_file"
+    fi
+}
+
+# Edit task template in editor
+edit_task() {
+    local task_name="$1"
+
+    if [[ -z "$task_name" ]]; then
+        echo "Error: Task name required"
+        echo "Usage: workflow task edit NAME"
+        return 1
+    fi
+
+    # Load global config to get WORKFLOW_TASK_PREFIX
+    source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
+    load_global_config
+
+    if [[ -z "$WORKFLOW_TASK_PREFIX" || ! -d "$WORKFLOW_TASK_PREFIX" ]]; then
+        echo "Error: WORKFLOW_TASK_PREFIX not configured"
+        echo "Set WORKFLOW_TASK_PREFIX in ~/.config/workflow/config"
+        return 1
+    fi
+
+    local task_file="$WORKFLOW_TASK_PREFIX/${task_name}.txt"
+
+    if [[ ! -f "$task_file" ]]; then
+        echo "Error: Task template not found: $task_name"
+        echo "File: $task_file"
+        echo ""
+        echo "Available templates:"
+        list_tasks
+        return 1
+    fi
+
+    # Source edit.sh for edit_files function
+    source "$(dirname "${BASH_SOURCE[0]}")/edit.sh"
+
+    # Open in editor
+    edit_files "$task_file"
 }
 
 # =============================================================================

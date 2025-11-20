@@ -70,7 +70,7 @@ show_quick_help_init() {
 }
 
 show_quick_help_new() {
-    echo "Usage: $SCRIPT_NAME new <name>"
+    echo "Usage: $SCRIPT_NAME new NAME [--task TEMPLATE]"
     echo "See '$SCRIPT_NAME help new' for complete usage details."
 }
 
