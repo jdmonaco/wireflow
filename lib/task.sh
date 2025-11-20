@@ -183,9 +183,19 @@ if [[ -n "$TASK_NAME" ]]; then
     fi
 
     TASK_FILE="$WORKFLOW_TASK_PREFIX/${TASK_NAME}.txt"
+
+    # If not found in custom location, try default location as fallback
     if [[ ! -f "$TASK_FILE" ]]; then
-        echo "Error: Task file not found: $TASK_FILE"
-        exit 1
+        local default_task_file="$HOME/.config/workflow/tasks/${TASK_NAME}.txt"
+        if [[ -f "$default_task_file" ]]; then
+            TASK_FILE="$default_task_file"
+            echo "Using built-in task template: $TASK_NAME" >&2
+        else
+            echo "Error: Task file not found: ${TASK_NAME}.txt" >&2
+            echo "  Searched: $WORKFLOW_TASK_PREFIX" >&2
+            echo "  Searched: $HOME/.config/workflow/tasks (fallback)" >&2
+            exit 1
+        fi
     fi
 
     TASK_PROMPT=$(<"$TASK_FILE")

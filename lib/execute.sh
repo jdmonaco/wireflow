@@ -59,10 +59,20 @@ build_system_prompt() {
     # Concatenate all specified prompts (no extra indentation)
     for prompt_name in "${SYSTEM_PROMPTS[@]}"; do
         local prompt_file="$WORKFLOW_PROMPT_PREFIX/${prompt_name}.txt"
+
+        # If not found in custom location, try default location as fallback
         if [[ ! -f "$prompt_file" ]]; then
-            echo "Error: System prompt file not found: $prompt_file" >&2
-            build_success=false
-            break
+            local default_prompt_file="$HOME/.config/workflow/prompts/${prompt_name}.txt"
+            if [[ -f "$default_prompt_file" ]]; then
+                prompt_file="$default_prompt_file"
+                echo "Using built-in prompt: $prompt_name (from default location)" >&2
+            else
+                echo "Error: System prompt file not found: ${prompt_name}.txt" >&2
+                echo "  Searched: $WORKFLOW_PROMPT_PREFIX" >&2
+                echo "  Searched: $HOME/.config/workflow/prompts (fallback)" >&2
+                build_success=false
+                break
+            fi
         fi
 
         # Add to XML file

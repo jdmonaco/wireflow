@@ -153,13 +153,21 @@ new_workflow() {
             template_task=""  # Fall through to default
         else
             local template_file="$WORKFLOW_TASK_PREFIX/${template_task}.txt"
+
+            # If not found in custom location, try default location as fallback
             if [[ ! -f "$template_file" ]]; then
-                echo "Error: Task template not found: $template_task"
-                echo "File: $template_file"
-                echo ""
-                echo "Available templates:"
-                list_tasks
-                exit 1
+                local default_template_file="$HOME/.config/workflow/tasks/${template_task}.txt"
+                if [[ -f "$default_template_file" ]]; then
+                    template_file="$default_template_file"
+                else
+                    echo "Error: Task template not found: $template_task" >&2
+                    echo "  Searched: $WORKFLOW_TASK_PREFIX" >&2
+                    echo "  Searched: $HOME/.config/workflow/tasks (fallback)" >&2
+                    echo ""
+                    echo "Available templates:"
+                    list_tasks
+                    exit 1
+                fi
             fi
 
             # Copy template to workflow task.txt
@@ -364,48 +372,89 @@ list_tasks() {
     source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
     load_global_config
 
-    if [[ -z "$WORKFLOW_TASK_PREFIX" || ! -d "$WORKFLOW_TASK_PREFIX" ]]; then
-        echo "No task templates directory configured or found."
-        echo ""
-        echo "Expected location: ~/.config/workflow/tasks/"
-        echo "Set WORKFLOW_TASK_PREFIX in ~/.config/workflow/config"
-        return 1
-    fi
-
     echo "Available task templates:"
     echo ""
 
-    # List all .txt files in task directory
-    local task_files=("$WORKFLOW_TASK_PREFIX"/*.txt)
+    local shown_tasks=()
+    local default_task_dir="$HOME/.config/workflow/tasks"
+    local has_custom_tasks=false
+    local has_builtin_tasks=false
 
-    if [[ ! -e "${task_files[0]}" ]]; then
-        echo "  (no task templates found)"
-        echo ""
-        echo "Location: $WORKFLOW_TASK_PREFIX"
-        return 0
+    # Set default if not configured
+    if [[ -z "$WORKFLOW_TASK_PREFIX" ]]; then
+        WORKFLOW_TASK_PREFIX="$default_task_dir"
     fi
 
-    for task_file in "${task_files[@]}"; do
-        local task_name=$(basename "$task_file" .txt)
-        # Extract first <description> tag content if present
-        local description=$(sed -n 's/.*<description>\s*\(.*\)<\/description>.*/\1/p' "$task_file" | head -n1 | sed 's/^[[:space:]]*//')
+    # List from custom location first
+    if [[ -d "$WORKFLOW_TASK_PREFIX" ]]; then
+        local task_files=("$WORKFLOW_TASK_PREFIX"/*.txt)
+        if [[ -e "${task_files[0]}" ]]; then
+            has_custom_tasks=true
+            for task_file in "${task_files[@]}"; do
+                local task_name=$(basename "$task_file" .txt)
+                shown_tasks+=("$task_name")
 
-        # If no description tag, try first non-empty line
-        if [[ -z "$description" ]]; then
-            description=$(grep -v '^[[:space:]]*$' "$task_file" | head -n1 | sed 's/^#\s*//' | sed 's/^[[:space:]]*//')
+                # Extract description
+                local description=$(sed -n 's/.*<description>\s*\(.*\)<\/description>.*/\1/p' "$task_file" | head -n1 | sed 's/^[[:space:]]*//')
+                if [[ -z "$description" ]]; then
+                    description=$(grep -v '^[[:space:]]*$' "$task_file" | head -n1 | sed 's/^#\s*//' | sed 's/^[[:space:]]*//')
+                fi
+
+                printf "  %-15s %s\n" "$task_name" "$description"
+            done
         fi
+    fi
 
-        # Format output
-        printf "  %-15s %s\n" "$task_name" "$description"
-    done
+    # List from default location (built-ins), excluding already shown
+    if [[ -d "$default_task_dir" && "$default_task_dir" != "$WORKFLOW_TASK_PREFIX" ]]; then
+        local builtin_files=("$default_task_dir"/*.txt)
+        if [[ -e "${builtin_files[0]}" ]]; then
+            has_builtin_tasks=true
+            if [[ $has_custom_tasks == true ]]; then
+                echo ""
+                echo "Built-in templates (fallback):"
+            fi
+
+            for task_file in "${builtin_files[@]}"; do
+                local task_name=$(basename "$task_file" .txt)
+
+                # Skip if already shown from custom location
+                local already_shown=false
+                for shown in "${shown_tasks[@]}"; do
+                    if [[ "$shown" == "$task_name" ]]; then
+                        already_shown=true
+                        break
+                    fi
+                done
+                [[ $already_shown == true ]] && continue
+
+                # Extract description
+                local description=$(sed -n 's/.*<description>\s*\(.*\)<\/description>.*/\1/p' "$task_file" | head -n1 | sed 's/^[[:space:]]*//')
+                if [[ -z "$description" ]]; then
+                    description=$(grep -v '^[[:space:]]*$' "$task_file" | head -n1 | sed 's/^#\s*//' | sed 's/^[[:space:]]*//')
+                fi
+
+                printf "  %-15s %s\n" "$task_name" "$description"
+            done
+        fi
+    fi
+
+    if [[ $has_custom_tasks == false && $has_builtin_tasks == false ]]; then
+        echo "  (no task templates found)"
+    fi
 
     echo ""
-    echo "Location: $WORKFLOW_TASK_PREFIX"
+    if [[ $has_custom_tasks == true ]]; then
+        echo "Custom: $WORKFLOW_TASK_PREFIX"
+    fi
+    if [[ $has_builtin_tasks == true ]]; then
+        echo "Built-in: $default_task_dir"
+    fi
     echo ""
     echo "Usage:"
-    echo "  workflow task ls              # List task templates"
-    echo "  workflow task show <name>     # Preview template in pager"
-    echo "  workflow task edit <name>     # Edit template"
+    echo "  workflow tasks                # List task templates"
+    echo "  workflow tasks show <name>    # Preview template in pager"
+    echo "  workflow tasks edit <name>    # Edit template"
     echo "  workflow task <name> [opts]   # Execute template"
 }
 
@@ -431,13 +480,20 @@ show_task() {
 
     local task_file="$WORKFLOW_TASK_PREFIX/${task_name}.txt"
 
+    # If not found in custom location, try default location as fallback
     if [[ ! -f "$task_file" ]]; then
-        echo "Error: Task template not found: $task_name"
-        echo "File: $task_file"
-        echo ""
-        echo "Available templates:"
-        list_tasks
-        return 1
+        local default_task_file="$HOME/.config/workflow/tasks/${task_name}.txt"
+        if [[ -f "$default_task_file" ]]; then
+            task_file="$default_task_file"
+        else
+            echo "Error: Task template not found: $task_name" >&2
+            echo "  Searched: $WORKFLOW_TASK_PREFIX" >&2
+            echo "  Searched: $HOME/.config/workflow/tasks (fallback)" >&2
+            echo ""
+            echo "Available templates:"
+            list_tasks
+            return 1
+        fi
     fi
 
     # Display in pager
@@ -477,13 +533,20 @@ edit_task() {
 
     local task_file="$WORKFLOW_TASK_PREFIX/${task_name}.txt"
 
+    # If not found in custom location, try default location as fallback
     if [[ ! -f "$task_file" ]]; then
-        echo "Error: Task template not found: $task_name"
-        echo "File: $task_file"
-        echo ""
-        echo "Available templates:"
-        list_tasks
-        return 1
+        local default_task_file="$HOME/.config/workflow/tasks/${task_name}.txt"
+        if [[ -f "$default_task_file" ]]; then
+            task_file="$default_task_file"
+        else
+            echo "Error: Task template not found: $task_name" >&2
+            echo "  Searched: $WORKFLOW_TASK_PREFIX" >&2
+            echo "  Searched: $HOME/.config/workflow/tasks (fallback)" >&2
+            echo ""
+            echo "Available templates:"
+            list_tasks
+            return 1
+        fi
     fi
 
     # Source edit.sh for edit_files function
