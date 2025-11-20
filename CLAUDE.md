@@ -837,6 +837,16 @@ When preparing a new release, follow these steps in order:
    git show HEAD --stat
    ```
 
+7. **Push to remote:**
+   ```bash
+   # Push commits and tags together
+   git push origin main --tags
+
+   # Or push separately
+   git push origin main
+   git push origin vX.Y.Z
+   ```
+
 **Version display:**
 - `workflow --version` or `workflow -v`: Shows version number
 - `workflow --help`: Includes version in header
