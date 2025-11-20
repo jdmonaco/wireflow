@@ -19,6 +19,7 @@ Technical implementation details, module reference, and code-level specifics for
 - `run_workflow()` - Execute workflow with full context aggregation
 
 **Key patterns:**
+
 - Project root discovery via `find_project_root()`
 - Subshell isolation for config extraction
 - Interactive prompts with validation
@@ -138,11 +139,13 @@ Stops at `$HOME` or `/` to avoid escaping user space.
 - `anthropic_count_tokens()` - Exact token counting via count_tokens endpoint
 
 **Request construction:**
+
 - Uses `jq` to build JSON payloads with content blocks
 - Accepts `system_blocks_file` and `user_blocks_file` parameters
 - Reads JSON arrays from files (avoids bash parameter parsing issues)
 
 **Key implementation:**
+
 - Uses `curl` with Anthropic Messages API
 - Handles both streaming and non-streaming modes
 - Supports prompt caching via `cache_control` in content blocks
@@ -261,6 +264,7 @@ ln "$source" "$hardlink"  # Not ln -s (symlink)
 ```
 
 **Properties:**
+
 - Both paths point to same inode
 - Deleting one doesn't affect the other
 - Visible in file browsers
@@ -294,17 +298,20 @@ trap 'rm -f "$temp_file"' EXIT
 **Minimum: Bash 4.0**
 
 **Required features:**
+
 - Associative arrays (4.0+)
 - `[[ ]]` conditional expressions
 - Process substitution
 - `read -a` array reading
 
 **Compatibility tested on:**
+
 - macOS (bash 3.2 via system, 5.x via Homebrew)
 - Linux (bash 4.x, 5.x)
 - WSL (bash 4.x, 5.x)
 
 **Development note:**
+
 - Development environment PATH is configured to use Homebrew bash (`/opt/homebrew/bin/bash`) by default
 - System bash (`/bin/bash`) is version 3.2 and lacks required features
 - Tests require Homebrew bash 4.0+ for associative array support
@@ -342,11 +349,13 @@ payload=$(jq -n \
 ```
 
 **File-based parameter passing:**
+
 - Avoids bash variable expansion issues with large JSON strings
 - Temporary files created by `execute_api_request()`, cleaned up after use
 - Each content block contains metadata as embedded XML tags
 
 **Streaming vs batch:**
+
 - Streaming: `stream: true` added to payload, parse SSE events
 - Batch: `stream: false`, single JSON response
 
@@ -380,6 +389,7 @@ Simple approximation: ~4 chars per token (reasonable for English). Fast and requ
 Calls Anthropic's `/v1/messages/count_tokens` endpoint with full content blocks for precise counting.
 
 **Display breakdown:**
+
 - System prompts (heuristic)
 - Task (heuristic)
 - Input documents (heuristic)
@@ -389,6 +399,7 @@ Calls Anthropic's `/v1/messages/count_tokens` endpoint with full content blocks 
 - Difference between heuristic and API count
 
 **Note:** API count is typically higher due to:
+
 - XML metadata headers in each block
 - JSON structure overhead
 - More accurate tokenization
@@ -478,6 +489,7 @@ ln "$source" "$target" || {
 ### Streaming Interruption
 
 Ctrl+C during streaming:
+
 - Partial output preserved in file
 - Trap ensures cleanup
 - User sees partial results

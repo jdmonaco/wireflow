@@ -10,6 +10,7 @@ System design, architecture patterns, and design decisions for the Workflow code
 Workflow is a modular bash application for AI-assisted project development using the Anthropic Messages API.
 
 **Design Principles:**
+
 - Git-like project discovery (walk up directory tree for `.workflow/`)
 - Configuration cascade with transparent pass-through inheritance
 - Modular library structure for maintainability
@@ -81,6 +82,7 @@ project-root/
 - Explicit value (`MODEL="claude-opus-4"`) → Override parent, decoupled from changes
 
 **Benefits:**
+
 - Change global default → affects all empty configs
 - Explicit values stay independent
 - Easy to reset: set to empty to restore pass-through
@@ -89,6 +91,7 @@ project-root/
 ### Nested Project Configuration
 
 When running workflows in nested projects:
+
 - `find_ancestor_projects()` walks up the directory tree to find all `.workflow/` directories
 - `load_ancestor_configs()` loads configs from oldest to newest ancestor
 - `CONFIG_SOURCE_MAP` tracks which ancestor (or tier) set each value
@@ -96,6 +99,7 @@ When running workflows in nested projects:
 - Each project can override ancestor values or pass through with empty values
 
 When initializing a new nested project:
+
 - `init_project()` detects parent project and displays inherited values
 - Creates separate workflow namespace
 - Stub config shows inherited values in comments for reference
@@ -105,6 +109,7 @@ When initializing a new nested project:
 **Design:** Config paths relative to project root, CLI paths relative to PWD
 
 **Processing order:**
+
 1. Config CONTEXT_PATTERN (project-relative)
 2. CLI --context-pattern (PWD-relative)
 3. Config CONTEXT_FILES (project-relative)
@@ -131,6 +136,7 @@ Applies to both INPUT and CONTEXT:
 ### Automatic File Type Detection
 
 **PDF documents:**
+
 - Validated against 32MB size limit
 - Base64-encoded for API
 - Added to CONTEXT_PDF_BLOCKS or INPUT_PDF_BLOCKS (citable, optimized ordering)
@@ -139,6 +145,7 @@ Applies to both INPUT and CONTEXT:
 - Token estimation: ~2000 tokens per page (conservative)
 
 **Office files (.docx, .pptx):**
+
 - Converted to PDF using LibreOffice (gracefully skips if unavailable)
 - Converted PDFs cached in `.workflow/<name>/cache/office/` with preserved filenames
 - Cache validated by mtime (regenerates only if source file is newer)
@@ -147,6 +154,7 @@ Applies to both INPUT and CONTEXT:
 - Token estimation: same as PDFs (~2000 tokens per page)
 
 **Images (jpg, jpeg, png, gif, webp):**
+
 - Validated against 5MB size limit
 - Resized if >1568px on long edge (optimal performance)
 - Cached in `.workflow/<name>/cache/` with preserved paths
@@ -270,6 +278,7 @@ All content is organized into typed arrays for proper ordering and cache managem
 | `DOCUMENT_INDEX_MAP` | Citation tracking for citable docs | N/A | Saved to document-map.json |
 
 **Citability:**
+
 - PDFs (context and input): Citable with document indices
 - Text files (context, dependency, input): Citable with document indices
 - Images: NOT citable (no document indices assigned)
@@ -281,12 +290,14 @@ All content is organized into typed arrays for proper ordering and cache managem
 **JSON-first:** Content blocks are constructed and passed to API functions via temporary files (avoids bash parameter parsing issues with large JSON payloads).
 
 **Streaming mode:**
+
 - Uses `curl` with chunked transfer encoding
 - Parses SSE (Server-Sent Events) format
 - Writes incrementally to output file
 - Real-time terminal display
 
 **Batch mode:**
+
 - Single request, buffers entire response
 - Atomic file write
 - Opens in pager when complete
@@ -294,11 +305,13 @@ All content is organized into typed arrays for proper ordering and cache managem
 ### Parameter Passing Strategy
 
 Content blocks are built incrementally in bash and written to JSON files, then:
+
 1. **Individual image blocks**: Use `printf | jq -Rs` to create each image block with base64 data
 2. **Content block arrays**: Use `jq --slurpfile` to read JSON arrays from files (avoids arg limits)
 3. **API request**: Pass JSON payload to curl via stdin with `-d @-` (avoids arg limits)
 
 **Why not `--rawfile` for images?**
+
 - Our architecture builds blocks incrementally in bash, then assembles arrays
 - Each image block is created via `printf | jq -Rs` (handles base64 correctly)
 - Final assembly uses `--slurpfile` for the complete arrays (not individual images)
@@ -312,6 +325,7 @@ Content blocks are built incrementally in bash and written to JSON files, then:
 **Heuristic:** Simple character-based approximation (`token_count=$(( char_count / 4 ))`) - reasonable for English text.
 
 **Display:**
+
 - System prompts tokens (heuristic)
 - Task tokens (heuristic)
 - Input documents tokens (heuristic)
@@ -335,6 +349,7 @@ ln "$output_file" ".workflow/output/$workflow_name.$format"
 ```
 
 **Why hardlinks:**
+
 - Visible in file browsers (unlike symlinks)
 - Single data storage (not duplication)
 - Atomic updates
@@ -344,6 +359,7 @@ ln "$output_file" ".workflow/output/$workflow_name.$format"
 Before overwriting, create timestamped backup: `output-TIMESTAMP.format`
 
 **Format-specific post-processing:**
+
 - Markdown: `mdformat` if available
 - JSON: `jq '.'` for pretty-printing if available
 - Others: No processing
@@ -353,6 +369,7 @@ Before overwriting, create timestamped backup: `output-TIMESTAMP.format`
 **Implementation:** Anthropic prompt caching with ephemeral cache breakpoints.
 
 **Architecture:**
+
 - Each file becomes its own content block
 - Metadata embedded as XML tags within text content
 - Cache breakpoints at semantic boundaries (maximum 4)
@@ -362,6 +379,7 @@ Before overwriting, create timestamped backup: `output-TIMESTAMP.format`
 Cache breakpoints (`cache_control: {type: "ephemeral"}`) are placed strategically to maximize cost reduction while respecting the 4-breakpoint limit.
 
 **System blocks array:**
+
 1. After aggregated system prompts (most stable)
 2. After date block
 
@@ -373,29 +391,33 @@ The strategy adapts based on what content is present:
 
 1. **If PDFs exist:** Place breakpoint after last PDF block (INPUT_PDF_BLOCKS or CONTEXT_PDF_BLOCKS)
 2. **Always:** Place breakpoint after last text document OR last image block (whichever comes last)
-    - If images exist: after last image block
-    - If no images: after last text block (INPUT_BLOCKS, CONTEXT_BLOCKS, or DEPENDENCY_BLOCKS)
+   - If images exist: after last image block
+   - If no images: after last text block (INPUT_BLOCKS, CONTEXT_BLOCKS, or DEPENDENCY_BLOCKS)
 3. **If no PDFs:** Move the "would-be PDF breakpoint" to after text documents (before images)
-    - Result: Text documents and images cached separately
+   - Result: Text documents and images cached separately
 4. **If no context/input documents:** No breakpoints in user array
-    - Result: Task is re-processed on every run (expected behavior)
+   - Result: Task is re-processed on every run (expected behavior)
 
 **Adaptive breakpoint logic:**
+
 - PDFs present: [PDFs w/ breakpoint] → [text docs] → [images w/ breakpoint] → task
 - No PDFs, have docs: [text docs w/ breakpoint] → [images w/ breakpoint] → task
 - Only task: task (no breakpoints, re-processed each run)
 
 **Aggregation order within categories:** Stable → volatile
+
 - Context: CONTEXT_FILES → CONTEXT_PATTERN → CLI_CONTEXT_FILES → CLI_CONTEXT_PATTERN
 - Input: INPUT_FILES → INPUT_PATTERN → CLI_INPUT_FILES → CLI_INPUT_PATTERN
 
 **Benefits:**
+
 - 90% cost reduction on cache reads
 - 5-minute default TTL (can extend to 1 hour)
 - Minimum 1024 tokens per cached block
 - Date-only timestamp (not datetime) prevents minute-by-minute invalidation
 
 **Monitoring:**
+
 - Heuristic token estimation (character-based)
 - Exact API token counting via `/v1/messages/count_tokens`
 - Future: cache usage metrics from API response
@@ -407,13 +429,14 @@ The strategy adapts based on what content is present:
 1. Check `$VISUAL` (highest priority)
 2. Check `$EDITOR`
 3. Platform-specific defaults (`uname -s`):
-    - Darwin (macOS): `vim` → `nano` → `vi`
-    - Linux: `vim` → `nano` → `vi`
-    - Windows/WSL: `vim` → `nano` → `code` → `vi`
+   - Darwin (macOS): `vim` → `nano` → `vi`
+   - Linux: `vim` → `nano` → `vi`
+   - Windows/WSL: `vim` → `nano` → `code` → `vi`
 4. Common editor detection: `command -v vim nvim emacs nano code subl atom vi`
 5. Fallback: `vi` (POSIX standard)
 
 **Integration:**
+
 - `workflow init` - Opens `project.txt` and `config`
 - `workflow new` - Opens `task.txt` and `config`
 - `workflow edit` - Opens project or workflow files (includes output if exists)
