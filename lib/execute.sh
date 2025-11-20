@@ -545,7 +545,8 @@ build_and_track_document_block() {
 
         # Build image content block (Vision API)
         local block
-        if ! block=$(build_image_content_block "$file" "$project_root" "$workflow_dir" 2>&1); then
+        block=$(build_image_content_block "$file" "$project_root" "$workflow_dir")
+        if [[ -z "$block" ]]; then
             echo "    Warning: Failed to process image: $file" >&2
             return 1
         fi
