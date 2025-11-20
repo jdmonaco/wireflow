@@ -618,6 +618,57 @@ build_and_track_document_block() {
         return 0
     fi
 
+    # Handle Microsoft Office files (convert to PDF then process as document)
+    if [[ "$file_type" == "office" ]]; then
+        echo "    Processing Office file: $(basename "$file")" >&2
+
+        # Check if soffice is available
+        if ! check_soffice_available; then
+            echo "    Warning: LibreOffice (soffice) not available, skipping Office file: $file" >&2
+            echo "    Install LibreOffice to enable Office file support (.docx, .pptx)" >&2
+            return 0  # Graceful skip
+        fi
+
+        # Get absolute path for conversion
+        local abs_file
+        abs_file=$(cd "$(dirname "$file")" && pwd)/$(basename "$file")
+
+        # Convert to PDF (with caching)
+        local cached_pdf
+        cached_pdf=$(convert_office_to_pdf "$abs_file" "$workflow_dir")
+        if [[ $? -ne 0 || -z "$cached_pdf" ]]; then
+            echo "    Warning: Failed to convert Office file to PDF: $file" >&2
+            return 1
+        fi
+
+        # Build document content block from cached PDF
+        local block
+        block=$(build_document_content_block "$cached_pdf" "false")
+        if [[ -z "$block" ]]; then
+            echo "    Warning: Failed to process converted PDF: $cached_pdf" >&2
+            return 1
+        fi
+
+        # Add to appropriate PDF array (Office files follow PDF ordering)
+        if [[ "$category" == "context" ]]; then
+            CONTEXT_PDF_BLOCKS+=("$block")
+        elif [[ "$category" == "input" ]]; then
+            INPUT_PDF_BLOCKS+=("$block")
+        fi
+
+        # Office files are citable - track with ORIGINAL filename (not cached PDF)
+        local current_index="${!doc_index_var}"
+        local title
+        title=$(extract_title_from_file "$file")
+
+        DOCUMENT_INDEX_MAP+=("{\"index\": $current_index, \"source\": \"$file\", \"title\": \"$title\"}")
+
+        # Increment index
+        eval "$doc_index_var=\$(( $current_index + 1 ))"
+
+        return 0
+    fi
+
     # Handle text files (existing logic)
     local block
     if [[ -n "$meta_key" && -n "$meta_value" ]]; then

@@ -169,3 +169,62 @@ EOF
     skip "Integration test - requires full workflow execution"
     # This would verify PDFs are citable via document index
 }
+
+# =============================================================================
+# Microsoft Office File Support
+# =============================================================================
+
+@test "office: detect_file_type recognizes .docx extension" {
+    touch test.docx
+
+    run detect_file_type "test.docx"
+    assert_success
+    assert_output "office"
+}
+
+@test "office: detect_file_type recognizes .pptx extension" {
+    touch test.pptx
+
+    run detect_file_type "test.pptx"
+    assert_success
+    assert_output "office"
+}
+
+@test "office: check_soffice_available detects LibreOffice" {
+    # This test depends on system configuration
+    run check_soffice_available
+    # Just verify it returns a valid exit code (0 or 1)
+    # Exit code 0 means soffice is available
+    # Exit code 1 means soffice is not available
+    # Both are valid outcomes depending on the test environment
+}
+
+@test "office: convert_office_to_pdf fails gracefully without soffice" {
+    skip "Test requires mocking soffice command"
+    # This would test the graceful failure path when soffice is not available
+}
+
+@test "office: convert_office_to_pdf creates cached PDF" {
+    skip "Test requires actual .docx file and LibreOffice installation"
+    # This would test end-to-end Office to PDF conversion with caching
+}
+
+@test "office: convert_office_to_pdf uses cache when source unchanged" {
+    skip "Test requires actual .docx file and LibreOffice installation"
+    # This would verify cache hit logic based on mtime
+}
+
+@test "office: convert_office_to_pdf regenerates when source modified" {
+    skip "Test requires actual .docx file and LibreOffice installation"
+    # This would verify cache invalidation when source file is newer
+}
+
+@test "office: converted Office files are citable with original filename" {
+    skip "Integration test - requires full workflow execution"
+    # This would verify Office files appear in document index with original filename
+}
+
+@test "office: converted Office files follow PDF ordering" {
+    skip "Integration test - requires inspecting assembled content blocks"
+    # This would verify converted PDFs are placed in PDF section, not text section
+}

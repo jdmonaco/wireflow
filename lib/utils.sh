@@ -318,12 +318,13 @@ extract_title_from_file() {
 # Content Block Builders (for Anthropic Messages API)
 # =============================================================================
 
-# Detect file type (text vs document/PDF vs image)
+# Detect file type (text vs document/PDF vs office vs image)
 # Arguments:
 #   $1 - File path
 # Returns:
 #   "text" for text files (default)
-#   "document" for PDFs (future support)
+#   "document" for PDFs
+#   "office" for Microsoft Office files (docx, pptx)
 #   "image" for supported image formats (jpg, png, gif, webp)
 detect_file_type() {
     local file="$1"
@@ -338,9 +339,13 @@ detect_file_type() {
         png|jpg|jpeg|gif|webp)
             echo "image"
             ;;
-        # Document types (future support)
+        # PDF document types
         pdf)
             echo "document"
+            ;;
+        # Microsoft Office types (require conversion)
+        docx|pptx)
+            echo "office"
             ;;
         # Text files (default)
         *)
@@ -686,6 +691,85 @@ validate_pdf_file() {
     fi
 
     return 0
+}
+
+# =============================================================================
+# Microsoft Office File Conversion
+# =============================================================================
+
+# Check if LibreOffice soffice command is available
+# Returns:
+#   0 if available, 1 if not
+check_soffice_available() {
+    command -v soffice >/dev/null 2>&1
+}
+
+# Convert Microsoft Office file to PDF using LibreOffice
+# Arguments:
+#   $1 - Source Office file path (absolute)
+#   $2 - Cache directory for conversions
+# Returns:
+#   Path to cached PDF file (stdout)
+#   Returns 1 on error
+# Side effects:
+#   Creates cache directory if needed
+#   Writes converted PDF to cache with preserved relative path
+convert_office_to_pdf() {
+    local source_file="$1"
+    local cache_base_dir="$2"
+
+    if [[ ! -f "$source_file" ]]; then
+        echo "Error: Office file not found: $source_file" >&2
+        return 1
+    fi
+
+    # Get source file details
+    local source_basename
+    source_basename=$(basename "$source_file")
+    local source_dir
+    source_dir=$(dirname "$source_file")
+
+    # Create cache directory preserving relative path structure
+    local cache_dir="$cache_base_dir/office"
+    mkdir -p "$cache_dir"
+
+    # Generate cached PDF filename (replace extension)
+    local pdf_name="${source_basename%.*}.pdf"
+    local cached_pdf="$cache_dir/$pdf_name"
+
+    # Check if cached PDF exists and is newer than source
+    if [[ -f "$cached_pdf" ]]; then
+        local source_mtime
+        local cache_mtime
+        source_mtime=$(stat -f%m "$source_file" 2>/dev/null || stat -c%Y "$source_file" 2>/dev/null)
+        cache_mtime=$(stat -f%m "$cached_pdf" 2>/dev/null || stat -c%Y "$cached_pdf" 2>/dev/null)
+
+        if [[ $cache_mtime -ge $source_mtime ]]; then
+            # Cache is valid
+            echo "$cached_pdf"
+            return 0
+        fi
+    fi
+
+    # Convert to PDF using LibreOffice in headless mode
+    echo "  Converting Office file to PDF: $source_basename" >&2
+
+    # Run soffice in headless mode, output to cache directory
+    # --convert-to pdf: Convert to PDF format
+    # --outdir: Output directory for converted file
+    # --headless: Run without GUI
+    if soffice --convert-to pdf --outdir "$cache_dir" --headless "$source_file" >/dev/null 2>&1; then
+        if [[ -f "$cached_pdf" ]]; then
+            echo "$cached_pdf"
+            return 0
+        else
+            echo "Error: PDF conversion succeeded but output file not found: $cached_pdf" >&2
+            return 1
+        fi
+    else
+        echo "Error: Failed to convert Office file to PDF: $source_file" >&2
+        return 1
+    fi
 }
 
 # Build a content block from a file (document or text type)

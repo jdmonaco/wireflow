@@ -142,6 +142,7 @@ CLI_CONTEXT_FILES+=("$file")  # Relative to PWD
 - **INPUT documents** (`INPUT_PATTERN`, `INPUT_FILES`): Primary documents to be analyzed or transformed
 - **CONTEXT materials** (`CONTEXT_PATTERN`, `CONTEXT_FILES`, `DEPENDS_ON`): Supporting information and references
 - **PDFs**: Automatically detected from INPUT/CONTEXT sources (PDF API support)
+- **Office files**: Automatically detected from INPUT/CONTEXT sources (.docx, .pptx converted to PDF)
 - **IMAGES**: Automatically detected from INPUT/CONTEXT sources (Vision API support)
 
 **Three aggregation methods (applies to both INPUT and CONTEXT):**
@@ -159,6 +160,17 @@ Files with `.pdf` extension are automatically processed for PDF API:
 - Placed BEFORE text documents in API request (per PDF optimization guidelines)
 - Citable (PDFs get document indices for citations)
 - Token estimation: ~2000 tokens per page (conservative)
+
+**Automatic Office file conversion:**
+
+Files with `.docx` or `.pptx` extensions are automatically converted to PDF using LibreOffice:
+- Requires LibreOffice installation (soffice command)
+- Gracefully skips with warning if LibreOffice not available
+- Converted PDFs cached in `.workflow/<name>/cache/office/` with preserved filenames
+- Cache validated by mtime (regenerates only if source file is newer)
+- Processed as PDF documents (follow PDF ordering)
+- Citable with ORIGINAL filename (not cached PDF path)
+- Token estimation: same as PDFs (~2000 tokens per page)
 
 **Automatic image detection:**
 
