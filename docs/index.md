@@ -10,23 +10,41 @@ Workflow is a bash-based command-line tool that lets you easily create and run r
 
 ## Key Features
 
-- 🎯 **Git-like Structure:** Uses `.workflow/` directories with automatic project root discovery, allowing you to run workflow commands from anywhere within your project tree.
+- 🎯 **Git-like Project Discovery:**
+    Automatic `.workflow/` directory detection by walking up the directory tree from your current location, enabling project-aware execution from anywhere within your project hierarchy. Stops at `$HOME` for safety and respects filesystem boundaries.
 
-- 🔧 **Flexible Configuration:** Multi-tier cascade with pass-through inheritance (global → ancestors → project → workflow → CLI), enabling centralized defaults with granular overrides.
+- 📄 **Native Document Processing:**
+    Unified handling of PDFs (32MB limit, joint text and visual analysis via Claude PDF API), Microsoft Office files (.docx and .pptx automatically converted to PDF via LibreOffice with intelligent mtime-based caching), images (Vision API support with automatic validation, resizing, and base64 encoding), and text files. Automatic format detection, conversion, and optimal ordering (PDFs before text per Anthropic optimization guidelines).
 
-- 🔗 **Workflow Dependencies:** Chain workflows together with `--depends-on` for sequential processing, automatically passing outputs as context to dependent workflows.
+- 🔧 **Configuration Cascade with Pass-Through:**
+    Sophisticated multi-tier inheritance system (global → ancestors → project → workflow → CLI) where empty configuration values automatically inherit from parent tiers while explicit values override and become decoupled from upstream changes. This enables centralized defaults that cascade down while maintaining granular control, supporting change-once affect-many configuration management patterns.
 
-- 📦 **Context Aggregation:** Powerful context management using glob patterns, explicit file lists, or workflow outputs, giving Claude comprehensive project awareness.
+- 🏗️ **Nested Project Support:**
+    Automatic discovery and configuration inheritance from all ancestor projects in the directory hierarchy. When running workflows in nested projects, the tool walks up the tree to find all `.workflow/` directories, loads their configs from oldest to newest, and provides transparent source tracking showing exactly which ancestor (or tier) set each configuration value.
 
-- 🚀 **Portable:** Modular bash-based tool that works anywhere in your project tree, with automatic project root discovery similar to git.
+- 🔗 **Workflow Dependencies & Chaining:**
+    Create multi-stage processing pipelines by declaring dependencies on other workflow outputs via `DEPENDS_ON` configuration. Outputs are managed via hardlinks for efficient storage and atomic updates, with automatic context passing enabling complex DAG-based orchestration. Cross-format dependencies work seamlessly (JSON → Markdown → HTML pipelines).
 
-- 💾 **Safe Output:** Automatic timestamped backups of all workflow outputs with hardlinked copies for convenient access, ensuring no work is ever lost.
+- 📦 **Semantic Content Aggregation:**
+    Distinguish between INPUT documents (primary materials to analyze or transform) and CONTEXT materials (supporting information and references) with three aggregation methods: glob patterns for flexible file matching, explicit file lists for precision, and workflow dependencies for pipeline orchestration. Intelligent stable-to-volatile ordering within each category optimizes prompt caching effectiveness.
 
-- ⚡ **Dual Execution Modes:** Choose between persistent workflows for iterative development or lightweight one-off tasks for quick queries, each optimized for its use case.
+- 💰 **Prompt Caching Architecture:**
+    JSON-first content block architecture with strategic cache breakpoint placement (maximum 4 per API limits) at semantic boundaries enables 90% cost reduction on cached content. Sophisticated ordering strategy places stable content first (system prompts → project descriptions → PDFs → text documents → images → task) with PDFs positioned before text per Anthropic optimization guidelines. Date-only timestamps (not datetime) prevent minute-by-minute cache invalidation while maintaining daily freshness.
 
-- 📊 **Token Estimation:** Built-in cost estimation before API calls with detailed breakdowns showing token contribution from each context source.
+- 📚 **Citations Support:**
+    Optional Anthropic citations API integration via `--enable-citations` flag provides source attribution for AI-generated content. Automatically generates document index mapping for citable sources (text files and PDFs, excluding images), parses citation responses from the API, and creates sidecar citation files for reference tracking and verification.
 
-- 🌊 **Flexible API Modes:** Support for single-request and streaming modes with real-time output, with batch processing mode planned for future releases.
+- ⚡ **Dual Execution Modes:**
+    Run mode provides persistent workflows with full configuration, context aggregation, workflow dependencies, and managed outputs for iterative development. Task mode offers lightweight one-off execution without workflow directories for quick queries. Both modes share core execution logic but are optimized for their specific use cases, providing flexibility between structure and speed.
+
+- 💾 **Safe Output Management:**
+    Automatic timestamped backups before overwriting any existing output, hardlinked copies in `.workflow/output/` for convenient access without duplication, atomic file operations with trap-based cleanup, and format-specific post-processing (mdformat for Markdown, jq for JSON pretty-printing). Every workflow run preserves previous results with clear timestamps.
+
+- 📊 **Dual Token Estimation:**
+    Fast heuristic character-based token estimation (4 chars per token) provides immediate feedback during workflow preparation, supplemented by exact counts via Anthropic's Token Counting API when API key is available. Detailed breakdowns show token contribution from system prompts, task, input documents, context materials, and images (~1600 tokens per image), with comparison between heuristic and actual counts for calibration.
+
+- 🌊 **Streaming & Batch Modes:**
+    Real-time streaming output with Server-Sent Events (SSE) parsing provides immediate feedback as the model generates responses, ideal for interactive development. Single-request batch mode buffers the entire response and opens in a pager when complete, suitable for long-form generation. Both modes support identical configuration, context aggregation, and prompt caching strategies.
 
 ## Quick Start
 

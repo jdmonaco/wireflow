@@ -4,17 +4,20 @@
 
 A terminal-based tool for building reproducible AI workflows for research, development, and analysis, featuring flexible configuration cascades, comprehensive document processing (PDFs, Office files, images), workflow dependencies and chaining, and intelligent context management.
 
-## Features
+## Key Features
 
-- 🎯 **Git-like Structure:** Uses `.workflow/` directories with automatic project root discovery, allowing you to run workflow commands from anywhere within your project tree.
-- 🔧 **Flexible Configuration:** Multi-tier cascade with pass-through inheritance (global → ancestors → project → workflow → CLI), enabling centralized defaults with granular overrides.
-- 🔗 **Workflow Dependencies:** Chain workflows together with `--depends-on` for sequential processing, automatically passing outputs as context to dependent workflows.
-- 📦 **Context Aggregation:** Powerful context management using glob patterns, explicit file lists, or workflow outputs. Supports text files, PDFs, Microsoft Office files (.docx, .pptx via LibreOffice), and images (via Vision API), giving Claude comprehensive project awareness.
-- 🚀 **Portable:** Modular bash-based tool works anywhere in your project tree, with automatic project root discovery just like git.
-- 💾 **Safe Output:** Automatic timestamped backups of all workflow outputs with hardlinked copies for convenient access, ensuring no work is ever lost.
-- ⚡ **Dual Execution Modes:** Choose between persistent workflows for iterative development or lightweight one-off tasks for quick queries, each optimized for its use case.
-- 📊 **Token Estimation:** Built-in cost estimation before API calls with detailed breakdowns showing token contribution from each context source.
-- 🌊 **Flexible API Modes:** Support for single-request and streaming modes with real-time output, with batch processing mode planned for future releases.
+- 🎯 **Git-like Project Discovery:** Automatic `.workflow/` directory detection walking up from any subdirectory, enabling project-aware execution from anywhere in your tree (stops at `$HOME` for safety).
+- 📄 **Native Document Processing:** Unified handling of PDFs (32MB, joint text+visual analysis), Microsoft Office files (.docx/.pptx auto-converted via LibreOffice), images (Vision API with automatic resizing), and text files with intelligent format detection and caching.
+- 🔧 **Configuration Cascade with Pass-Through:** Multi-tier inheritance (global → ancestors → project → workflow → CLI) where empty values automatically inherit from parent tiers while explicit values override and decouple, enabling change-once affect-many configuration management.
+- 🏗️ **Nested Project Support:** Automatic discovery and inheritance from all ancestor projects in the directory hierarchy, with transparent source tracking showing exactly where each configuration value originates.
+- 🔗 **Workflow Dependencies & Chaining:** Create multi-stage processing pipelines with `DEPENDS_ON` declarations, automatically passing outputs as context to dependent workflows via hardlinks for efficient DAG-based orchestration.
+- 📦 **Semantic Content Aggregation:** Distinguish INPUT documents (primary analysis targets) from CONTEXT materials (supporting information) using three methods: glob patterns, explicit file lists, and workflow dependencies, with optimized ordering for cost-effective caching.
+- 💰 **Prompt Caching Architecture:** Strategic cache breakpoint placement (max 4) at semantic boundaries enables 90% cost reduction on stable content, with intelligent ordering (system prompts → project descriptions → PDFs → text → images → task) and date-only timestamps to prevent minute-by-minute invalidation.
+- 📚 **Citations Support:** Optional Anthropic citations API integration with document mapping for source attribution, generating sidecar citation files and enabling proper references for AI-generated content.
+- ⚡ **Dual Execution Modes:** Persistent workflows with configuration, context, dependencies, and outputs for iterative development, or lightweight task mode for one-off queries without workflow directories, both sharing optimized execution logic.
+- 💾 **Safe Output Management:** Automatic timestamped backups before overwriting, hardlinked copies for convenient access (`.workflow/output/`), atomic file operations, and format-specific post-processing (mdformat, jq).
+- 📊 **Dual Token Estimation:** Fast heuristic character-based estimates plus exact counts via Anthropic's Token Counting API, with detailed breakdowns showing contribution from system prompts, task, input documents, context, and images.
+- 🌊 **Streaming & Batch Modes:** Real-time streaming output with SSE parsing for immediate feedback, or single-request batch mode with pager display, both supporting identical configuration and context aggregation.
 
 ## Quick Start
 
