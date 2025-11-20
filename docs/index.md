@@ -48,15 +48,15 @@ WireFlow is a bash-based command-line tool that lets you easily create and run r
 
 ## Quick Start
 
-To install `workflow`, clone the [repo](https://github.com/jdmonaco/wireflow) and link the script into your `PATH`. For example:
+To install `wireflow`, clone the [repo](https://github.com/jdmonaco/wireflow) and link the script into your `PATH`. For example:
 
 ```bash
 # Clone repository
 git clone https://github.com/jdmonaco/wireflow.git
-cd workflow
+cd wireflow
 
 # Add to PATH (example using ~/.local/bin)
-ln -s "$(pwd)/wireflow.sh" ~/.local/bin/workflow
+ln -s "$(pwd)/wireflow.sh" ~/.local/bin/wfw
 ```
 
 For Anthropic requests, ensure your API key is set in your shell environment:
@@ -66,7 +66,7 @@ For Anthropic requests, ensure your API key is set in your shell environment:
 export ANTHROPIC_API_KEY="your-key"
 ```
 
-Try out initializing `workflow` in any folder containing a project or files you want to process:
+Try out initializing `wireflow` in any folder containing a project or files you want to process:
 
 ```bash
 # Initialize project
@@ -78,7 +78,7 @@ wfw new 00-context-analysis
 wfw run 00-context-analysis --stream
 ```
 
-Your project files and folders are treated as read-only. All `workflow` files are maintained in a `.workflow/` subfolder.
+Your project files and folders are treated as read-only. All WireFlow files are maintained in a `.workflow/` subfolder.
 
 ## What You Can Do
 
