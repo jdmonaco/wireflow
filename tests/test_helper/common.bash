@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-# Common test utilities for workflow.sh tests
+# Common test utilities for wireflow.sh tests
 
-# Source workflow.sh functions for unit testing
+# Source wireflow.sh functions for unit testing
 # This sources the script in a way that defines functions but doesn't execute main logic
 source_workflow_functions() {
     local script_path="$1"
@@ -26,11 +26,11 @@ setup_test_env() {
 
     # Mock environment variables
     export ANTHROPIC_API_KEY="sk-ant-test-12345"
-    export WORKFLOW_PROMPT_PREFIX="$TEST_TEMP_DIR/prompts"
+    export WIREFLOW_PROMPT_PREFIX="$TEST_TEMP_DIR/prompts"
     export EDITOR="echo"  # Don't actually open vim in tests
 
-    # Unset WORKFLOW_TASK_PREFIX to avoid picking up user's personal templates
-    unset WORKFLOW_TASK_PREFIX
+    # Unset WIREFLOW_TASK_PREFIX to avoid picking up user's personal templates
+    unset WIREFLOW_TASK_PREFIX
 
     # Mock global config directory (isolate from user's real config)
     export HOME="$TEST_TEMP_DIR/home"
@@ -39,12 +39,12 @@ setup_test_env() {
     mkdir -p "$HOME"
 
     # Create mock system prompts
-    mkdir -p "$WORKFLOW_PROMPT_PREFIX"
-    echo "This is the base system prompt for testing." > "$WORKFLOW_PROMPT_PREFIX/base.txt"
-    echo "This is a NeuroAI prompt for testing." > "$WORKFLOW_PROMPT_PREFIX/NeuroAI.txt"
+    mkdir -p "$WIREFLOW_PROMPT_PREFIX"
+    echo "This is the base system prompt for testing." > "$WIREFLOW_PROMPT_PREFIX/base.txt"
+    echo "This is a NeuroAI prompt for testing." > "$WIREFLOW_PROMPT_PREFIX/NeuroAI.txt"
 
-    # Path to workflow.sh (assuming tests/ is next to workflow.sh)
-    export WORKFLOW_SCRIPT="$(cd "$(dirname "$BATS_TEST_DIRNAME")"; pwd)/workflow.sh"
+    # Path to wireflow.sh (assuming tests/ is next to wireflow.sh)
+    export WORKFLOW_SCRIPT="$(cd "$(dirname "$BATS_TEST_DIRNAME")"; pwd)/wireflow.sh"
 
     # Change to test project
     cd "$TEST_PROJECT"

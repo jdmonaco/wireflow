@@ -3,7 +3,7 @@
 # =============================================================================
 # Configuration functions for the workflow CLI tool.
 # Handles global, project, and workflow config loading and management.
-# This file is sourced by workflow.sh and lib/core.sh.
+# This file is sourced by wireflow.sh and lib/core.sh.
 # =============================================================================
 
 # =============================================================================
@@ -444,14 +444,14 @@ ENABLE_CITATIONS=false
 # =============================================================================
 
 # System prompt files to concatenate (space-separated or array syntax)
-# Files are loaded from $WORKFLOW_PROMPT_PREFIX/{name}.txt
+# Files are loaded from $WIREFLOW_PROMPT_PREFIX/{name}.txt
 # Default: (base)
 SYSTEM_PROMPTS=(base)
 
 # System prompt directory (contains prompt .txt files)
 # Default prompt included at ~/.config/workflow/prompts/base.txt
 # Override to use custom prompt directory
-WORKFLOW_PROMPT_PREFIX="$HOME/.config/workflow/prompts"
+WIREFLOW_PROMPT_PREFIX="$HOME/.config/workflow/prompts"
 
 # =============================================================================
 # Task Files
@@ -460,7 +460,7 @@ WORKFLOW_PROMPT_PREFIX="$HOME/.config/workflow/prompts"
 # Task file directory (contains named task .txt files)
 # Used by 'workflow task NAME' subcommand
 # Built-in task templates are created automatically on first use
-WORKFLOW_TASK_PREFIX="$HOME/.config/workflow/tasks"
+WIREFLOW_TASK_PREFIX="$HOME/.config/workflow/tasks"
 
 # =============================================================================
 # Optional: API Credentials
@@ -559,7 +559,7 @@ load_ancestor_configs() {
 #
 # Side effects:
 #   Sets: MODEL, TEMPERATURE, MAX_TOKENS, OUTPUT_FORMAT, SYSTEM_PROMPTS
-#   May set: ANTHROPIC_API_KEY, WORKFLOW_PROMPT_PREFIX (if not in env)
+#   May set: ANTHROPIC_API_KEY, WIREFLOW_PROMPT_PREFIX (if not in env)
 load_global_config() {
     # Start with hard-coded fallbacks
     local FALLBACK_MODEL="claude-sonnet-4-5"
@@ -592,16 +592,16 @@ load_global_config() {
                         ANTHROPIC_API_KEY="$value"
                     fi
                     ;;
-                WORKFLOW_PROMPT_PREFIX)
+                WIREFLOW_PROMPT_PREFIX)
                     # Only use config value if env var not already set
-                    if [[ -z "$WORKFLOW_PROMPT_PREFIX" && -n "$value" ]]; then
-                        WORKFLOW_PROMPT_PREFIX="$value"
+                    if [[ -z "$WIREFLOW_PROMPT_PREFIX" && -n "$value" ]]; then
+                        WIREFLOW_PROMPT_PREFIX="$value"
                     fi
                     ;;
-                WORKFLOW_TASK_PREFIX)
+                WIREFLOW_TASK_PREFIX)
                     # Only use config value if env var not already set
-                    if [[ -z "$WORKFLOW_TASK_PREFIX" && -n "$value" ]]; then
-                        WORKFLOW_TASK_PREFIX="$value"
+                    if [[ -z "$WIREFLOW_TASK_PREFIX" && -n "$value" ]]; then
+                        WIREFLOW_TASK_PREFIX="$value"
                     fi
                     ;;
             esac

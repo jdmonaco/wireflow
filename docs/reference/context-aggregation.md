@@ -61,7 +61,7 @@ INPUT_PATTERN="data/*.csv"
 **From CLI:**
 
 ```bash
-workflow run analysis --input-pattern "data/*.csv"
+wfw run analysis --input-pattern "data/*.csv"
 ```
 
 ### Context Patterns
@@ -76,7 +76,7 @@ CONTEXT_PATTERN="references/*.md"
 **From CLI:**
 
 ```bash
-workflow run analysis --context-pattern "references/*.md"
+wfw run analysis --context-pattern "references/*.md"
 ```
 
 ### Pattern Syntax
@@ -124,7 +124,7 @@ INPUT_FILES=("data/dataset1.json" "data/dataset2.json")
 **From CLI:**
 
 ```bash
-workflow run analysis \
+wfw run analysis \
   --input-file data/dataset1.json \
   --input-file data/dataset2.json
 ```
@@ -141,7 +141,7 @@ CONTEXT_FILES=("README.md" "notes/important.txt")
 **From CLI:**
 
 ```bash
-workflow run analysis \
+wfw run analysis \
   --context-file README.md \
   --context-file notes/important.txt
 ```
@@ -169,10 +169,10 @@ DEPENDS_ON=(context-gathering data-analysis)
 ### From CLI
 
 ```bash
-workflow run report --depends-on context-gathering --depends-on data-analysis
+wfw run report --depends-on context-gathering --depends-on data-analysis
 
 # Or comma-separated
-workflow run report --depends-on context-gathering,data-analysis
+wfw run report --depends-on context-gathering,data-analysis
 ```
 
 ### Dependency Resolution
@@ -195,10 +195,10 @@ Works across formats:
 
 ```bash
 # JSON output
-workflow run extract --format-hint json
+wfw run extract --format-hint json
 
 # Depends on JSON (included as text context)
-workflow run analyze --depends-on extract
+wfw run analyze --depends-on extract
 ```
 
 ## Combining Methods
@@ -221,7 +221,7 @@ CONTEXT_FILES=("README.md" "notes/analysis-plan.txt")
 ### Example CLI
 
 ```bash
-workflow run analysis \
+wfw run analysis \
   --depends-on 00-context \
   --context-pattern "data/*.csv" \
   --context-file additional-notes.md
@@ -318,14 +318,14 @@ Works regardless of where you run `workflow` from:
 
 ```bash
 cd /home/user/project/subdir
-workflow run analysis  # Still finds /home/user/project/data/results.csv
+wfw run analysis  # Still finds /home/user/project/data/results.csv
 ```
 
 ### CLI Paths
 
 ```bash
 # Current directory: /home/user/project/subdir
-workflow run analysis --context-file local.csv
+wfw run analysis --context-file local.csv
 # Looks for: /home/user/project/subdir/local.csv
 ```
 
@@ -336,7 +336,7 @@ Standard CLI behavior (like `cp`, `cat`, etc.).
 ### Estimate Before Running
 
 ```bash
-workflow run analysis --count-tokens
+wfw run analysis --count-tokens
 ```
 
 Shows:
@@ -374,11 +374,11 @@ CONTEXT_FILES=("data/summary.csv" "data/key-results.txt")
 
 ```bash
 # Workflow 1: Process all data, output summary
-workflow run 01-summarize
+wfw run 01-summarize
 # Config: CONTEXT_PATTERN="data/**/*.csv"
 
 # Workflow 2: Use summary only
-workflow run 02-analyze
+wfw run 02-analyze
 # Config: DEPENDS_ON=(01-summarize)  # Much smaller context
 ```
 
@@ -387,7 +387,7 @@ workflow run 02-analyze
 ### Dry Run
 
 ```bash
-workflow run analysis --count-tokens
+wfw run analysis --count-tokens
 ```
 
 Shows exactly what will be included and token estimates.
@@ -406,7 +406,7 @@ find data -name "*.csv"
 
 ```bash
 # Check workflow exists and has output
-workflow list
+wfw list
 ls .workflow/dependency-name/output/
 ```
 
@@ -440,8 +440,8 @@ DEPENDS_ON=(00-init 01-process 02-analyze)
 
 ```bash
 # Both workflows can run independently
-workflow run 01-analyze-a --depends-on 00-init
-workflow run 01-analyze-b --depends-on 00-init
+wfw run 01-analyze-a --depends-on 00-init
+wfw run 01-analyze-b --depends-on 00-init
 
 # Final workflow depends on both
 # Config for 02-final:
@@ -470,10 +470,10 @@ Instead of copying files or including large outputs directly, use `--depends-on`
 ```bash
 # Inefficient:
 cp .workflow/preprocessing/output.md context/
-workflow run analysis --context-file context/<name>.md
+wfw run analysis --context-file context/<name>.md
 
 # Better:
-workflow run analysis --depends-on preprocessing
+wfw run analysis --depends-on preprocessing
 ```
 
 ### Split Large Context
@@ -484,8 +484,8 @@ If context exceeds token limits:
 2. Use summary as context for final workflow
 
 ```bash
-workflow run 01-summarize  # Processes all data
-workflow run 02-final --depends-on 01-summarize  # Uses summary only
+wfw run 01-summarize  # Processes all data
+wfw run 02-final --depends-on 01-summarize  # Uses summary only
 ```
 
 ## Troubleshooting
@@ -518,7 +518,7 @@ ls relative/path/to/file.txt
 
 ```bash
 # Check workflow exists
-workflow list
+wfw list
 
 # Check has output
 ls .workflow/dependency-name/output/
@@ -528,7 +528,7 @@ ls .workflow/dependency-name/output/
 
 ```bash
 # Estimate first
-workflow run analysis --count-tokens
+wfw run analysis --count-tokens
 
 # If too large, reduce:
 # - Use more specific patterns

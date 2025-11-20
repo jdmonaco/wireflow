@@ -32,7 +32,7 @@ teardown() {
     assert_output --partial 'MAX_TOKENS=4096'
     assert_output --partial 'OUTPUT_FORMAT="md"'
     assert_output --partial 'SYSTEM_PROMPTS=(base)'
-    assert_output --partial 'WORKFLOW_PROMPT_PREFIX='
+    assert_output --partial 'WIREFLOW_PROMPT_PREFIX='
 }
 
 @test "global-config: creates default base.txt system prompt" {
@@ -58,7 +58,7 @@ TEMPERATURE=0.7
 MAX_TOKENS=8192
 OUTPUT_FORMAT="txt"
 SYSTEM_PROMPTS=(base NeuroAI)
-WORKFLOW_PROMPT_PREFIX="$HOME/.config/workflow/prompts"
+WIREFLOW_PROMPT_PREFIX="$HOME/.config/workflow/prompts"
 EOF
 
     # Create workflow with empty config (should inherit from global)
@@ -171,7 +171,7 @@ TEMPERATURE=0.3
 MAX_TOKENS=16384
 OUTPUT_FORMAT="json"
 SYSTEM_PROMPTS=(base Custom)
-WORKFLOW_PROMPT_PREFIX="$HOME/.config/workflow/prompts"
+WIREFLOW_PROMPT_PREFIX="$HOME/.config/workflow/prompts"
 EOF
 
     # Create new project in different location (should inherit from global, not parent)

@@ -9,10 +9,10 @@ setup() {
     setup_test_env
 
     # Create task directory and sample tasks
-    export WORKFLOW_TASK_PREFIX="$TEST_TEMP_DIR/tasks"
-    mkdir -p "$WORKFLOW_TASK_PREFIX"
-    echo "Summarize the key findings from the research." > "$WORKFLOW_TASK_PREFIX/summarize.txt"
-    echo "Extract action items and deadlines." > "$WORKFLOW_TASK_PREFIX/extract-actions.txt"
+    export WIREFLOW_TASK_PREFIX="$TEST_TEMP_DIR/tasks"
+    mkdir -p "$WIREFLOW_TASK_PREFIX"
+    echo "Summarize the key findings from the research." > "$WIREFLOW_TASK_PREFIX/summarize.txt"
+    echo "Extract action items and deadlines." > "$WIREFLOW_TASK_PREFIX/extract-actions.txt"
 
     # Mock curl for API responses
     mock_curl_streaming
@@ -61,17 +61,17 @@ teardown() {
     assert_output --partial "Cannot specify both task NAME and --inline TEXT"
 }
 
-@test "task: fails when WORKFLOW_TASK_PREFIX not set (named task)" {
-    unset WORKFLOW_TASK_PREFIX
+@test "task: fails when WIREFLOW_TASK_PREFIX not set (named task)" {
+    unset WIREFLOW_TASK_PREFIX
 
     run bash "$WORKFLOW_SCRIPT" task summarize
 
     assert_failure
-    assert_output --partial "WORKFLOW_TASK_PREFIX environment variable is not set"
+    assert_output --partial "WIREFLOW_TASK_PREFIX environment variable is not set"
 }
 
-@test "task: inline task works without WORKFLOW_TASK_PREFIX" {
-    unset WORKFLOW_TASK_PREFIX
+@test "task: inline task works without WIREFLOW_TASK_PREFIX" {
+    unset WIREFLOW_TASK_PREFIX
 
     run bash "$WORKFLOW_SCRIPT" task -i "Do something"
 
@@ -158,7 +158,7 @@ EOF
 
 @test "task: respects --system-prompts override" {
     # Create additional prompt file
-    echo "NeuroAI specialized prompt" > "$WORKFLOW_PROMPT_PREFIX/NeuroAI.txt"
+    echo "NeuroAI specialized prompt" > "$WIREFLOW_PROMPT_PREFIX/NeuroAI.txt"
 
     run bash "$WORKFLOW_SCRIPT" task -i "Test" --system-prompts "base,NeuroAI"
 
@@ -275,11 +275,11 @@ EOF
     assert_output --partial "ANTHROPIC_API_KEY"
 }
 
-@test "task: fails when WORKFLOW_PROMPT_PREFIX not set" {
-    unset WORKFLOW_PROMPT_PREFIX
+@test "task: fails when WIREFLOW_PROMPT_PREFIX not set" {
+    unset WIREFLOW_PROMPT_PREFIX
 
     run bash "$WORKFLOW_SCRIPT" task -i "Test"
 
     assert_failure
-    assert_output --partial "WORKFLOW_PROMPT_PREFIX"
+    assert_output --partial "WIREFLOW_PROMPT_PREFIX"
 }

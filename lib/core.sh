@@ -2,7 +2,7 @@
 # Workflow Core Functions
 # =============================================================================
 # Core workflow subcommand implementations for the workflow CLI tool.
-# This file is sourced by workflow.sh.
+# This file is sourced by wireflow.sh.
 # Dependencies: lib/utils.sh, lib/config.sh, lib/edit.sh
 # =============================================================================
 
@@ -143,16 +143,16 @@ new_workflow() {
 
     # Create task file (from template or default skeleton)
     if [[ -n "$template_task" ]]; then
-        # Load global config to get WORKFLOW_TASK_PREFIX
+        # Load global config to get WIREFLOW_TASK_PREFIX
         source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
         load_global_config
 
-        if [[ -z "$WORKFLOW_TASK_PREFIX" || ! -d "$WORKFLOW_TASK_PREFIX" ]]; then
-            echo "Error: WORKFLOW_TASK_PREFIX not configured"
+        if [[ -z "$WIREFLOW_TASK_PREFIX" || ! -d "$WIREFLOW_TASK_PREFIX" ]]; then
+            echo "Error: WIREFLOW_TASK_PREFIX not configured"
             echo "Cannot use task template. Creating with default skeleton instead."
             template_task=""  # Fall through to default
         else
-            local template_file="$WORKFLOW_TASK_PREFIX/${template_task}.txt"
+            local template_file="$WIREFLOW_TASK_PREFIX/${template_task}.txt"
 
             # If not found in custom location, try default location as fallback
             if [[ ! -f "$template_file" ]]; then
@@ -161,7 +161,7 @@ new_workflow() {
                     template_file="$default_template_file"
                 else
                     echo "Error: Task template not found: $template_task" >&2
-                    echo "  Searched: $WORKFLOW_TASK_PREFIX" >&2
+                    echo "  Searched: $WIREFLOW_TASK_PREFIX" >&2
                     echo "  Searched: $HOME/.config/workflow/tasks (fallback)" >&2
                     echo ""
                     echo "Available templates:"
@@ -368,7 +368,7 @@ list_workflows_cmd() {
 
 # List available task templates
 list_tasks() {
-    # Load global config to get WORKFLOW_TASK_PREFIX
+    # Load global config to get WIREFLOW_TASK_PREFIX
     source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
     load_global_config
 
@@ -381,13 +381,13 @@ list_tasks() {
     local has_builtin_tasks=false
 
     # Set default if not configured
-    if [[ -z "$WORKFLOW_TASK_PREFIX" ]]; then
-        WORKFLOW_TASK_PREFIX="$default_task_dir"
+    if [[ -z "$WIREFLOW_TASK_PREFIX" ]]; then
+        WIREFLOW_TASK_PREFIX="$default_task_dir"
     fi
 
     # List from custom location first
-    if [[ -d "$WORKFLOW_TASK_PREFIX" ]]; then
-        local task_files=("$WORKFLOW_TASK_PREFIX"/*.txt)
+    if [[ -d "$WIREFLOW_TASK_PREFIX" ]]; then
+        local task_files=("$WIREFLOW_TASK_PREFIX"/*.txt)
         if [[ -e "${task_files[0]}" ]]; then
             has_custom_tasks=true
             for task_file in "${task_files[@]}"; do
@@ -406,7 +406,7 @@ list_tasks() {
     fi
 
     # List from default location (built-ins), excluding already shown
-    if [[ -d "$default_task_dir" && "$default_task_dir" != "$WORKFLOW_TASK_PREFIX" ]]; then
+    if [[ -d "$default_task_dir" && "$default_task_dir" != "$WIREFLOW_TASK_PREFIX" ]]; then
         local builtin_files=("$default_task_dir"/*.txt)
         if [[ -e "${builtin_files[0]}" ]]; then
             has_builtin_tasks=true
@@ -445,7 +445,7 @@ list_tasks() {
 
     echo ""
     if [[ $has_custom_tasks == true ]]; then
-        echo "Custom: $WORKFLOW_TASK_PREFIX"
+        echo "Custom: $WIREFLOW_TASK_PREFIX"
     fi
     if [[ $has_builtin_tasks == true ]]; then
         echo "Built-in: $default_task_dir"
@@ -468,17 +468,17 @@ show_task() {
         return 1
     fi
 
-    # Load global config to get WORKFLOW_TASK_PREFIX
+    # Load global config to get WIREFLOW_TASK_PREFIX
     source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
     load_global_config
 
-    if [[ -z "$WORKFLOW_TASK_PREFIX" || ! -d "$WORKFLOW_TASK_PREFIX" ]]; then
-        echo "Error: WORKFLOW_TASK_PREFIX not configured"
-        echo "Set WORKFLOW_TASK_PREFIX in ~/.config/workflow/config"
+    if [[ -z "$WIREFLOW_TASK_PREFIX" || ! -d "$WIREFLOW_TASK_PREFIX" ]]; then
+        echo "Error: WIREFLOW_TASK_PREFIX not configured"
+        echo "Set WIREFLOW_TASK_PREFIX in ~/.config/workflow/config"
         return 1
     fi
 
-    local task_file="$WORKFLOW_TASK_PREFIX/${task_name}.txt"
+    local task_file="$WIREFLOW_TASK_PREFIX/${task_name}.txt"
 
     # If not found in custom location, try default location as fallback
     if [[ ! -f "$task_file" ]]; then
@@ -487,7 +487,7 @@ show_task() {
             task_file="$default_task_file"
         else
             echo "Error: Task template not found: $task_name" >&2
-            echo "  Searched: $WORKFLOW_TASK_PREFIX" >&2
+            echo "  Searched: $WIREFLOW_TASK_PREFIX" >&2
             echo "  Searched: $HOME/.config/workflow/tasks (fallback)" >&2
             echo ""
             echo "Available templates:"
@@ -521,17 +521,17 @@ edit_task() {
         return 1
     fi
 
-    # Load global config to get WORKFLOW_TASK_PREFIX
+    # Load global config to get WIREFLOW_TASK_PREFIX
     source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
     load_global_config
 
-    if [[ -z "$WORKFLOW_TASK_PREFIX" || ! -d "$WORKFLOW_TASK_PREFIX" ]]; then
-        echo "Error: WORKFLOW_TASK_PREFIX not configured"
-        echo "Set WORKFLOW_TASK_PREFIX in ~/.config/workflow/config"
+    if [[ -z "$WIREFLOW_TASK_PREFIX" || ! -d "$WIREFLOW_TASK_PREFIX" ]]; then
+        echo "Error: WIREFLOW_TASK_PREFIX not configured"
+        echo "Set WIREFLOW_TASK_PREFIX in ~/.config/workflow/config"
         return 1
     fi
 
-    local task_file="$WORKFLOW_TASK_PREFIX/${task_name}.txt"
+    local task_file="$WIREFLOW_TASK_PREFIX/${task_name}.txt"
 
     # If not found in custom location, try default location as fallback
     if [[ ! -f "$task_file" ]]; then
@@ -540,7 +540,7 @@ edit_task() {
             task_file="$default_task_file"
         else
             echo "Error: Task template not found: $task_name" >&2
-            echo "  Searched: $WORKFLOW_TASK_PREFIX" >&2
+            echo "  Searched: $WIREFLOW_TASK_PREFIX" >&2
             echo "  Searched: $HOME/.config/workflow/tasks (fallback)" >&2
             echo ""
             echo "Available templates:"

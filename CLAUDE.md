@@ -1,4 +1,4 @@
-# Workflow - Development Guide
+# WireFlow - Development Guide
 
 Quick reference for development workflows and processes.
 
@@ -173,7 +173,7 @@ Code comments           → Inline documentation
 
 ### Adding a Subcommand
 
-1. Add case to `workflow.sh` subcommand dispatcher
+1. Add case to `wireflow.sh` subcommand dispatcher
 2. Implement in `lib/core.sh` (or new lib file if complex)
 3. Add help function to `lib/help.sh`
 4. Add `-h` check to subcommand case
@@ -197,7 +197,7 @@ Code comments           → Inline documentation
 
 **Current version:** 0.2.0 (pre-release)
 
-**Location:** `WORKFLOW_VERSION` constant in `workflow.sh` (line 5)
+**Location:** `WIREFLOW_VERSION` constant in `wireflow.sh` (line 5)
 
 **Semantic versioning strategy:**
 - **0.x.x:** Pre-release (API may change)
@@ -235,14 +235,14 @@ When preparing a new release, follow these steps in order:
    - Keep entries concise and commit-focused
 
 3. **Bump version numbers:**
-   - Edit `WORKFLOW_VERSION` in `workflow.sh` (line 5)
+   - Edit `WIREFLOW_VERSION` in `wireflow.sh` (line 5)
    - Update version in `README.md` (line 3)
    - Update version in `docs/index.md` (if exists)
    - Ensure all three match exactly
 
 4. **Create version bump commit:**
    ```bash
-   git add RELEASE-NOTES.md CHANGELOG.md workflow.sh README.md docs/index.md
+   git add RELEASE-NOTES.md CHANGELOG.md wireflow.sh README.md docs/index.md
    git commit -m "chore: Release version X.Y.Z
 
    Add comprehensive release notes documenting:

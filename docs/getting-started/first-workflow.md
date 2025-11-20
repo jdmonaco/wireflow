@@ -54,7 +54,7 @@ EOF
 ### 3. Initialize Workflow Project
 
 ```bash
-workflow init .
+wfw init .
 ```
 
 This creates `.workflow/` with default configuration.
@@ -64,7 +64,7 @@ This creates `.workflow/` with default configuration.
 ### Create the Workflow
 
 ```bash
-workflow new 01-analyze-code
+wfw new 01-analyze-code
 ```
 
 ### Define the Task
@@ -72,7 +72,7 @@ workflow new 01-analyze-code
 Edit the task file:
 
 ```bash
-workflow edit 01-analyze-code
+wfw edit 01-analyze-code
 ```
 
 Add this task description:
@@ -113,7 +113,7 @@ MAX_TOKENS=4000
 ### Run the Analysis
 
 ```bash
-workflow run 01-analyze-code --context-file string_utils.py --stream
+wfw run 01-analyze-code --context-file string_utils.py --stream
 ```
 
 Watch as Claude analyzes the code in real-time!
@@ -133,13 +133,13 @@ Now let's use the analysis to generate actual documentation.
 ### Create the Workflow
 
 ```bash
-workflow new 02-generate-docs
+wfw new 02-generate-docs
 ```
 
 ### Define the Task
 
 ```bash
-workflow edit 02-generate-docs
+wfw edit 02-generate-docs
 ```
 
 Add this task:
@@ -166,7 +166,7 @@ Use proper markdown formatting with code blocks and clear headings.
 This is where it gets powerful. Use `--depends-on` to automatically include the previous workflow's output:
 
 ```bash
-workflow run 02-generate-docs \
+wfw run 02-generate-docs \
   --context-file string_utils.py \
   --depends-on 01-analyze-code \
   --stream
@@ -190,13 +190,13 @@ Let's create a separate workflow for generating example code.
 ### Create the Workflow
 
 ```bash
-workflow new 03-usage-examples
+wfw new 03-usage-examples
 ```
 
 ### Define the Task
 
 ```bash
-workflow edit 03-usage-examples
+wfw edit 03-usage-examples
 ```
 
 Add this task:
@@ -220,7 +220,7 @@ Output should be ready to copy into a Python file or Jupyter notebook.
 Include both the original analysis and the documentation:
 
 ```bash
-workflow run 03-usage-examples \
+wfw run 03-usage-examples \
   --context-file string_utils.py \
   --depends-on 01-analyze-code \
   --depends-on 02-generate-docs \
@@ -282,7 +282,7 @@ Each workflow builds on previous outputs using `--depends-on`.
 Before running, check estimated costs:
 
 ```bash
-workflow run 03-usage-examples \
+wfw run 03-usage-examples \
   --context-file string_utils.py \
   --depends-on 01-analyze-code \
   --depends-on 02-generate-docs \
@@ -299,10 +299,10 @@ If you want to refine the documentation, just edit the task and re-run:
 
 ```bash
 # Edit the task
-workflow edit 02-generate-docs
+wfw edit 02-generate-docs
 
 # Re-run (automatically backs up previous output)
-workflow run 02-generate-docs \
+wfw run 02-generate-docs \
   --context-file string_utils.py \
   --depends-on 01-analyze-code \
   --stream
@@ -353,7 +353,7 @@ echo "SYSTEM_PROMPTS=base,code-documenter" >> .workflow/config
 If you had multiple Python files:
 
 ```bash
-workflow run 01-analyze-code --context-pattern "*.py" --stream
+wfw run 01-analyze-code --context-pattern "*.py" --stream
 ```
 
 ### Different Output Formats
@@ -361,7 +361,7 @@ workflow run 01-analyze-code --context-pattern "*.py" --stream
 Request JSON output:
 
 ```bash
-workflow run 01-analyze-code \
+wfw run 01-analyze-code \
   --context-file string_utils.py \
   --format-hint json \
   --stream

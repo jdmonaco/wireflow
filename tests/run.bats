@@ -387,7 +387,7 @@ EOF
 
 @test "run: CLI --system-prompts overrides config" {
     # Add NeuroAI prompt
-    echo "NeuroAI system prompt" > "$WORKFLOW_PROMPT_PREFIX/NeuroAI.txt"
+    echo "NeuroAI system prompt" > "$WIREFLOW_PROMPT_PREFIX/NeuroAI.txt"
 
     run bash "$WORKFLOW_SCRIPT" run test-workflow --system-prompts "base,NeuroAI" --count-tokens
 
@@ -412,13 +412,13 @@ EOF
     assert_output --partial "ANTHROPIC_API_KEY"
 }
 
-@test "run: fails when WORKFLOW_PROMPT_PREFIX not set" {
-    unset WORKFLOW_PROMPT_PREFIX
+@test "run: fails when WIREFLOW_PROMPT_PREFIX not set" {
+    unset WIREFLOW_PROMPT_PREFIX
 
     run bash "$WORKFLOW_SCRIPT" run test-workflow
 
     assert_failure
-    assert_output --partial "WORKFLOW_PROMPT_PREFIX"
+    assert_output --partial "WIREFLOW_PROMPT_PREFIX"
 }
 
 @test "run: fails when system prompt file missing" {
@@ -476,7 +476,7 @@ EOF
     bash "$WORKFLOW_SCRIPT" run test-workflow --count-tokens > /dev/null
 
     # Modify system prompt file
-    echo "MODIFIED BASE PROMPT" > "$WORKFLOW_PROMPT_PREFIX/base.txt"
+    echo "MODIFIED BASE PROMPT" > "$WIREFLOW_PROMPT_PREFIX/base.txt"
 
     # Run again - should rebuild
     bash "$WORKFLOW_SCRIPT" run test-workflow --count-tokens > /dev/null

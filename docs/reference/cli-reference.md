@@ -5,7 +5,7 @@ Complete reference for all Workflow commands, options, and flags.
 ## Global Usage
 
 ```
-workflow <subcommand> [options]
+wfw <subcommand> [options]
 ```
 
 ### Available Subcommands
@@ -32,9 +32,9 @@ workflow <subcommand> [options]
 ### Quick Help
 
 ```bash
-workflow help                # Main help
-workflow help <subcommand>   # Detailed subcommand help
-workflow <subcommand> -h     # Quick subcommand help
+wfw help                # Main help
+wfw help <subcommand>   # Detailed subcommand help
+wfw <subcommand> -h     # Quick subcommand help
 ```
 
 ## Environment Variables
@@ -42,8 +42,8 @@ workflow <subcommand> -h     # Quick subcommand help
 | Variable | Description | Required | Default |
 |----------|-------------|----------|---------|
 | `ANTHROPIC_API_KEY` | Anthropic API key | ✅ Yes | None |
-| `WORKFLOW_PROMPT_PREFIX` | System prompt directory | No | `~/.config/workflow/prompts` |
-| `WORKFLOW_TASK_PREFIX` | Named task directory | No | `~/.config/workflow/tasks` |
+| `WIREFLOW_PROMPT_PREFIX` | System prompt directory | No | `~/.config/workflow/prompts` |
+| `WIREFLOW_TASK_PREFIX` | Named task directory | No | `~/.config/workflow/tasks` |
 | `EDITOR` | Text editor for file editing | No | `vi` |
 
 ## Configuration Files
@@ -56,14 +56,14 @@ workflow <subcommand> -h     # Quick subcommand help
 
 ---
 
-## `workflow init`
+## `wfw init`
 
 Initialize a workflow project with `.workflow/` structure.
 
 ### Usage
 
 ```bash
-workflow init [<directory>]
+wfw init [<directory>]
 ```
 
 ### Arguments
@@ -111,31 +111,31 @@ If initializing inside an existing workflow project:
 
 ```bash
 # Initialize in current directory
-workflow init .
+wfw init .
 
 # Initialize in new directory
-workflow init my-project
+wfw init my-project
 
 # Navigate and initialize
 cd existing-project
-workflow init .
+wfw init .
 ```
 
 ### See Also
 
-- [`workflow new`](#workflow-new) - Create workflows
-- [`workflow config`](#workflow-config) - View configuration
+- [`wfw new`](#workflow-new) - Create workflows
+- [`wfw config`](#workflow-config) - View configuration
 
 ---
 
-## `workflow new`
+## `wfw new`
 
 Create a new workflow in the current project.
 
 ### Usage
 
 ```bash
-workflow new <name>
+wfw new <name>
 ```
 
 ### Arguments
@@ -168,39 +168,39 @@ Workflow config supports:
 
 ### Requirements
 
-Must be run within an initialized workflow project. Use `workflow init` first if needed.
+Must be run within an initialized workflow project. Use `wfw init` first if needed.
 
 ### Examples
 
 ```bash
 # Simple workflow
-workflow new 01-outline
+wfw new 01-outline
 
 # Descriptive name
-workflow new analyze-data
+wfw new analyze-data
 
 # Numbered sequence
-workflow new 00-context
-workflow new 01-analysis
-workflow new 02-writeup
+wfw new 00-context
+wfw new 01-analysis
+wfw new 02-writeup
 ```
 
 ### See Also
 
-- [`workflow init`](#workflow-init) - Initialize project
-- [`workflow edit`](#workflow-edit) - Edit workflows
-- [`workflow run`](#workflow-run) - Execute workflows
+- [`wfw init`](#workflow-init) - Initialize project
+- [`wfw edit`](#workflow-edit) - Edit workflows
+- [`wfw run`](#workflow-run) - Execute workflows
 
 ---
 
-## `workflow edit`
+## `wfw edit`
 
 Edit workflow or project files in `$EDITOR`.
 
 ### Usage
 
 ```bash
-workflow edit [<name>]
+wfw edit [<name>]
 ```
 
 ### Arguments
@@ -239,27 +239,27 @@ Must be run within an initialized workflow project.
 
 ```bash
 # Edit project files
-workflow edit
+wfw edit
 
 # Edit workflow files
-workflow edit 01-outline
-workflow edit analyze-data
+wfw edit 01-outline
+wfw edit analyze-data
 ```
 
 ### See Also
 
-- [`workflow config`](#workflow-config) - View configuration
+- [`wfw config`](#workflow-config) - View configuration
 
 ---
 
-## `workflow cat`
+## `wfw cat`
 
 Display workflow output to stdout.
 
 ### Usage
 
 ```bash
-workflow cat <name>
+wfw cat <name>
 ```
 
 ### Arguments
@@ -288,36 +288,36 @@ Must be run within an initialized workflow project. Workflow must have been run 
 
 ```bash
 # View output
-workflow cat 01-analysis
+wfw cat 01-analysis
 
 # Search in output
-workflow cat data-summary | grep "findings"
+wfw cat data-summary | grep "findings"
 
 # Pipe to pager
-workflow cat report | less
+wfw cat report | less
 
 # Process JSON
-workflow cat extract | jq .results
+wfw cat extract | jq .results
 
 # Save to file
-workflow cat draft > published.md
+wfw cat draft > published.md
 ```
 
 ### See Also
 
-- [`workflow run`](#workflow-run) - Execute workflows
-- [`workflow open`](#workflow-open) - Open in default app (macOS)
+- [`wfw run`](#workflow-run) - Execute workflows
+- [`wfw open`](#workflow-open) - Open in default app (macOS)
 
 ---
 
-## `workflow open`
+## `wfw open`
 
 Open workflow output in default application (macOS only).
 
 ### Usage
 
 ```bash
-workflow open <name>
+wfw open <name>
 ```
 
 ### Arguments
@@ -356,40 +356,40 @@ Reads from `.workflow/output/<name>.<format>` (automatically detects format).
 
 ```bash
 # Open Markdown in editor
-workflow open report
+wfw open report
 
 # Open HTML in browser
-workflow open data-viz
+wfw open data-viz
 
 # Open JSON in viewer
-workflow open analysis
+wfw open analysis
 ```
 
 ### Platform Notes
 
 This command is **macOS-specific**. On other platforms:
 
-- **Linux:** Use `workflow cat <name> | xdg-open -` or similar
-- **Windows/WSL:** Use `workflow cat <name>` and open manually
+- **Linux:** Use `wfw cat <name> | xdg-open -` or similar
+- **Windows/WSL:** Use `wfw cat <name>` and open manually
 
-The command checks for `open` availability and fails gracefully with a helpful message suggesting `workflow cat` as an alternative.
+The command checks for `open` availability and fails gracefully with a helpful message suggesting `wfw cat` as an alternative.
 
 ### See Also
 
-- [`workflow cat`](#workflow-cat) - Display to stdout
-- [`workflow run`](#workflow-run) - Execute workflows
+- [`wfw cat`](#workflow-cat) - Display to stdout
+- [`wfw run`](#workflow-run) - Execute workflows
 
 ---
 
-## `workflow list`
+## `wfw list`
 
 List all workflows in the current project.
 
 ### Usage
 
 ```bash
-workflow list
-workflow ls    # Alias
+wfw list
+wfw ls    # Alias
 ```
 
 ### Options
@@ -416,8 +416,8 @@ Must be run within an initialized workflow project.
 ### Examples
 
 ```bash
-workflow list
-workflow ls
+wfw list
+wfw ls
 ```
 
 ### Sample Output
@@ -433,19 +433,19 @@ Available workflows in /path/to/project/.workflow:
 
 ### See Also
 
-- [`workflow new`](#workflow-new) - Create workflows
-- [`workflow run`](#workflow-run) - Execute workflows
+- [`wfw new`](#workflow-new) - Create workflows
+- [`wfw run`](#workflow-run) - Execute workflows
 
 ---
 
-## `workflow config`
+## `wfw config`
 
 Display configuration with source tracking. Optionally prompt to edit files.
 
 ### Usage
 
 ```bash
-workflow config [<name>] [options]
+wfw config [<name>] [options]
 ```
 
 ### Arguments
@@ -498,13 +498,13 @@ workflow config [<name>] [options]
 
 ```bash
 # Show project config
-workflow config
+wfw config
 
 # Show workflow config
-workflow config 01-analysis
+wfw config 01-analysis
 
 # Show config and prompt to edit
-workflow config --edit
+wfw config --edit
 ```
 
 ### Sample Output
@@ -534,19 +534,19 @@ Context Sources:
 
 ### See Also
 
-- [`workflow help run`](#workflow-run) - Execution options
-- [`workflow help task`](#workflow-task) - Task mode
+- [`wfw help run`](#workflow-run) - Execution options
+- [`wfw help task`](#workflow-task) - Task mode
 
 ---
 
-## `workflow run`
+## `wfw run`
 
 Execute a workflow with full context aggregation and persistence.
 
 ### Usage
 
 ```bash
-workflow run <name> [options]
+wfw run <name> [options]
 ```
 
 ### Arguments
@@ -614,67 +614,67 @@ Previous outputs are automatically backed up with timestamps.
 
 ```bash
 # Basic execution
-workflow run 01-analysis
+wfw run 01-analysis
 
 # With streaming
-workflow run 01-analysis --stream
+wfw run 01-analysis --stream
 
 # With dependencies
-workflow run 02-report --depends-on 01-analysis
+wfw run 02-report --depends-on 01-analysis
 
 # With context files
-workflow run draft --context-file notes.md --context-file data.csv
+wfw run draft --context-file notes.md --context-file data.csv
 
 # With glob pattern
-workflow run analysis --context-pattern "data/2024-01/*.csv"
+wfw run analysis --context-pattern "data/2024-01/*.csv"
 
 # Multiple dependencies
-workflow run final --depends-on 01-context,02-analysis,03-draft
+wfw run final --depends-on 01-context,02-analysis,03-draft
 
 # Override configuration
-workflow run analysis \
+wfw run analysis \
   --model claude-3-opus-4-20250514 \
   --temperature 0.5 \
   --max-tokens 8192 \
   --stream
 
 # Estimate tokens first
-workflow run analysis --count-tokens
+wfw run analysis --count-tokens
 
 # Inspect prompts before running
-workflow run analysis --dry-run
+wfw run analysis --dry-run
 
 # Custom system prompts
-workflow run analysis --system-prompts "base,stats,research"
+wfw run analysis --system-prompts "base,stats,research"
 
 # Different output format
-workflow run extract --format-hint json
+wfw run extract --format-hint json
 ```
 
 ### See Also
 
-- [`workflow config`](#workflow-config) - View configuration
-- [`workflow task`](#workflow-task) - Lightweight tasks
+- [`wfw config`](#workflow-config) - View configuration
+- [`wfw task`](#workflow-task) - Lightweight tasks
 
 ---
 
-## `workflow task`
+## `wfw task`
 
 Execute a one-off task without creating workflow directories.
 
 ### Usage
 
 ```bash
-workflow task <name> [options]
-workflow task --inline <text> [options]
-workflow task -i <text> [options]
+wfw task <name> [options]
+wfw task --inline <text> [options]
+wfw task -i <text> [options]
 ```
 
 ### Arguments
 
 | Argument | Description | Required |
 |----------|-------------|----------|
-| `<name>` | Named task from `$WORKFLOW_TASK_PREFIX/<name>.txt` | Mutually exclusive with `--inline` |
+| `<name>` | Named task from `$WIREFLOW_TASK_PREFIX/<name>.txt` | Mutually exclusive with `--inline` |
 
 ### Task Specification
 
@@ -736,59 +736,59 @@ Otherwise runs in standalone mode with global config only.
 
 ### Named Tasks
 
-Create reusable task templates in `$WORKFLOW_TASK_PREFIX/`:
+Create reusable task templates in `$WIREFLOW_TASK_PREFIX/`:
 
 ```bash
 mkdir -p ~/.config/workflow/tasks
 echo "Summarize the key points" > ~/.config/workflow/tasks/summarize.txt
-workflow task summarize --context-file notes.md
+wfw task summarize --context-file notes.md
 ```
 
 ### Examples
 
 ```bash
 # Named task with context
-workflow task summarize --context-file notes.md
+wfw task summarize --context-file notes.md
 
 # Inline task
-workflow task -i "Extract action items" --context-file meeting.md
+wfw task -i "Extract action items" --context-file meeting.md
 
 # Long inline task
-workflow task --inline "Analyze the data and create a comprehensive report" \
+wfw task --inline "Analyze the data and create a comprehensive report" \
   --context-pattern "data/*.csv"
 
 # Save output to file
-workflow task -i "Analyze data" \
+wfw task -i "Analyze data" \
   --context-pattern "data/*.csv" \
   --output-file analysis.md
 
 # Override model
-workflow task summarize \
+wfw task summarize \
   --model claude-3-opus-4-20250514 \
   --context-file report.md
 
 # Multiple context files
-workflow task -i "Compare these approaches" \
+wfw task -i "Compare these approaches" \
   --context-file approach-a.md \
   --context-file approach-b.md
 
 # Use glob pattern
-workflow task -i "What are the common themes?" \
+wfw task -i "What are the common themes?" \
   --context-pattern "reports/2024/*.md"
 
 # Batch mode (no streaming)
-workflow task -i "Generate JSON" \
+wfw task -i "Generate JSON" \
   --context-file data.txt \
   --format-hint json \
   --no-stream
 
 # Estimate tokens
-workflow task summarize --context-file large-file.md --dry-run
+wfw task summarize --context-file large-file.md --dry-run
 ```
 
-### Key Differences from `workflow run`
+### Key Differences from `wfw run`
 
-| Feature | `workflow run` | `workflow task` |
+| Feature | `wfw run` | `wfw task` |
 |---------|----------------|-----------------|
 | Workflow directory | Required | Not created |
 | Default output | File | stdout |
@@ -800,19 +800,19 @@ workflow task summarize --context-file large-file.md --dry-run
 
 ### See Also
 
-- [`workflow run`](#workflow-run) - Full workflow execution
-- [`workflow config`](#workflow-config) - Configuration
+- [`wfw run`](#workflow-run) - Full workflow execution
+- [`wfw config`](#workflow-config) - Configuration
 
 ---
 
-## `workflow help`
+## `wfw help`
 
 Show help for subcommands.
 
 ### Usage
 
 ```bash
-workflow help [<subcommand>]
+wfw help [<subcommand>]
 ```
 
 ### Arguments
@@ -835,17 +835,17 @@ Shows detailed help for the specified subcommand.
 
 ```bash
 # Main help
-workflow help
+wfw help
 
 # Subcommand-specific help
-workflow help init
-workflow help run
-workflow help task
+wfw help init
+wfw help run
+wfw help task
 
 # Quick help (alternative)
-workflow init -h
-workflow run -h
-workflow task -h
+wfw init -h
+wfw run -h
+wfw task -h
 ```
 
 ---
@@ -917,7 +917,7 @@ workflow task -h
 
 ```bash
 # Full configuration
-workflow run analysis \
+wfw run analysis \
   --context-file data.csv \
   --context-pattern "notes/*.md" \
   --depends-on 00-context \
@@ -933,20 +933,20 @@ workflow run analysis \
 
 ```bash
 # Check token estimate
-workflow run expensive-analysis --dry-run
+wfw run expensive-analysis --dry-run
 
 # If acceptable, run for real
-workflow run expensive-analysis --stream
+wfw run expensive-analysis --stream
 ```
 
 ### Quick Iterations
 
 ```bash
 # Edit task
-workflow edit analysis
+wfw edit analysis
 
 # Run with streaming
-workflow run analysis --stream
+wfw run analysis --stream
 
 # Compare with previous
 diff .workflow/analysis/output.md \
@@ -960,7 +960,7 @@ diff .workflow/analysis/output.md \
 # Run workflow pipeline
 for wf in 01-preprocess 02-analyze 03-visualize 04-report; do
   echo "Running $wf..."
-  workflow run "$wf" --stream || exit 1
+  wfw run "$wf" --stream || exit 1
 done
 echo "Pipeline complete!"
 ```

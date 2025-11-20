@@ -50,7 +50,7 @@ my-project/
 
 The presence of this directory marks a workflow project. All workflow-related files are stored here.
 
-**Created by:** `workflow init`
+**Created by:** `wfw init`
 
 **Contents:**
 
@@ -147,7 +147,7 @@ Hardlink directory for quick access to workflow outputs.
 
 Individual workflow directories.
 
-**Created by:** `workflow new <name>`
+**Created by:** `wfw new <name>`
 
 **Contents:** Workflow-specific files (task.txt, config, context/, output/)
 
@@ -165,9 +165,9 @@ The task description or prompt for this workflow.
 
 **Purpose:** Instructions for Claude on what to do
 
-**Created by:** `workflow new <name>`
+**Created by:** `wfw new <name>`
 
-**Edited by:** `workflow edit <name>` or direct text editor
+**Edited by:** `wfw edit <name>` or direct text editor
 
 **Example:**
 
@@ -190,7 +190,7 @@ Workflow-specific configuration.
 
 **Purpose:** Configure this workflow's behavior and context
 
-**Created by:** `workflow new <name>`
+**Created by:** `wfw new <name>`
 
 **Common variables:**
 
@@ -226,7 +226,7 @@ Optional directory for workflow-specific context files.
 
 Workflow directory containing all workflow-specific files.
 
-**Created by:** `workflow new <name>` and `workflow run <name>`
+**Created by:** `wfw new <name>` and `wfw run <name>`
 
 **Contents:**
 
@@ -296,11 +296,11 @@ System prompt directory.
 
 Optional named task directory.
 
-**Purpose:** Store reusable task templates for `workflow task <name>`
+**Purpose:** Store reusable task templates for `wfw task <name>`
 
 **Created by:** User (as needed)
 
-**Set via:** `WORKFLOW_TASK_PREFIX` environment variable or config
+**Set via:** `WIREFLOW_TASK_PREFIX` environment variable or config
 
 ## File Naming Conventions
 
@@ -347,19 +347,19 @@ Paths from command-line flags are **relative to PWD** (current working directory
 
 ```bash
 cd /project/subdir
-workflow run analysis --context-file local.md
+wfw run analysis --context-file local.md
 # Looks for: /project/subdir/local.md
 ```
 
 ### System Prompt Paths
 
-System prompts are resolved from `$WORKFLOW_PROMPT_PREFIX`:
+System prompts are resolved from `$WIREFLOW_PROMPT_PREFIX`:
 
 ```bash
 SYSTEM_PROMPTS=(base research)
 # Looks for:
-#   $WORKFLOW_PROMPT_PREFIX/base.txt
-#   $WORKFLOW_PROMPT_PREFIX/research.txt
+#   $WIREFLOW_PROMPT_PREFIX/base.txt
+#   $WIREFLOW_PROMPT_PREFIX/research.txt
 ```
 
 ## Project Discovery
@@ -501,7 +501,7 @@ rm -r .workflow/*/output/
 rm -r .workflow/output/
 # Or start fresh:
 rm -r .workflow
-workflow init .
+wfw init .
 ```
 
 ## See Also

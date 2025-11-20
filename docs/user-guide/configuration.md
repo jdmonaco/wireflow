@@ -46,13 +46,13 @@ OUTPUT_FORMAT="md"
 SYSTEM_PROMPTS=(base)
 
 # System prompt directory
-WORKFLOW_PROMPT_PREFIX="$HOME/.config/workflow/prompts"
+WIREFLOW_PROMPT_PREFIX="$HOME/.config/workflow/prompts"
 
 # Optional: Store API key (environment variable preferred)
 # ANTHROPIC_API_KEY="sk-ant-..."
 
 # Optional: Named task directory
-# WORKFLOW_TASK_PREFIX="$HOME/.config/workflow/tasks"
+# WIREFLOW_TASK_PREFIX="$HOME/.config/workflow/tasks"
 ```
 
 ### Why Global Config?
@@ -73,7 +73,7 @@ nano ~/.config/workflow/config
 Or from any directory:
 
 ```bash
-workflow config  # Shows global config if not in a project
+wfw config  # Shows global config if not in a project
 ```
 
 ## Project Configuration
@@ -84,11 +84,11 @@ workflow config  # Shows global config if not in a project
 
 ### Creation
 
-Created automatically when you run `workflow init`:
+Created automatically when you run `wfw init`:
 
 ```bash
 cd my-project
-workflow init .
+wfw init .
 # Creates .workflow/config
 ```
 
@@ -133,7 +133,7 @@ This allows you to change global defaults and affect all projects that don't exp
 ### Editing Project Config
 
 ```bash
-workflow edit  # Without workflow name, edits project config
+wfw edit  # Without workflow name, edits project config
 ```
 
 Or directly:
@@ -154,10 +154,10 @@ When you initialize a project inside an existing workflow project:
 
 ```bash
 cd ~/projects/research
-workflow init .                    # Parent project
+wfw init .                    # Parent project
 
 cd data-analysis
-workflow init .                    # Nested project
+wfw init .                    # Nested project
 ```
 
 The nested project inherits configuration from the full cascade:
@@ -172,10 +172,10 @@ Current project config
 
 ### Viewing Effective Configuration
 
-Use `workflow config` to see which ancestor set each value:
+Use `wfw config` to see which ancestor set each value:
 
 ```bash
-workflow config
+wfw config
 ```
 
 Output shows:
@@ -205,10 +205,10 @@ Effective Configuration:
 
 ### Creation
 
-Created when you run `workflow new`:
+Created when you run `wfw new`:
 
 ```bash
-workflow new analysis-01
+wfw new analysis-01
 # Creates .workflow/analysis-01/config
 ```
 
@@ -248,7 +248,7 @@ Workflow configs distinguish between primary input documents and supporting cont
 ### Editing Workflow Config
 
 ```bash
-workflow edit analysis-01  # Edits workflow-specific config
+wfw edit analysis-01  # Edits workflow-specific config
 ```
 
 Or directly:
@@ -284,10 +284,10 @@ CLI flags don't modify config files - they apply only to the current execution:
 
 ```bash
 # Use opus just for this run
-workflow run analysis --model claude-3-opus-4-20250514
+wfw run analysis --model claude-3-opus-4-20250514
 
 # Next run uses config default
-workflow run analysis
+wfw run analysis
 ```
 
 ### When to Use CLI Flags
@@ -389,7 +389,7 @@ MODEL=  # Empty - inherits from project
 | Variable | Type | Description | Default |
 |----------|------|-------------|---------|
 | `SYSTEM_PROMPTS` | Array | Prompt names (no `.txt`) | `(base)` |
-| `WORKFLOW_PROMPT_PREFIX` | String | Prompt directory path | `~/.config/workflow/prompts` |
+| `WIREFLOW_PROMPT_PREFIX` | String | Prompt directory path | `~/.config/workflow/prompts` |
 
 ### Context Configuration
 
@@ -404,7 +404,7 @@ MODEL=  # Empty - inherits from project
 
 | Variable | Type | Description | Default |
 |----------|------|-------------|---------|
-| `WORKFLOW_TASK_PREFIX` | String | Named task directory | `~/.config/workflow/tasks` |
+| `WIREFLOW_TASK_PREFIX` | String | Named task directory | `~/.config/workflow/tasks` |
 
 ### Environment Variables
 
@@ -447,7 +447,7 @@ CONTEXT_FILES=("notes/analysis.md" "refs/paper.pdf")
 
 # Works from anywhere:
 cd /home/user/project/subdir
-workflow run analysis  # Still finds /home/user/project/data/*.csv
+wfw run analysis  # Still finds /home/user/project/data/*.csv
 ```
 
 ### CLI Paths (Relative to PWD)
@@ -456,7 +456,7 @@ Command-line paths are **relative to current working directory**:
 
 ```bash
 cd /home/user/project/subdir
-workflow run analysis --context-file local-notes.md
+wfw run analysis --context-file local-notes.md
 # Looks for: /home/user/project/subdir/local-notes.md
 ```
 
@@ -504,10 +504,10 @@ SYSTEM_PROMPTS=(base research stats)
 
 ```bash
 # Project config
-workflow config
+wfw config
 
 # Workflow config
-workflow config <name>
+wfw config <name>
 ```
 
 ### Output Format
@@ -707,7 +707,7 @@ You're not in a workflow project:
 
 ```bash
 cd /path/to/project  # Navigate to project
-workflow config
+wfw config
 ```
 
 ### Values Not Taking Effect
@@ -715,7 +715,7 @@ workflow config
 Check the cascade - CLI flags override everything:
 
 ```bash
-workflow config analysis  # See where each value comes from
+wfw config analysis  # See where each value comes from
 ```
 
 ### Glob Patterns Not Matching
@@ -729,7 +729,7 @@ workflow config analysis  # See where each value comes from
 Dependent workflows must exist and have outputs:
 
 ```bash
-workflow list  # Check workflow exists
+wfw list  # Check workflow exists
 ls .workflow/dependency/output/  # Check output exists
 ```
 

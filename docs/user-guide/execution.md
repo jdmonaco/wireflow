@@ -22,13 +22,13 @@ Workflow mode executes persistent workflows with full context aggregation.
 ### Basic Usage
 
 ```bash
-workflow run <name>
+wfw run <name>
 ```
 
 Example:
 
 ```bash
-workflow run 01-analysis
+wfw run 01-analysis
 ```
 
 ### With Streaming
@@ -36,7 +36,7 @@ workflow run 01-analysis
 Stream output in real-time:
 
 ```bash
-workflow run 01-analysis --stream
+wfw run 01-analysis --stream
 ```
 
 ### With Context Files
@@ -44,13 +44,13 @@ workflow run 01-analysis --stream
 Add specific files as context:
 
 ```bash
-workflow run 01-analysis --context-file data.csv
+wfw run 01-analysis --context-file data.csv
 ```
 
 Multiple files:
 
 ```bash
-workflow run 01-analysis --context-file data.csv --context-file notes.md
+wfw run 01-analysis --context-file data.csv --context-file notes.md
 ```
 
 ### With Glob Patterns
@@ -58,13 +58,13 @@ workflow run 01-analysis --context-file data.csv --context-file notes.md
 Add files matching patterns:
 
 ```bash
-workflow run 01-analysis --context-pattern "data/*.csv"
+wfw run 01-analysis --context-pattern "data/*.csv"
 ```
 
 Multiple patterns:
 
 ```bash
-workflow run 01-analysis --context-pattern "data/*.csv" --context-pattern "notes/*.md"
+wfw run 01-analysis --context-pattern "data/*.csv" --context-pattern "notes/*.md"
 ```
 
 ### With Dependencies
@@ -72,13 +72,13 @@ workflow run 01-analysis --context-pattern "data/*.csv" --context-pattern "notes
 Include outputs from other workflows:
 
 ```bash
-workflow run 02-synthesis --depends-on 01-analysis
+wfw run 02-synthesis --depends-on 01-analysis
 ```
 
 Multiple dependencies:
 
 ```bash
-workflow run 03-report --depends-on 01-analysis,02-synthesis
+wfw run 03-report --depends-on 01-analysis,02-synthesis
 ```
 
 ### Override Configuration
@@ -86,7 +86,7 @@ workflow run 03-report --depends-on 01-analysis,02-synthesis
 Override model, temperature, or tokens:
 
 ```bash
-workflow run 01-analysis \
+wfw run 01-analysis \
     --model claude-3-5-sonnet-20241022 \
     --temperature 0.5 \
     --max-tokens 8192
@@ -97,7 +97,7 @@ workflow run 01-analysis \
 Override system prompts:
 
 ```bash
-workflow run 01-analysis --system-prompts "base,research,stats"
+wfw run 01-analysis --system-prompts "base,research,stats"
 ```
 
 ### Specify Output Format
@@ -105,8 +105,8 @@ workflow run 01-analysis --system-prompts "base,research,stats"
 Change output file extension:
 
 ```bash
-workflow run 01-analysis --format-hint json  # Creates <name>.json
-workflow run 01-analysis --format-hint txt   # Creates <name>.txt
+wfw run 01-analysis --format-hint json  # Creates <name>.json
+wfw run 01-analysis --format-hint txt   # Creates <name>.txt
 ```
 
 ### Estimate Tokens
@@ -114,7 +114,7 @@ workflow run 01-analysis --format-hint txt   # Creates <name>.txt
 Preview token count without making an API call:
 
 ```bash
-workflow run 01-analysis --count-tokens
+wfw run 01-analysis --count-tokens
 ```
 
 Shows estimated token usage for system prompts, task, and context.
@@ -124,7 +124,7 @@ Shows estimated token usage for system prompts, task, and context.
 Save final system and user prompts to files for inspection:
 
 ```bash
-workflow run 01-analysis --dry-run
+wfw run 01-analysis --dry-run
 ```
 
 This saves API request files to:
@@ -136,7 +136,7 @@ Then opens both files in your editor for inspection.
 ### Combined: Estimate and Inspect
 
 ```bash
-workflow run 01-analysis --dry-run --count-tokens
+wfw run 01-analysis --dry-run --count-tokens
 ```
 
 Shows token estimation, then prompts to open the saved prompt files in your editor
@@ -150,19 +150,19 @@ Task mode provides lightweight, one-off task execution without workflow persiste
 Execute tasks with inline text:
 
 ```bash
-workflow task -i "Summarize these notes" --context-file notes.md
+wfw task -i "Summarize these notes" --context-file notes.md
 ```
 
 Long form:
 
 ```bash
-workflow task --inline "Extract key action items from the meeting notes" \
+wfw task --inline "Extract key action items from the meeting notes" \
     --context-file meeting.md
 ```
 
 ### Named Tasks
 
-Create reusable task templates in `$WORKFLOW_TASK_PREFIX/`:
+Create reusable task templates in `$WIREFLOW_TASK_PREFIX/`:
 
 ```bash
 # Setup task directory
@@ -179,7 +179,7 @@ Format as structured markdown with bullet points.
 EOF
 
 # Use named task
-workflow task summarize --context-file notes.md
+wfw task summarize --context-file notes.md
 ```
 
 ### Task Mode with Context
@@ -187,13 +187,13 @@ workflow task summarize --context-file notes.md
 Add context files:
 
 ```bash
-workflow task -i "Analyze this data" --context-file data.csv
+wfw task -i "Analyze this data" --context-file data.csv
 ```
 
 Use glob patterns:
 
 ```bash
-workflow task -i "What are the common themes?" --context-pattern "reports/*.md"
+wfw task -i "What are the common themes?" --context-pattern "reports/*.md"
 ```
 
 ### Saving Task Output
@@ -201,7 +201,7 @@ workflow task -i "What are the common themes?" --context-pattern "reports/*.md"
 By default, task mode streams to stdout. To save to a file:
 
 ```bash
-workflow task -i "Summarize notes" --context-file notes.md --output-file summary.md
+wfw task -i "Summarize notes" --context-file notes.md --output-file summary.md
 ```
 
 ### Batch Mode for Tasks
@@ -209,7 +209,7 @@ workflow task -i "Summarize notes" --context-file notes.md --output-file summary
 Disable streaming and use single-batch mode:
 
 ```bash
-workflow task -i "Analyze data" --context-file data.csv --no-stream
+wfw task -i "Analyze data" --context-file data.csv --no-stream
 ```
 
 ### Task Mode in Projects
@@ -250,7 +250,7 @@ PDF files are automatically processed using the **Claude API**, which jointly an
 
 Example:
 ```bash
-workflow run analysis --input-file report.pdf --context-file references.pdf
+wfw run analysis --input-file report.pdf --context-file references.pdf
 ```
 
 #### Microsoft Office Files (.docx, .pptx)
@@ -264,7 +264,7 @@ Office files are automatically converted to PDF for processing using LibreOffice
 
 Example:
 ```bash
-workflow run summary --input-file presentation.pptx --context-file notes.docx
+wfw run summary --input-file presentation.pptx --context-file notes.docx
 ```
 
 #### Image Files (.jpg, .png, .gif, .webp)
@@ -277,14 +277,14 @@ Images are processed using the **Claude Vision API**.
 
 Example:
 ```bash
-workflow run analyze-diagram --input-file flowchart.png --context-file screenshot.jpg
+wfw run analyze-diagram --input-file flowchart.png --context-file screenshot.jpg
 ```
 
 #### Mixing Document Types
 You can freely mix different document types in a single workflow:
 
 ```bash
-workflow run research \
+wfw run research \
     --input-pattern "data/*.pdf" \
     --context-file notes.docx \
     --context-file diagram.png \
@@ -299,7 +299,7 @@ Content is aggregated in this specific order for optimal processing:
 
 For **workflow mode (`run`)**:
 
-1. **System prompts:** From `$WORKFLOW_PROMPT_PREFIX/` directory
+1. **System prompts:** From `$WIREFLOW_PROMPT_PREFIX/` directory
 2. **Project description:** From `.workflow/project.txt` (if non-empty)
 3. **Context files and patterns:**
      - Config `CONTEXT_FILES` (project-relative)
@@ -317,7 +317,7 @@ For **workflow mode (`run`)**:
 
 For **task mode (`task`)**:
 
-1. **System prompts:** From `$WORKFLOW_PROMPT_PREFIX/` directory
+1. **System prompts:** From `$WIREFLOW_PROMPT_PREFIX/` directory
 2. **Project description:** From `.workflow/project.txt` (if in a project)
 3. **Context files and patterns:**
      - CLI `--context-file` flags (PWD-relative)
@@ -363,7 +363,7 @@ For **task mode (`task`)**:
 Files are processed in the order specified. For narrative context, order carefully:
 
 ```bash
-workflow run draft \
+wfw run draft \
     --context-file 00-outline.md \
     --context-file 01-introduction.md \
     --context-file 02-methods.md
@@ -376,13 +376,13 @@ workflow run draft \
 **Workflow mode:**
 
 ```bash
-workflow run analysis --stream
+wfw run analysis --stream
 ```
 
 **Task mode (default):**
 
 ```bash
-workflow task -i "Summarize" --context-file notes.md
+wfw task -i "Summarize" --context-file notes.md
 ```
 
 **Behavior:**
@@ -397,13 +397,13 @@ workflow task -i "Summarize" --context-file notes.md
 **Workflow mode (default):**
 
 ```bash
-workflow run analysis  # No --stream flag
+wfw run analysis  # No --stream flag
 ```
 
 **Task mode (opt-in):**
 
 ```bash
-workflow task -i "Summarize" --context-file notes.md --no-stream
+wfw task -i "Summarize" --context-file notes.md --no-stream
 ```
 
 **Behavior:**
@@ -420,7 +420,7 @@ Build workflow chains by including outputs from previous workflows.
 ### Simple Dependency
 
 ```bash
-workflow run 02-analysis --depends-on 01-context
+wfw run 02-analysis --depends-on 01-context
 ```
 
 This automatically includes `.workflow/01-context/output.*` as context.
@@ -428,7 +428,7 @@ This automatically includes `.workflow/01-context/output.*` as context.
 ### Multiple Dependencies
 
 ```bash
-workflow run 04-synthesis --depends-on 01-context,02-data,03-models
+wfw run 04-synthesis --depends-on 01-context,02-data,03-models
 ```
 
 Includes outputs from all three workflows.
@@ -445,7 +445,7 @@ DEPENDS_ON=01-context,02-data,03-models
 Then simply run:
 
 ```bash
-workflow run 04-synthesis
+wfw run 04-synthesis
 ```
 
 ### Override Dependencies
@@ -455,7 +455,7 @@ CLI flags override config:
 ```bash
 # Config says: DEPENDS_ON=01-context
 # But you want different dependencies:
-workflow run 04-synthesis --depends-on 02-data,03-models
+wfw run 04-synthesis --depends-on 02-data,03-models
 ```
 
 ### Dependency Resolution
@@ -484,10 +484,10 @@ Create complex directed acyclic graphs:
 Execute in order:
 
 ```bash
-workflow run 02-clean-data --depends-on 01-raw-data --stream
-workflow run 03-exploratory --depends-on 02-clean-data --stream
-workflow run 03-statistical --depends-on 02-clean-data --stream
-workflow run 04-final-report \
+wfw run 02-clean-data --depends-on 01-raw-data --stream
+wfw run 03-exploratory --depends-on 02-clean-data --stream
+wfw run 03-statistical --depends-on 02-clean-data --stream
+wfw run 04-final-report \
     --depends-on 03-exploratory,03-statistical \
     --stream
 ```
@@ -528,9 +528,9 @@ Each re-run creates timestamped backups:
 Specify output format with `--format-hint`:
 
 ```bash
-workflow run analysis --format-hint json    # <name>.json
-workflow run analysis --format-hint txt     # <name>.txt
-workflow run analysis --format-hint html    # <name>.html
+wfw run analysis --format-hint json    # <name>.json
+wfw run analysis --format-hint txt     # <name>.txt
+wfw run analysis --format-hint html    # <name>.html
 ```
 
 Or set in config:
@@ -545,8 +545,8 @@ OUTPUT_FORMAT=json
 If a dependency has a different format, it's still included:
 
 ```bash
-workflow run 01-data --format-hint json  # Creates <name>.json
-workflow run 02-analysis --depends-on 01-data --format-hint md
+wfw run 01-data --format-hint json  # Creates <name>.json
+wfw run 02-analysis --depends-on 01-data --format-hint md
 # Includes the JSON file as context
 ```
 
@@ -561,7 +561,7 @@ Available models (as of 2024):
 - `claude-3-opus-4-20250514` - Most capable
 
 ```bash
-workflow run analysis --model claude-3-opus-4-20250514
+wfw run analysis --model claude-3-opus-4-20250514
 ```
 
 ### Temperature
@@ -573,7 +573,7 @@ Controls randomness (0.0 to 1.0):
 - `1.0` - Creative, varied (default)
 
 ```bash
-workflow run analysis --temperature 0.3
+wfw run analysis --temperature 0.3
 ```
 
 ### Max Tokens
@@ -581,7 +581,7 @@ workflow run analysis --temperature 0.3
 Maximum response length:
 
 ```bash
-workflow run analysis --max-tokens 8192
+wfw run analysis --max-tokens 8192
 ```
 
 Default: 8192 (from config)
@@ -592,13 +592,13 @@ Default: 8192 (from config)
 
 ```bash
 # First draft
-workflow run draft --context-file outline.md --stream
+wfw run draft --context-file outline.md --stream
 
 # Review and refine
 nano .workflow/draft/task.txt  # Refine instructions
 
 # Re-run with improvements
-workflow run draft --context-file outline.md --stream
+wfw run draft --context-file outline.md --stream
 
 # Compare outputs
 diff .workflow/draft/output.md \
@@ -609,16 +609,16 @@ diff .workflow/draft/output.md \
 
 ```bash
 # Stage 1: Analysis
-workflow run 01-analyze --context-pattern "data/*.csv" --stream
+wfw run 01-analyze --context-pattern "data/*.csv" --stream
 
 # Stage 2: Initial draft (using analysis)
-workflow run 02-draft --depends-on 01-analyze --stream
+wfw run 02-draft --depends-on 01-analyze --stream
 
 # Stage 3: Review (using both)
-workflow run 03-review --depends-on 01-analyze,02-draft --stream
+wfw run 03-review --depends-on 01-analyze,02-draft --stream
 
 # Stage 4: Final version (using review)
-workflow run 04-final --depends-on 03-review --stream
+wfw run 04-final --depends-on 03-review --stream
 ```
 
 ### Quick Experiments
@@ -627,13 +627,13 @@ Use task mode for quick tests:
 
 ```bash
 # Quick summary
-workflow task -i "Summarize in 3 bullets" --context-file paper.pdf
+wfw task -i "Summarize in 3 bullets" --context-file paper.pdf
 
 # Quick analysis
-workflow task -i "What are the main findings?" --context-file results.json
+wfw task -i "What are the main findings?" --context-file results.json
 
 # Quick comparison
-workflow task -i "Compare these approaches" \
+wfw task -i "Compare these approaches" \
     --context-file approach-a.md \
     --context-file approach-b.md
 ```
@@ -646,14 +646,14 @@ workflow task -i "Compare these approaches" \
 
 ```bash
 cd /path/to/project  # Navigate to project with .workflow/
-workflow run analysis
+wfw run analysis
 ```
 
 **"Workflow 'xyz' does not exist":**
 
 ```bash
-workflow list  # Check available workflows
-workflow new xyz  # Create it if needed
+wfw list  # Check available workflows
+wfw new xyz  # Create it if needed
 ```
 
 **"ANTHROPIC_API_KEY environment variable is not set":**
@@ -668,7 +668,7 @@ export ANTHROPIC_API_KEY="sk-ant-..."
 ```bash
 # Check paths are relative to PWD (for CLI) or project root (for config)
 ls -la data.csv  # Verify file exists
-workflow run analysis --context-file ./data.csv  # Use explicit path
+wfw run analysis --context-file ./data.csv  # Use explicit path
 ```
 
 ### Interrupting Execution
@@ -682,7 +682,7 @@ Press **Ctrl+C** to interrupt during streaming:
 
 ### When to Use Workflow Mode
 
-- ✅ Use `workflow run` when:
+- ✅ Use `wfw run` when:
 
 - Building iterative, evolving content
 - Creating workflow dependencies
@@ -692,7 +692,7 @@ Press **Ctrl+C** to interrupt during streaming:
 
 ### When to Use Task Mode
 
-- ✅ Use `workflow task` when:
+- ✅ Use `wfw task` when:
 
 - Quick, one-off queries
 - Temporary analysis

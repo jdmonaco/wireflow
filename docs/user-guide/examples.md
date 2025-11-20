@@ -14,13 +14,13 @@ You have CSV files with experimental results and need to analyze them.
 # Create and initialize project
 mkdir data-analysis-project
 cd data-analysis-project
-workflow init .
+wfw init .
 ```
 
 ### Create Workflow
 
 ```bash
-workflow new analyze-results
+wfw new analyze-results
 ```
 
 In `task.txt`:
@@ -47,7 +47,7 @@ TEMPERATURE=0.3  # Lower for analytical tasks
 ### Execute
 
 ```bash
-workflow run analyze-results --stream
+wfw run analyze-results --stream
 ```
 
 ### View Output
@@ -66,10 +66,10 @@ Multi-stage document creation: gather context → outline → draft → review.
 
 ```bash
 cd manuscript-project
-workflow init .
+wfw init .
 
 # Stage 1: Context gathering
-workflow new 00-gather-context
+wfw new 00-gather-context
 ```
 
 In `00-gather-context/config`:
@@ -90,7 +90,7 @@ Review the provided reference materials and create a structured summary of:
 
 ```bash
 # Stage 2: Create outline
-workflow new 01-outline
+wfw new 01-outline
 ```
 
 In `01-outline/config`:
@@ -108,7 +108,7 @@ including: Introduction, Methods, Results, Discussion sections with bullet point
 
 ```bash
 # Stage 3: Draft introduction
-workflow new 02-draft-intro
+wfw new 02-draft-intro
 ```
 
 In `02-draft-intro/config`:
@@ -129,9 +129,9 @@ Include appropriate background, rationale, and clear research objectives.
 ### Execute Pipeline
 
 ```bash
-workflow run 00-gather-context --stream
-workflow run 01-outline --stream
-workflow run 02-draft-intro --stream
+wfw run 00-gather-context --stream
+wfw run 01-outline --stream
+wfw run 02-draft-intro --stream
 ```
 
 Each step builds on previous outputs automatically via `DEPENDS_ON`.
@@ -168,25 +168,25 @@ EOF
 
 ```bash
 # Summarize meeting notes
-workflow task summarize --context-file meeting-notes.md
+wfw task summarize --context-file meeting-notes.md
 
 # Extract data from report
-workflow task extract-data --context-file report.txt --output-file data.json
+wfw task extract-data --context-file report.txt --output-file data.json
 ```
 
 ### Inline Tasks
 
 ```bash
 # Quick question about code
-workflow task -i "What does this function do?" --context-file script.py
+wfw task -i "What does this function do?" --context-file script.py
 
 # Compare files
-workflow task -i "Compare these approaches and recommend the best one" \
+wfw task -i "Compare these approaches and recommend the best one" \
   --context-file approach-a.md \
   --context-file approach-b.md
 
 # Analyze pattern
-workflow task -i "What are the common themes across these files?" \
+wfw task -i "What are the common themes across these files?" \
   --context-pattern "reports/202401/*.md"
 ```
 
@@ -201,13 +201,13 @@ Generate documentation for a Python module.
 ```bash
 mkdir code-docs
 cd code-docs
-workflow init .
+wfw init .
 ```
 
 ### Workflow 1: Analyze Code
 
 ```bash
-workflow new 01-analyze
+wfw new 01-analyze
 ```
 
 In `task.txt`:
@@ -231,7 +231,7 @@ TEMPERATURE=0.3
 ### Workflow 2: Generate README
 
 ```bash
-workflow new 02-generate-readme
+wfw new 02-generate-readme
 ```
 
 In `task.txt`:
@@ -257,8 +257,8 @@ DEPENDS_ON=(01-analyze)
 ### Execute
 
 ```bash
-workflow run 01-analyze --stream
-workflow run 02-generate-readme --stream
+wfw run 01-analyze --stream
+wfw run 02-generate-readme --stream
 
 # Copy generated README
 cp .workflow/02-generate-readme/output.md README.md
@@ -274,7 +274,7 @@ Large research project with independent subprojects that should share configurat
 
 ```bash
 cd ~/research/neuroai-study
-workflow init .
+wfw init .
 ```
 
 Edit parent `.workflow/config`:
@@ -290,7 +290,7 @@ SYSTEM_PROMPTS=(base research neuroscience)
 
 ```bash
 cd experiments/mouse-behavior
-workflow init .
+wfw init .
 ```
 
 You'll be prompted:
@@ -321,12 +321,12 @@ Now the nested project has:
 cd experiments/mouse-behavior
 
 # Create workflows specific to this experiment
-workflow new 01-preprocess-data
-workflow new 02-behavioral-analysis
-workflow new 03-generate-figures
+wfw new 01-preprocess-data
+wfw new 02-behavioral-analysis
+wfw new 03-generate-figures
 
 # Runs use inherited config
-workflow run 01-preprocess-data --stream
+wfw run 01-preprocess-data --stream
 ```
 
 ## Example 6: Configuration Overrides
@@ -339,42 +339,42 @@ Experiment with different models and parameters without changing configs.
 
 ```bash
 # Test with Haiku (fast, economical)
-workflow run analysis --model claude-3-5-haiku-20241022 --count-tokens
+wfw run analysis --model claude-3-5-haiku-20241022 --count-tokens
 
 # Test with Sonnet (balanced)
-workflow run analysis --model claude-3-5-sonnet-20241022 --count-tokens
+wfw run analysis --model claude-3-5-sonnet-20241022 --count-tokens
 
 # Test with Opus (most capable)
-workflow run analysis --model claude-3-opus-4-20250514 --count-tokens
+wfw run analysis --model claude-3-opus-4-20250514 --count-tokens
 
 # Choose best and run
-workflow run analysis --model claude-3-5-sonnet-20241022 --stream
+wfw run analysis --model claude-3-5-sonnet-20241022 --stream
 ```
 
 ### Testing Parameters
 
 ```bash
 # Creative output (high temperature)
-workflow run brainstorm --temperature 1.0 --stream
+wfw run brainstorm --temperature 1.0 --stream
 
 # Focused output (low temperature)
-workflow run analysis --temperature 0.3 --stream
+wfw run analysis --temperature 0.3 --stream
 
 # Long-form content (high tokens)
-workflow run writeup --max-tokens 16384 --stream
+wfw run writeup --max-tokens 16384 --stream
 ```
 
 ### Adding Context Dynamically
 
 ```bash
 # Add new context without changing config
-workflow run analysis \
+wfw run analysis \
   --context-file new-data.csv \
   --context-file updated-notes.md \
   --stream
 
 # Override context pattern
-workflow run analysis \
+wfw run analysis \
   --context-pattern "data/2024-01/*.csv" \
   --stream
 ```
@@ -389,7 +389,7 @@ Generate outputs in different formats for different purposes.
 
 ```bash
 # Data extraction (JSON)
-workflow new extract-metrics
+wfw new extract-metrics
 ```
 
 In `extract-metrics/config`:
@@ -412,7 +412,7 @@ Extract performance metrics from logs and format as JSON with fields:
 
 ```bash
 # Summary report (Markdown)
-workflow new summary-report
+wfw new summary-report
 ```
 
 In `summary-report/config`:
@@ -436,7 +436,7 @@ Format as professional markdown with tables and charts recommendations.
 
 ```bash
 # HTML presentation
-workflow new presentation
+wfw new presentation
 ```
 
 In `presentation/config`:
@@ -449,9 +449,9 @@ DEPENDS_ON=(summary-report)
 ### Execute
 
 ```bash
-workflow run extract-metrics --stream      # Creates <name>.json
-workflow run summary-report --stream        # Creates <name>.md
-workflow run presentation --stream          # Creates <name>.html
+wfw run extract-metrics --stream      # Creates <name>.json
+wfw run summary-report --stream        # Creates <name>.md
+wfw run presentation --stream          # Creates <name>.html
 ```
 
 Cross-format dependencies work seamlessly - JSON feeds into Markdown, Markdown feeds into HTML.
@@ -465,7 +465,7 @@ Iteratively improve a document draft.
 ### Initial Draft
 
 ```bash
-workflow new draft-v1
+wfw new draft-v1
 ```
 
 In `task.txt`:
@@ -476,7 +476,7 @@ Focus on core concepts without technical jargon.
 ```
 
 ```bash
-workflow run draft-v1 --context-file outline.md --stream
+wfw run draft-v1 --context-file outline.md --stream
 ```
 
 ### Review Output
@@ -489,7 +489,7 @@ cat .workflow/draft-v1/output.md
 ### Refine Task
 
 ```bash
-workflow edit draft-v1
+wfw edit draft-v1
 ```
 
 Update `task.txt`:
@@ -510,7 +510,7 @@ Tone: Friendly but informative
 ### Re-run
 
 ```bash
-workflow run draft-v1 --stream
+wfw run draft-v1 --stream
 ```
 
 Previous output is automatically backed up to `<name>-TIMESTAMP.md`.
@@ -529,7 +529,7 @@ diff .workflow/draft-v1/output.md \
 
 ```bash
 cd ~/research/study-2024
-workflow init .
+wfw init .
 
 # Configure project
 cat > .workflow/project.txt << 'EOF'
@@ -552,31 +552,31 @@ EOF
 
 ```bash
 # Data preprocessing
-workflow new 01-preprocess
+wfw new 01-preprocess
 # task: Clean data, handle missing values, compute derived variables
 
 # Exploratory analysis
-workflow new 02-exploratory
+wfw new 02-exploratory
 # config: DEPENDS_ON=(01-preprocess)
 # task: Generate descriptive statistics, check assumptions
 
 # Statistical tests
-workflow new 03-statistical-tests
+wfw new 03-statistical-tests
 # config: DEPENDS_ON=(01-preprocess)
 # task: Mixed-effects models, post-hoc tests
 
 # Figures
-workflow new 04-generate-figures
+wfw new 04-generate-figures
 # config: DEPENDS_ON=(02-exploratory 03-statistical-tests)
 # task: Create publication-quality figures
 
 # Methods section
-workflow new 05-write-methods
+wfw new 05-write-methods
 # config: DEPENDS_ON=(01-preprocess)
 # task: Write methods section
 
 # Results section
-workflow new 06-write-results
+wfw new 06-write-results
 # config: DEPENDS_ON=(02-exploratory 03-statistical-tests 04-generate-figures)
 # task: Write results section with statistics
 ```
@@ -585,7 +585,7 @@ workflow new 06-write-results
 
 ```bash
 for wf in 01-preprocess 02-exploratory 03-statistical-tests 04-generate-figures 05-write-methods 06-write-results; do
-  workflow run "$wf" --stream
+  wfw run "$wf" --stream
 done
 ```
 
@@ -596,7 +596,7 @@ done
 ```bash
 mkdir code-review
 cd code-review
-workflow init .
+wfw init .
 
 # Use code-specific system prompt
 echo "SYSTEM_PROMPTS=(base code)" > .workflow/config
@@ -606,7 +606,7 @@ echo "SYSTEM_PROMPTS=(base code)" > .workflow/config
 
 ```bash
 # Security review
-workflow new security-review
+wfw new security-review
 ```
 
 In `task.txt`:
@@ -625,7 +625,7 @@ Provide specific line references and remediation suggestions.
 
 ```bash
 # Performance review
-workflow new performance-review
+wfw new performance-review
 ```
 
 In `task.txt`:
@@ -644,8 +644,8 @@ Suggest specific optimizations with code examples.
 ### Execute
 
 ```bash
-workflow run security-review --context-pattern "src/**/*.py" --stream
-workflow run performance-review --context-pattern "src/**/*.py" --stream
+wfw run security-review --context-pattern "src/**/*.py" --stream
+wfw run performance-review --context-pattern "src/**/*.py" --stream
 ```
 
 ## Common Patterns Summary
@@ -669,17 +669,17 @@ DEPENDS_ON=(00-step1 01-step2 02-step3)
 ```bash
 # Global: Balanced defaults
 # Project: Domain-specific
-# Workflow: Task-specific overrides
+# WireFlow: Task-specific overrides
 ```
 
 ### Pattern: Quick Iteration
 
 ```bash
 # Edit task
-workflow edit workflow-name
+wfw edit workflow-name
 
 # Re-run
-workflow run workflow-name --stream
+wfw run workflow-name --stream
 
 # Compare
 diff output/<name>.md output/<name>.md-*.*
@@ -728,9 +728,9 @@ Commit:
 Before creating full workflows, use task mode to experiment:
 
 ```bash
-workflow task -i "Try analyzing this" --context-file data.csv
+wfw task -i "Try analyzing this" --context-file data.csv
 # If useful, create persistent workflow
-workflow new analysis
+wfw new analysis
 ```
 
 ## Next Steps

@@ -4,7 +4,7 @@
 # Shared execution logic for run and task modes.
 # Houses common functions for system prompt building, context aggregation,
 # token estimation, dry-run handling, and API request execution.
-# This file is sourced by workflow.sh and lib/task.sh.
+# This file is sourced by wireflow.sh and lib/task.sh.
 # =============================================================================
 
 # =============================================================================
@@ -12,12 +12,12 @@
 # =============================================================================
 
 # Build system prompt from SYSTEM_PROMPTS configuration array
-# Concatenates prompt files from WORKFLOW_PROMPT_PREFIX directory
+# Concatenates prompt files from WIREFLOW_PROMPT_PREFIX directory
 #
 # Args:
 #   $1 - system_prompt_file: Path where composed prompt should be saved
 # Requires:
-#   WORKFLOW_PROMPT_PREFIX: Directory containing *.txt prompt files
+#   WIREFLOW_PROMPT_PREFIX: Directory containing *.txt prompt files
 #   SYSTEM_PROMPTS: Array of prompt names (without .txt extension)
 # Returns:
 #   0 on success, 1 on error
@@ -28,14 +28,14 @@ build_system_prompt() {
     local system_prompt_file="$1"
 
     # Validate prompt directory configuration
-    if [[ -z "$WORKFLOW_PROMPT_PREFIX" ]]; then
-        echo "Error: WORKFLOW_PROMPT_PREFIX environment variable is not set" >&2
-        echo "Set WORKFLOW_PROMPT_PREFIX to the directory containing your *.txt prompt files" >&2
+    if [[ -z "$WIREFLOW_PROMPT_PREFIX" ]]; then
+        echo "Error: WIREFLOW_PROMPT_PREFIX environment variable is not set" >&2
+        echo "Set WIREFLOW_PROMPT_PREFIX to the directory containing your *.txt prompt files" >&2
         return 1
     fi
 
-    if [[ ! -d "$WORKFLOW_PROMPT_PREFIX" ]]; then
-        echo "Error: System prompt directory not found: $WORKFLOW_PROMPT_PREFIX" >&2
+    if [[ ! -d "$WIREFLOW_PROMPT_PREFIX" ]]; then
+        echo "Error: System prompt directory not found: $WIREFLOW_PROMPT_PREFIX" >&2
         return 1
     fi
 
@@ -51,8 +51,8 @@ build_system_prompt() {
 
     # FIRST: Add meta prompt block (required, auto-included, not cached)
     local meta_file="$HOME/.config/workflow/prompts/meta.txt"
-    if [[ ! -f "$meta_file" && -n "$WORKFLOW_PROMPT_PREFIX" ]]; then
-        meta_file="$WORKFLOW_PROMPT_PREFIX/meta.txt"
+    if [[ ! -f "$meta_file" && -n "$WIREFLOW_PROMPT_PREFIX" ]]; then
+        meta_file="$WIREFLOW_PROMPT_PREFIX/meta.txt"
     fi
 
     if [[ -f "$meta_file" ]]; then
@@ -82,7 +82,7 @@ build_system_prompt() {
 
     # Concatenate all specified prompts (no extra indentation)
     for prompt_name in "${SYSTEM_PROMPTS[@]}"; do
-        local prompt_file="$WORKFLOW_PROMPT_PREFIX/${prompt_name}.txt"
+        local prompt_file="$WIREFLOW_PROMPT_PREFIX/${prompt_name}.txt"
 
         # If not found in custom location, try default location as fallback
         if [[ ! -f "$prompt_file" ]]; then
@@ -92,7 +92,7 @@ build_system_prompt() {
                 echo "Using built-in prompt: $prompt_name (from default location)" >&2
             else
                 echo "Error: System prompt file not found: ${prompt_name}.txt" >&2
-                echo "  Searched: $WORKFLOW_PROMPT_PREFIX" >&2
+                echo "  Searched: $WIREFLOW_PROMPT_PREFIX" >&2
                 echo "  Searched: $HOME/.config/workflow/prompts (fallback)" >&2
                 build_success=false
                 break

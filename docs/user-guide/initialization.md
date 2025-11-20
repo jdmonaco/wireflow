@@ -8,19 +8,19 @@ Learn how to initialize workflow projects and understand the project structure t
 
 ```bash
 cd my-project
-workflow init .
+wfw init .
 ```
 
 ### Initialize in New Directory
 
 ```bash
-workflow init ~/research/my-analysis
+wfw init ~/research/my-analysis
 cd ~/research/my-analysis
 ```
 
 ### What Gets Created
 
-When you run `workflow init`, it creates the following file structure:
+When you run `wfw init`, it creates the following file structure:
 
 ```
 your-project/
@@ -29,13 +29,13 @@ your-project/
     ├── project.txt       # Project description, appended to system prompt
     ├── prompts/          # Cache for project-wide system prompts
     ├── <workflow-foo>/   # Individual workflow directories
-    ├── <workflow-bar>/   #   (created via `workflow new <workflow-name> ...`)
+    ├── <workflow-bar>/   #   (created via `wfw new <workflow-name> ...`)
     └── ...               # 
 ```
 
 ## Initial Setup Flow
 
-After running `workflow init`, the tool:
+After running `wfw init`, the tool:
 
 1. **Creates `.workflow/` structure** with necessary directories
 2. **Opens editor** (vim by default) with two files:
@@ -57,7 +57,7 @@ SYSTEM_PROMPTS=base
 ```
 
 !!! tip "Skip if You're in a Hurry"
-    You can leave both files empty and edit them later with `workflow edit`. The tool works with all defaults!
+    You can leave both files empty and edit them later with `wfw edit`. The tool works with all defaults!
 
 ## Project Description (`project.txt`)
 
@@ -172,7 +172,7 @@ Use nested projects when you have:
 cd my-research  # Parent project with .workflow/
 mkdir sub-analysis
 cd sub-analysis
-workflow init .
+wfw init .
 ```
 
 ### Configuration Inheritance
@@ -232,7 +232,7 @@ The tool automatically finds your project root by walking up the directory tree 
 
 ```bash
 cd my-project/data/processed/
-workflow list  # Still finds .workflow/ at project root
+wfw list  # Still finds .workflow/ at project root
 ```
 
 ### Multiple Projects
@@ -254,7 +254,7 @@ home/
 ### Edit Project Configuration
 
 ```bash
-workflow edit
+wfw edit
 ```
 
 Opens `project.txt` and `config` in your editor.
@@ -262,7 +262,7 @@ Opens `project.txt` and `config` in your editor.
 ### View Project Structure
 
 ```bash
-workflow list
+wfw list
 ```
 
 Shows all workflows in the current project.
@@ -270,7 +270,7 @@ Shows all workflows in the current project.
 ### View Project Configuration
 
 ```bash
-workflow config
+wfw config
 ```
 
 Shows current project configuration values.
@@ -307,7 +307,7 @@ If you have an existing project and want to add workflows:
 
 ```bash
 cd existing-project
-workflow init .
+wfw init .
 # .workflow/ is created alongside your existing files
 ```
 
@@ -331,7 +331,7 @@ nano .workflow/config
 ### See All Workflows
 
 ```bash
-workflow list
+wfw list
 ```
 
 ### Move Project
@@ -341,7 +341,7 @@ Just move the entire directory - `.workflow/` moves with it:
 ```bash
 mv ~/old-location/my-project ~/new-location/
 cd ~/new-location/my-project
-workflow list  # Still works!
+wfw list  # Still works!
 ```
 
 ### Share Project (Without Outputs)
@@ -360,7 +360,7 @@ Or add `.workflow/*/output.gitignore`.
 You're not in a workflow project. Run:
 
 ```bash
-workflow init .
+wfw init .
 ```
 
 ### "Permission denied"
@@ -377,7 +377,7 @@ Set your preferred editor:
 
 ```bash
 export EDITOR=nano
-workflow init .
+wfw init .
 ```
 
 ## Next Steps

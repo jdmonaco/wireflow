@@ -1,4 +1,4 @@
-# Workflow: Reproducible AI Workflows for Research and Development
+# WireFlow: Reproducible AI Workflows for Research and Development
 
 **Version:** 0.2.0 (pre-release)
 
@@ -23,15 +23,15 @@ A terminal-based tool for building reproducible AI workflows for research, devel
 
 ### Install
 
-First, clone the [repo](https://github.com/jdmonaco/workflow) and then link the script into your `PATH`. For example:
+First, clone the [repo](https://github.com/jdmonaco/wireflow) and then link the script into your `PATH`. For example:
 
 ```bash
 # Clone repository
-git clone https://github.com/jdmonaco/workflow.git
-cd workflow
+git clone https://github.com/jdmonaco/wireflow.git
+cd wireflow
 
 # Add to PATH (example using ~/.local/bin)
-ln -s "$(pwd)/workflow.sh" ~/.local/bin/workflow
+ln -s "$(pwd)/wireflow.sh" ~/.local/bin/workflow
 ```
 
 ### Setup
@@ -46,16 +46,16 @@ export PATH="$HOME/.local/bin:$PATH"
 ```bash
 # Initialize project
 cd my-project
-workflow init .
+wfw init .
 
 # Create workflow
-workflow new analyze-data
+wfw new analyze-data
 
 # Edit workflow config
-workflow edit analyze-data
+wfw edit analyze-data
 
 # Run with context
-workflow run analyze-data --context-file data.csv --stream
+wfw run analyze-data --context-file data.csv --stream
 ```
 
 Your project files and folders are treated as read-only. All `workflow` files are maintained in a `.workflow/` subfolder.
@@ -80,8 +80,8 @@ Your project files and folders are treated as read-only. All `workflow` files ar
 Persistent, named tasks with configuration and outputs:
 
 ```bash
-workflow new 01-analysis
-workflow run 01-analysis --stream
+wfw new 01-analysis
+wfw run 01-analysis --stream
 ```
 
 ### Tasks
@@ -89,7 +89,7 @@ workflow run 01-analysis --stream
 Lightweight, one-off execution without persistence:
 
 ```bash
-workflow task -i "Summarize these notes" --context-file notes.md
+wfw task -i "Summarize these notes" --context-file notes.md
 ```
 
 ### Dependencies
@@ -97,7 +97,7 @@ workflow task -i "Summarize these notes" --context-file notes.md
 Chain workflows to build pipelines:
 
 ```bash
-workflow run 02-report --depends-on 01-analysis --stream
+wfw run 02-report --depends-on 01-analysis --stream
 ```
 
 ### Configuration
@@ -121,23 +121,23 @@ CLI Flags (--model, --temperature, etc.)
 ### Simple Analysis
 
 ```bash
-workflow init my-analysis
-workflow new analyze-data
-workflow run analyze-data --context-file data.csv --stream
+wfw init my-analysis
+wfw new analyze-data
+wfw run analyze-data --context-file data.csv --stream
 ```
 
 ### Workflow Chain
 
 ```bash
-workflow run 00-context --stream
-workflow run 01-outline --depends-on 00-context --stream
-workflow run 02-draft --depends-on 00-context,01-outline --stream
+wfw run 00-context --stream
+wfw run 01-outline --depends-on 00-context --stream
+wfw run 02-draft --depends-on 00-context,01-outline --stream
 ```
 
 ### Quick Query
 
 ```bash
-workflow task -i "Extract action items" --context-file meeting-notes.md
+wfw task -i "Extract action items" --context-file meeting-notes.md
 ```
 
 ## Requirements
@@ -158,7 +158,7 @@ Auto-created on first use at `~/.config/workflow/`:
 
 ### Project Configuration
 
-Created by `workflow init`:
+Created by `wfw init`:
 
 - `.workflow/config` - Project-level settings
 - `.workflow/project.txt` - Project description (optional)
@@ -167,9 +167,9 @@ Created by `workflow init`:
 ## Help
 
 ```bash
-workflow help              # Show all subcommands
-workflow help <subcommand> # Detailed subcommand help
-workflow <subcommand> -h   # Quick help
+wfw help              # Show all subcommands
+wfw help <subcommand> # Detailed subcommand help
+wfw <subcommand> -h   # Quick help
 ```
 
 ## Contributing
@@ -182,8 +182,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## Resources
 
-- **GitHub:** [https://github.com/jdmonaco/workflow](https://github.com/jdmonaco/workflow)
-- **Issues:** [GitHub Issues](https://github.com/jdmonaco/workflow/issues)
+- **GitHub:** [https://github.com/jdmonaco/wireflow](https://github.com/jdmonaco/wireflow)
+- **Issues:** [GitHub Issues](https://github.com/jdmonaco/wireflow/issues)
 - **Anthropic API:** [https://docs.anthropic.com/](https://docs.anthropic.com/)
 - **Technical Details:** [CLAUDE.md](CLAUDE.md)
 

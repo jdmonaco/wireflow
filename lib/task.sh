@@ -5,7 +5,7 @@
 # =============================================================================
 # Execute tasks without creating workflow directories.
 # Supports named tasks from files or inline task specifications.
-# This file is sourced by workflow.sh when task mode is active.
+# This file is sourced by wireflow.sh when task mode is active.
 # =============================================================================
 
 # =============================================================================
@@ -175,14 +175,14 @@ fi
 
 if [[ -n "$TASK_NAME" ]]; then
     # Load task from file
-    if [[ -z "$WORKFLOW_TASK_PREFIX" ]]; then
-        echo "Error: WORKFLOW_TASK_PREFIX environment variable is not set"
-        echo "Set WORKFLOW_TASK_PREFIX to the directory containing your task .txt files"
+    if [[ -z "$WIREFLOW_TASK_PREFIX" ]]; then
+        echo "Error: WIREFLOW_TASK_PREFIX environment variable is not set"
+        echo "Set WIREFLOW_TASK_PREFIX to the directory containing your task .txt files"
         echo "Or use --inline to specify task directly"
         exit 1
     fi
 
-    TASK_FILE="$WORKFLOW_TASK_PREFIX/${TASK_NAME}.txt"
+    TASK_FILE="$WIREFLOW_TASK_PREFIX/${TASK_NAME}.txt"
 
     # If not found in custom location, try default location as fallback
     if [[ ! -f "$TASK_FILE" ]]; then
@@ -192,7 +192,7 @@ if [[ -n "$TASK_NAME" ]]; then
             echo "Using built-in task template: $TASK_NAME" >&2
         else
             echo "Error: Task file not found: ${TASK_NAME}.txt" >&2
-            echo "  Searched: $WORKFLOW_TASK_PREFIX" >&2
+            echo "  Searched: $WIREFLOW_TASK_PREFIX" >&2
             echo "  Searched: $HOME/.config/workflow/tasks (fallback)" >&2
             exit 1
         fi

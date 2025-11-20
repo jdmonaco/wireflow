@@ -91,7 +91,7 @@ nano ~/.config/workflow/config
 
 ```bash
 # Initialize project
-workflow init .
+wfw init .
 
 # Or navigate to existing project
 cd /path/to/project-with-.workflow
@@ -105,10 +105,10 @@ cd /path/to/project-with-.workflow
 
 ```bash
 # List existing workflows
-workflow list
+wfw list
 
 # Create workflow
-workflow new xyz
+wfw new xyz
 
 # Check for typos
 ls .workflow/
@@ -175,13 +175,13 @@ ls -la  # What's here?
 
 ```bash
 # Check workflow exists
-workflow list
+wfw list
 
 # Check has output
 ls .workflow/xyz/output/
 
 # Run dependency first
-workflow run xyz --stream
+wfw run xyz --stream
 ```
 
 ## Configuration Issues
@@ -194,7 +194,7 @@ workflow run xyz --stream
 
 ```bash
 # Check configuration cascade
-workflow config workflow-name
+wfw config workflow-name
 
 # Verify which config is used
 # CLI flags > workflow config > project config > global config
@@ -211,13 +211,13 @@ cat .workflow/workflow-name/config
 
 ```bash
 # Check prompt directory
-ls $WORKFLOW_PROMPT_PREFIX/
+ls $WIREFLOW_PROMPT_PREFIX/
 
 # Verify environment variable
-echo $WORKFLOW_PROMPT_PREFIX
+echo $WIREFLOW_PROMPT_PREFIX
 
 # Check config
-grep WORKFLOW_PROMPT_PREFIX ~/.config/workflow/config
+grep WIREFLOW_PROMPT_PREFIX ~/.config/workflow/config
 
 # Create missing prompt
 nano ~/.config/workflow/prompts/custom.txt
@@ -233,7 +233,7 @@ nano ~/.config/workflow/prompts/custom.txt
 
 ```bash
 # Check estimate
-workflow run analysis --count-tokens
+wfw run analysis --count-tokens
 
 # Reduce context
 # - Use more specific patterns
@@ -242,8 +242,8 @@ workflow run analysis --count-tokens
 # - Use summarization
 
 # Example: Summarize first
-workflow run 01-summarize  # Process all data
-workflow run 02-final --depends-on 01-summarize  # Use summary only
+wfw run 01-summarize  # Process all data
+wfw run 02-final --depends-on 01-summarize  # Use summary only
 ```
 
 ### Streaming Fails
@@ -257,14 +257,14 @@ workflow run 02-final --depends-on 01-summarize  # Use summary only
 curl -I https://api.anthropic.com
 
 # Try batch mode
-workflow run analysis  # Without --stream
+wfw run analysis  # Without --stream
 
 # Check terminal
 # Streaming requires TTY
 tty
 
 # Redirect if needed
-workflow run analysis --stream 2>&1 | less
+wfw run analysis --stream 2>&1 | less
 ```
 
 ### Output Not Saved
@@ -289,7 +289,7 @@ chmod -R u+w .workflow/
 
 ### Editor Not Opening
 
-**Problem:** `workflow edit` doesn't open editor
+**Problem:** `wfw edit` doesn't open editor
 
 **Solutions:**
 
@@ -348,7 +348,7 @@ cat .workflow/analysis/output.md
 # Look at workflow command output for error messages
 
 # Re-run with dry-run
-workflow run analysis --count-tokens
+wfw run analysis --count-tokens
 ```
 
 ### Wrong Output Format
@@ -359,11 +359,11 @@ workflow run analysis --count-tokens
 
 ```bash
 # Check config
-workflow config analysis
+wfw config analysis
 
 # Verify OUTPUT_FORMAT
 # Use CLI override
-workflow run analysis --format-hint json
+wfw run analysis --format-hint json
 
 # Or update config
 nano .workflow/analysis/config
@@ -380,10 +380,10 @@ Backups only created on **re-run**:
 
 ```bash
 # First run: Creates <name>.md
-workflow run analysis
+wfw run analysis
 
 # Second run: Creates backup
-workflow run analysis
+wfw run analysis
 ls .workflow/analysis/output/
 # Now you'll see <name>-TIMESTAMP.md
 ```
@@ -398,11 +398,11 @@ ls .workflow/analysis/output/
 
 ```bash
 # Run any workflow command
-workflow help
+wfw help
 
 # Or create manually
 mkdir -p ~/.config/workflow/prompts
-workflow init /tmp/test-project  # Triggers creation
+wfw init /tmp/test-project  # Triggers creation
 ```
 
 ### Config Syntax Errors
@@ -431,7 +431,7 @@ CONTEXT_FILES=("file1.md" "file2.txt")
 
 ### Nested Detection Fails
 
-**Problem:** Parent project not detected during `workflow init`
+**Problem:** Parent project not detected during `wfw init`
 
 **Solutions:**
 
@@ -470,11 +470,11 @@ CONTEXT_FILES=("../../parent-file.md")  # Explicit path to parent
 **Solutions:**
 
 ```bash
-# Check WORKFLOW_TASK_PREFIX
-echo $WORKFLOW_TASK_PREFIX
+# Check WIREFLOW_TASK_PREFIX
+echo $WIREFLOW_TASK_PREFIX
 
 # Check file exists
-ls $WORKFLOW_TASK_PREFIX/summarize.txt
+ls $WIREFLOW_TASK_PREFIX/summarize.txt
 
 # Create task
 mkdir -p ~/.config/workflow/tasks
@@ -492,7 +492,7 @@ echo "Summarize the content" > ~/.config/workflow/tasks/summarize.txt
 touch test-output.md && rm test-output.md
 
 # Use absolute path
-workflow task -i "Test" --output-file /full/path/output.md
+wfw task -i "Test" --output-file /full/path/output.md
 
 # Check disk space
 df -h .
@@ -508,14 +508,14 @@ df -h .
 
 ```bash
 # Check token count
-workflow run analysis --count-tokens
+wfw run analysis --count-tokens
 
 # Reduce context if large
 # Check network latency
 ping api.anthropic.com
 
 # Try smaller model for testing
-workflow run analysis --model claude-3-5-haiku-20241022 --stream
+wfw run analysis --model claude-3-5-haiku-20241022 --stream
 ```
 
 ### High API Costs
@@ -526,7 +526,7 @@ workflow run analysis --model claude-3-5-haiku-20241022 --stream
 
 ```bash
 # Always estimate first
-workflow run expensive-task --count-tokens
+wfw run expensive-task --count-tokens
 
 # Review token usage
 # Look at actual usage in output:
@@ -556,7 +556,7 @@ grep "^# Version:" ~/bin/workflow | head -1
 Workflow outputs errors to stderr:
 
 ```bash
-workflow run analysis 2> error.log
+wfw run analysis 2> error.log
 cat error.log
 ```
 
@@ -582,7 +582,7 @@ Run this diagnostic to check common issues:
 ```bash
 # Check installation
 which workflow
-workflow --help > /dev/null && echo "✓ Workflow installed" || echo "✗ Workflow not found"
+wfw --help > /dev/null && echo "✓ Workflow installed" || echo "✗ Workflow not found"
 
 # Check dependencies
 command -v jq > /dev/null && echo "✓ jq installed" || echo "✗ jq missing"

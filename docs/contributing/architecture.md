@@ -2,7 +2,7 @@
 
 System design, architecture patterns, and design decisions for the Workflow codebase.
 
-**For development workflows, see [CLAUDE.md](https://github.com/jdmonaco/workflow/blob/main/CLAUDE.md) (GitHub).**
+**For development workflows, see [CLAUDE.md](https://github.com/jdmonaco/wireflow/blob/main/CLAUDE.md) (GitHub).**
 **For implementation details, see [implementation.md](implementation.md).**
 
 ## Overview
@@ -19,7 +19,7 @@ Workflow is a modular bash application for AI-assisted project development using
 ### Module Structure
 
 ```
-workflow.sh              # Main entry point, argument parsing, subcommand dispatch
+wireflow.sh              # Main entry point, argument parsing, subcommand dispatch
 lib/
 ├── core.sh             # Subcommand implementations (init, new, edit, list, config, run)
 ├── config.sh           # Configuration loading and cascade logic
@@ -168,7 +168,7 @@ Workflow dependencies read from `.workflow/output/` hardlinks. Dependencies alwa
 
 ### Nested Project Descriptions
 
-`aggregate_nested_project_descriptions()` finds all ancestor projects, aggregates their project.txt files (oldest first), wraps each in XML tags using sanitized directory name, and caches to `.workflow/prompts/project.txt`. Used in both workflow.sh and lib/task.sh.
+`aggregate_nested_project_descriptions()` finds all ancestor projects, aggregates their project.txt files (oldest first), wraps each in XML tags using sanitized directory name, and caches to `.workflow/prompts/project.txt`. Used in both wireflow.sh and lib/task.sh.
 
 ## Prompt System
 
@@ -183,7 +183,7 @@ Builds JSON content blocks only. Pseudo-XML files optionally created via custom 
 1. Load meta prompt from `~/.config/workflow/prompts/meta.txt` (auto-included)
 2. Create meta JSON block WITHOUT cache_control (too small to cache)
 3. Add meta block as first element in `SYSTEM_BLOCKS` array
-4. Load user prompts from `$WORKFLOW_PROMPT_PREFIX/{name}.txt`
+4. Load user prompts from `$WIREFLOW_PROMPT_PREFIX/{name}.txt`
 5. Concatenate user prompts in order specified by `SYSTEM_PROMPTS` array
 6. Create user prompts JSON block with `cache_control: {type: "ephemeral"}`
 7. Add to `SYSTEM_BLOCKS` array
@@ -446,6 +446,6 @@ The strategy adapts based on what content is present:
 
 **Integration:**
 
-- `workflow init` - Opens `project.txt` and `config`
-- `workflow new` - Opens `task.txt` and `config`
-- `workflow edit` - Opens project or workflow files (includes output if exists)
+- `wfw init` - Opens `project.txt` and `config`
+- `wfw new` - Opens `task.txt` and `config`
+- `wfw edit` - Opens project or workflow files (includes output if exists)

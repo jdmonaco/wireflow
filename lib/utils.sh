@@ -2,7 +2,7 @@
 # Workflow Utility Functions
 # =============================================================================
 # Support functions for the workflow CLI tool.
-# This file is sourced by both workflow.sh and lib/core.sh.
+# This file is sourced by both wireflow.sh and lib/core.sh.
 # =============================================================================
 
 # =============================================================================

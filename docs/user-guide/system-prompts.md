@@ -17,7 +17,7 @@ System prompts are XML-formatted text files that define Claude's behavior, role,
 
 ### Location
 
-System prompts live in `$WORKFLOW_PROMPT_PREFIX/`:
+System prompts live in `$WIREFLOW_PROMPT_PREFIX/`:
 
 ```
 ~/.config/workflow/prompts/
@@ -38,10 +38,10 @@ Set a custom location:
 
 ```bash
 # In global config
-WORKFLOW_PROMPT_PREFIX="$HOME/my-prompts"
+WIREFLOW_PROMPT_PREFIX="$HOME/my-prompts"
 
 # Or as environment variable
-export WORKFLOW_PROMPT_PREFIX="$HOME/my-prompts"
+export WIREFLOW_PROMPT_PREFIX="$HOME/my-prompts"
 ```
 
 ## The Base Prompt
@@ -195,7 +195,7 @@ SYSTEM_PROMPTS=(base code)
 #### CLI Override
 
 ```bash
-workflow run analysis --system-prompts "base,stats,research"
+wfw run analysis --system-prompts "base,stats,research"
 ```
 
 ### Prompt Order
@@ -242,7 +242,7 @@ In CLI, use comma-separated list:
 
 ### Location
 
-`.workflow/project.txt` (created during `workflow init`)
+`.workflow/project.txt` (created during `wfw init`)
 
 ### When It's Included
 
@@ -299,7 +299,7 @@ Writing Style:
 ### Editing `project.txt`
 
 ```bash
-workflow edit  # Opens project.txt and config
+wfw edit  # Opens project.txt and config
 ```
 
 Or directly:
@@ -420,7 +420,7 @@ Create shareable prompt libraries:
 ~/shared/team-prompts/
 
 # Project-specific
-.workflow/prompts/  # Override WORKFLOW_PROMPT_PREFIX for project
+.workflow/prompts/  # Override WIREFLOW_PROMPT_PREFIX for project
 ```
 
 ## Debugging Prompts
@@ -475,7 +475,7 @@ SYSTEM_PROMPTS=(base)
 # Project: .workflow/config
 SYSTEM_PROMPTS=(base research)  # Adds research
 
-# Workflow: .workflow/stats-analysis/config
+# WireFlow: .workflow/stats-analysis/config
 SYSTEM_PROMPTS=(base research stats)  # Adds stats
 ```
 

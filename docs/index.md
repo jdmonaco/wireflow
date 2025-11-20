@@ -1,4 +1,4 @@
-# Workflow
+# WireFlow
 
 **A flexible CLI tool for building persistent AI workflows anywhere you want**
 
@@ -48,15 +48,15 @@ Workflow is a bash-based command-line tool that lets you easily create and run r
 
 ## Quick Start
 
-To install `workflow`, clone the [repo](https://github.com/jdmonaco/workflow) and link the script into your `PATH`. For example:
+To install `workflow`, clone the [repo](https://github.com/jdmonaco/wireflow) and link the script into your `PATH`. For example:
 
 ```bash
 # Clone repository
-git clone https://github.com/jdmonaco/workflow.git
+git clone https://github.com/jdmonaco/wireflow.git
 cd workflow
 
 # Add to PATH (example using ~/.local/bin)
-ln -s "$(pwd)/workflow.sh" ~/.local/bin/workflow
+ln -s "$(pwd)/wireflow.sh" ~/.local/bin/workflow
 ```
 
 For Anthropic requests, ensure your API key is set in your shell environment:
@@ -71,11 +71,11 @@ Try out initializing `workflow` in any folder containing a project or files you 
 ```bash
 # Initialize project
 cd ~/my-manuscript
-workflow init .
+wfw init .
 
 # Create and run first workflow
-workflow new 00-context-analysis
-workflow run 00-context-analysis --stream
+wfw new 00-context-analysis
+wfw run 00-context-analysis --stream
 ```
 
 Your project files and folders are treated as read-only. All `workflow` files are maintained in a `.workflow/` subfolder.
@@ -85,21 +85,21 @@ Your project files and folders are treated as read-only. All `workflow` files ar
 **Persistent Workflows:** Create reusable workflows for iterative development:
 
 ```bash
-workflow new analyze-data
-workflow run analyze-data --context-pattern "data/*.csv" --stream
+wfw new analyze-data
+wfw run analyze-data --context-pattern "data/*.csv" --stream
 ```
 
 **One-Off Tasks:** Execute lightweight tasks without workflow persistence:
 
 ```bash
-workflow task -i "Extract key points" --context-file notes.md
-workflow task summarize --context-pattern "*.md"
+wfw task -i "Extract key points" --context-file notes.md
+wfw task summarize --context-pattern "*.md"
 ```
 
 **Workflow Chains:** Build dependent pipelines with automatic context passing:
 
 ```bash
-workflow run 02-analysis --depends-on 01-context --stream
+wfw run 02-analysis --depends-on 01-context --stream
 ```
 
 ## Use Cases
@@ -131,9 +131,9 @@ MIT License - see repository for details
 ## Getting Help
 
 ```bash
-workflow help              # Show all subcommands
-workflow help <subcommand> # Show detailed help for a subcommand
-workflow <subcommand> -h   # Quick help for a subcommand
+wfw help              # Show all subcommands
+wfw help <subcommand> # Show detailed help for a subcommand
+wfw <subcommand> -h   # Quick help for a subcommand
 ```
 
 ---

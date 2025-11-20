@@ -56,7 +56,7 @@ OUTPUT_FORMAT=md  # Default for all workflows
 ### Via CLI Flag
 
 ```bash
-workflow run extract-data --format-hint json
+wfw run extract-data --format-hint json
 ```
 
 CLI flags override config files.
@@ -162,19 +162,19 @@ Workflows can depend on workflows with different formats:
 
 ```bash
 # Workflow 1: Extract data as JSON
-workflow new extract-metrics
+wfw new extract-metrics
 # Config: OUTPUT_FORMAT=json
-workflow run extract-metrics --stream
+wfw run extract-metrics --stream
 
 # Workflow 2: Analyze JSON data, output markdown report
-workflow new analyze-metrics
+wfw new analyze-metrics
 # Config: OUTPUT_FORMAT=md, DEPENDS_ON=(extract-metrics)
-workflow run analyze-metrics --stream
+wfw run analyze-metrics --stream
 
 # Workflow 3: Generate HTML presentation from markdown
-workflow new presentation
+wfw new presentation
 # Config: OUTPUT_FORMAT=html, DEPENDS_ON=(analyze-metrics)
-workflow run presentation --stream
+wfw run presentation --stream
 ```
 
 The dependency mechanism works regardless of format - the content is included as context.
@@ -387,7 +387,7 @@ Format choice affects diff readability:
 ### For Single Run
 
 ```bash
-workflow run analysis --format-hint json
+wfw run analysis --format-hint json
 ```
 
 Original config unchanged, applies only to this run.
@@ -418,11 +418,11 @@ Create separate workflows for different formats:
 
 ```bash
 # Data as JSON
-workflow new data-json
+wfw new data-json
 # Config: OUTPUT_FORMAT=json, CONTEXT_PATTERN="raw/*.txt"
 
 # Same data as CSV
-workflow new data-csv
+wfw new data-csv
 # Config: OUTPUT_FORMAT=csv, CONTEXT_PATTERN="raw/*.txt"
 
 # Both with same task but different format hints
@@ -434,13 +434,13 @@ Use dependencies for format conversion:
 
 ```bash
 # Extract as JSON
-workflow run extract-data --format-hint json
+wfw run extract-data --format-hint json
 
 # Convert to markdown table
-workflow new format-as-table
+wfw new format-as-table
 # Config: DEPENDS_ON=(extract-data), OUTPUT_FORMAT=md
 # Task: "Convert the JSON data to a markdown table"
-workflow run format-as-table
+wfw run format-as-table
 ```
 
 ## Troubleshooting
@@ -450,7 +450,7 @@ workflow run format-as-table
 Check configuration cascade:
 
 ```bash
-workflow config workflow-name
+wfw config workflow-name
 # Look for OUTPUT_FORMAT value and source
 ```
 

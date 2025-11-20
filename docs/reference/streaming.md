@@ -28,13 +28,13 @@ Workflow supports two execution modes:
 **Workflow mode:**
 
 ```bash
-workflow run analysis --stream
+wfw run analysis --stream
 ```
 
 **Task mode (default):**
 
 ```bash
-workflow task -i "Summarize" --context-file notes.md
+wfw task -i "Summarize" --context-file notes.md
 # Streaming is automatic
 ```
 
@@ -85,13 +85,13 @@ Press Ctrl+C → Partial output saved.
 **Workflow mode (default):**
 
 ```bash
-workflow run analysis  # No --stream flag
+wfw run analysis  # No --stream flag
 ```
 
 **Task mode:**
 
 ```bash
-workflow task -i "Summarize" --context-file notes.md --no-stream
+wfw task -i "Summarize" --context-file notes.md --no-stream
 ```
 
 ### Behavior
@@ -155,10 +155,10 @@ CLI flags always override config:
 
 ```bash
 # Force streaming (even if config says batch)
-workflow run analysis --stream
+wfw run analysis --stream
 
 # Force batch (even if config says streaming)
-workflow task summarize --context-file notes.md --no-stream
+wfw task summarize --context-file notes.md --no-stream
 ```
 
 ## Technical Details
@@ -208,33 +208,33 @@ Uses Server-Sent Events (SSE) from Anthropic API:
 
 ```bash
 # Send to file and terminal
-workflow run analysis --stream | tee custom-output.md
+wfw run analysis --stream | tee custom-output.md
 
 # Send to file only (no terminal)
-workflow run analysis --stream > custom-output.md
+wfw run analysis --stream > custom-output.md
 
 # Send to pipeline
-workflow run extract --format-hint json --stream | jq '.results[]'
+wfw run extract --format-hint json --stream | jq '.results[]'
 ```
 
 ### Batch with Custom Display
 
 ```bash
 # Save without opening pager
-workflow run analysis > output.md
+wfw run analysis > output.md
 
 # Custom pager
-workflow run analysis | bat  # or cat, most, etc.
+wfw run analysis | bat  # or cat, most, etc.
 ```
 
 ### Silent Execution
 
 ```bash
 # No output display (batch)
-workflow run analysis 2>/dev/null
+wfw run analysis 2>/dev/null
 
 # No output display (streaming)
-workflow run analysis --stream > /dev/null
+wfw run analysis --stream > /dev/null
 ```
 
 ## Mode Selection Guide
@@ -299,14 +299,14 @@ curl -I https://api.anthropic.com
 ```bash
 # Must be a TTY for streaming display
 # This won't stream properly:
-workflow run analysis --stream < /dev/null
+wfw run analysis --stream < /dev/null
 ```
 
 **Verify flag:**
 
 ```bash
 # Ensure --stream is specified (workflow mode)
-workflow run analysis --stream
+wfw run analysis --stream
 ```
 
 ### Batch Hangs
@@ -320,7 +320,7 @@ If batch mode appears to hang:
 Add `--stream` to see progress:
 
 ```bash
-workflow run analysis --stream  # See what's happening
+wfw run analysis --stream  # See what's happening
 ```
 
 ### Output Not Displayed
@@ -328,11 +328,11 @@ workflow run analysis --stream  # See what's happening
 **Batch mode:**
 
 - Check pager settings: `echo $PAGER`
-- Try different pager: `workflow run analysis | less`
+- Try different pager: `wfw run analysis | less`
 
 **Streaming mode:**
 
-- Verify output to terminal: `workflow run analysis --stream 2>&1 | less`
+- Verify output to terminal: `wfw run analysis --stream 2>&1 | less`
 
 ### Partial Output Not Saved
 
@@ -388,7 +388,7 @@ If file is empty, interrupt may have occurred before first flush.
 nano .workflow/analysis/task.txt
 
 # Run with streaming
-workflow run analysis --stream
+wfw run analysis --stream
 
 # See results immediately
 # Adjust task if needed
@@ -402,10 +402,10 @@ workflow run analysis --stream
 # pipeline.sh - Run analysis pipeline
 
 # Use batch mode (default) for reliability
-workflow run 01-import
-workflow run 02-clean --depends-on 01-import
-workflow run 03-analyze --depends-on 02-clean
-workflow run 04-report --depends-on 03-analyze
+wfw run 01-import
+wfw run 02-clean --depends-on 01-import
+wfw run 03-analyze --depends-on 02-clean
+wfw run 04-report --depends-on 03-analyze
 
 echo "Pipeline complete!"
 ```
@@ -415,9 +415,9 @@ echo "Pipeline complete!"
 ```bash
 # Stream if interactive, batch if scripted
 if [ -t 1 ]; then
-    workflow run analysis --stream
+    wfw run analysis --stream
 else
-    workflow run analysis
+    wfw run analysis
 fi
 ```
 
@@ -425,7 +425,7 @@ fi
 
 ```bash
 # Show spinner while batch runs
-workflow run expensive-analysis &
+wfw run expensive-analysis &
 PID=$!
 
 while kill -0 $PID 2>/dev/null; do

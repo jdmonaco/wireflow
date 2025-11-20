@@ -55,7 +55,7 @@ teardown() {
     run bash "$WORKFLOW_SCRIPT" help init
 
     assert_success
-    assert_output --partial "Usage: workflow.sh init"
+    assert_output --partial "Usage: wireflow.sh init"
     assert_output --partial "<directory>"
     assert_output --partial "Initialize a workflow project"
 }
@@ -64,7 +64,7 @@ teardown() {
     run bash "$WORKFLOW_SCRIPT" help new
 
     assert_success
-    assert_output --partial "Usage: workflow.sh new"
+    assert_output --partial "Usage: wireflow.sh new"
     assert_output --partial "<name>"
     assert_output --partial "Create a new workflow"
 }
@@ -96,7 +96,7 @@ teardown() {
     run bash "$WORKFLOW_SCRIPT" help edit
 
     assert_success
-    assert_output --partial "Usage: workflow.sh edit"
+    assert_output --partial "Usage: wireflow.sh edit"
     assert_output --partial "Edit workflow or project files"
 }
 
@@ -122,7 +122,7 @@ teardown() {
     run bash "$WORKFLOW_SCRIPT" help list
 
     assert_success
-    assert_output --partial "Usage: workflow.sh list"
+    assert_output --partial "Usage: wireflow.sh list"
     assert_output --partial "List all workflows"
 }
 
@@ -130,7 +130,7 @@ teardown() {
     run bash "$WORKFLOW_SCRIPT" help config
 
     assert_success
-    assert_output --partial "Usage: workflow.sh config"
+    assert_output --partial "Usage: wireflow.sh config"
     assert_output --partial "configuration"
 }
 
@@ -138,7 +138,7 @@ teardown() {
     run bash "$WORKFLOW_SCRIPT" help run
 
     assert_success
-    assert_output --partial "Usage: workflow.sh run"
+    assert_output --partial "Usage: wireflow.sh run"
     assert_output --partial "Context Options"
     assert_output --partial "--depends-on"
 }
@@ -147,7 +147,7 @@ teardown() {
     run bash "$WORKFLOW_SCRIPT" help task
 
     assert_success
-    assert_output --partial "Usage: workflow.sh task"
+    assert_output --partial "Usage: wireflow.sh task"
     assert_output --partial "--inline"
     assert_output --partial "one-off task"
 }
@@ -168,21 +168,21 @@ teardown() {
     run bash "$WORKFLOW_SCRIPT" init -h
 
     assert_success
-    assert_output --partial "Usage: workflow.sh init"
+    assert_output --partial "Usage: wireflow.sh init"
 }
 
 @test "help: 'workflow new -h' shows new help" {
     run bash "$WORKFLOW_SCRIPT" new -h
 
     assert_success
-    assert_output --partial "Usage: workflow.sh new"
+    assert_output --partial "Usage: wireflow.sh new"
 }
 
 @test "help: 'workflow edit -h' shows edit help" {
     run bash "$WORKFLOW_SCRIPT" edit -h
 
     assert_success
-    assert_output --partial "Usage: workflow.sh edit"
+    assert_output --partial "Usage: wireflow.sh edit"
 }
 
 @test "help: 'workflow cat -h' shows cat help" {
@@ -205,26 +205,26 @@ teardown() {
     run bash "$WORKFLOW_SCRIPT" list -h
 
     assert_success
-    assert_output --partial "Usage: workflow.sh list"
+    assert_output --partial "Usage: wireflow.sh list"
 }
 
 @test "help: 'workflow config -h' shows config help" {
     run bash "$WORKFLOW_SCRIPT" config -h
 
     assert_success
-    assert_output --partial "Usage: workflow.sh config"
+    assert_output --partial "Usage: wireflow.sh config"
 }
 
 @test "help: 'workflow run -h' shows run help" {
     run bash "$WORKFLOW_SCRIPT" run -h
 
     assert_success
-    assert_output --partial "Usage: workflow.sh run"
+    assert_output --partial "Usage: wireflow.sh run"
 }
 
 @test "help: 'workflow task -h' shows task help" {
     run bash "$WORKFLOW_SCRIPT" task -h
 
     assert_success
-    assert_output --partial "Usage: workflow.sh task"
+    assert_output --partial "Usage: wireflow.sh task"
 }

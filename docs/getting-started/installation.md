@@ -111,18 +111,18 @@ Clone the repository and add to your PATH:
 
 ```bash
 # Clone the repository
-git clone https://github.com/jdmonaco/workflow.git
-cd workflow
+git clone https://github.com/jdmonaco/wireflow.git
+cd wireflow
 
 # Create symlink to add to PATH
 # Option A: User-local installation (~/.local/bin)
-ln -s "$(pwd)/workflow.sh" ~/.local/bin/workflow
+ln -s "$(pwd)/wireflow.sh" ~/.local/bin/workflow
 
 # Option B: User bin directory (~/bin)
-ln -s "$(pwd)/workflow.sh" ~/bin/workflow
+ln -s "$(pwd)/wireflow.sh" ~/bin/workflow
 
 # Verify installation
-workflow help
+wfw help
 ```
 
 !!! tip "Add to PATH"
@@ -141,18 +141,18 @@ For system-wide installation (requires sudo):
 
 ```bash
 # Clone the repository
-git clone https://github.com/jdmonaco/workflow.git
-cd workflow
+git clone https://github.com/jdmonaco/wireflow.git
+cd wireflow
 
 # Create symlink in system directory
-sudo ln -s "$(pwd)/workflow.sh" /usr/local/bin/workflow
+sudo ln -s "$(pwd)/wireflow.sh" /usr/local/bin/workflow
 ```
 
 ### Why Clone Instead of Single-File Download?
 
 Workflow is a modular tool that includes:
 
-- `workflow.sh` - Main script
+- `wireflow.sh` - Main script
 - `lib/` - Library modules (core, config, help, task, utils, api)
 - `tests/` - Test suite
 
@@ -184,7 +184,7 @@ On first use, Workflow automatically creates `~/.config/workflow/config` where y
 
 ```bash
 # Run any workflow command to trigger auto-creation
-workflow help
+wfw help
 
 # Edit the global config
 nano ~/.config/workflow/config
@@ -204,13 +204,13 @@ ANTHROPIC_API_KEY=sk-ant-...
 By default, Workflow creates a base system prompt at `~/.config/workflow/prompts/base.txt`. If you want to use a custom prompt directory:
 
 ```bash
-export WORKFLOW_PROMPT_PREFIX="$HOME/custom/prompts"
+export WIREFLOW_PROMPT_PREFIX="$HOME/custom/prompts"
 ```
 
 You can also set this in the global config file:
 
 ```bash
-WORKFLOW_PROMPT_PREFIX=$HOME/custom/prompts
+WIREFLOW_PROMPT_PREFIX=$HOME/custom/prompts
 ```
 
 ### Optional: Task Prefix Directory
@@ -218,13 +218,13 @@ WORKFLOW_PROMPT_PREFIX=$HOME/custom/prompts
 If you plan to use named tasks (see [Execution Guide](../user-guide/execution.md#task-mode-task)), set a directory for task templates:
 
 ```bash
-export WORKFLOW_TASK_PREFIX="$HOME/.config/workflow/tasks"
+export WIREFLOW_TASK_PREFIX="$HOME/.config/workflow/tasks"
 ```
 
 Or in the global config:
 
 ```bash
-WORKFLOW_TASK_PREFIX=$HOME/.config/workflow/tasks
+WIREFLOW_TASK_PREFIX=$HOME/.config/workflow/tasks
 ```
 
 ## First-Run Auto-Configuration
@@ -244,13 +244,13 @@ Verify your installation is working:
 
 ```bash
 # Check help works
-workflow help
+wfw help
 
 # Verify global config was created
 ls ~/.config/workflow/
 
 # Check API key is configured
-workflow config  # Run from any directory
+wfw config  # Run from any directory
 ```
 
 You should see your global configuration values displayed.

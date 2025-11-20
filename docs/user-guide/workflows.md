@@ -16,7 +16,7 @@ A workflow is a **named, persistent task configuration** stored in your project'
 ### Basic Creation
 
 ```bash
-workflow new analysis-01
+wfw new analysis-01
 ```
 
 This creates `.workflow/analysis-01/` with:
@@ -31,7 +31,7 @@ This creates `.workflow/analysis-01/` with:
 
 ### The Creation Experience
 
-After running `workflow new`, the tool opens your editor (vim by default) with two buffers:
+After running `wfw new`, the tool opens your editor (vim by default) with two buffers:
 
 1. **`task.txt`** - Write your task/prompt here
 2. **`config`** - Set workflow-specific configuration
@@ -122,26 +122,26 @@ OUTPUT_FORMAT=markdown
 
 **Sequential workflows:**
 ```bash
-workflow new 00-context
-workflow new 01-analysis
-workflow new 02-writeup
-workflow new 03-review
+wfw new 00-context
+wfw new 01-analysis
+wfw new 02-writeup
+wfw new 03-review
 ```
 
 **Descriptive names:**
 ```bash
-workflow new extract-data
-workflow new analyze-results
-workflow new generate-figures
-workflow new draft-discussion
+wfw new extract-data
+wfw new analyze-results
+wfw new generate-figures
+wfw new draft-discussion
 ```
 
 **Categorized workflows:**
 ```bash
-workflow new data-preprocessing
-workflow new data-exploratory-analysis
-workflow new model-training
-workflow new model-evaluation
+wfw new data-preprocessing
+wfw new data-exploratory-analysis
+wfw new model-training
+wfw new model-evaluation
 ```
 
 ### Naming Rules
@@ -156,7 +156,7 @@ workflow new model-evaluation
 ### Edit Workflow Files
 
 ```bash
-workflow edit analysis-01
+wfw edit analysis-01
 ```
 
 Opens `task.txt` and `config` in your editor.
@@ -176,7 +176,7 @@ nano .workflow/analysis-01/config
 ### View Workflow Configuration
 
 ```bash
-workflow config analysis-01
+wfw config analysis-01
 ```
 
 Shows the complete configuration cascade:
@@ -209,7 +209,7 @@ The labels show where each value comes from:
 ### List All Workflows
 
 ```bash
-workflow list
+wfw list
 ```
 
 Output:
@@ -228,7 +228,7 @@ Available workflows in /path/to/project/.workflow:
 ### Short Form
 
 ```bash
-workflow ls
+wfw ls
 ```
 
 Both `list` and `ls` work identically.
@@ -279,7 +279,7 @@ CONTEXT_FILES=README.md,notes.txt
 **Option 2: At Runtime**
 
 ```bash
-workflow run analysis-01 --context-pattern "data/*.csv" --context-file README.md
+wfw run analysis-01 --context-pattern "data/*.csv" --context-file README.md
 ```
 
 Runtime flags override config file settings.
@@ -311,7 +311,7 @@ Use patterns to include multiple files:
 CONTEXT_PATTERN=data/*.csv,results/*.json
 
 # Or at runtime
-workflow run analysis-01 --context-pattern "data/*.csv"
+wfw run analysis-01 --context-pattern "data/*.csv"
 ```
 
 ### Explicit Files
@@ -323,7 +323,7 @@ List specific files:
 CONTEXT_FILES=README.md,data/summary.csv,notes.txt
 
 # Or at runtime
-workflow run analysis-01 --context-file README.md --context-file data/summary.csv
+wfw run analysis-01 --context-file README.md --context-file data/summary.csv
 ```
 
 ### Dependencies
@@ -335,7 +335,7 @@ Include outputs from other workflows:
 DEPENDS_ON=00-context,01-preprocessing
 
 # Or at runtime
-workflow run analysis-01 --depends-on 00-context
+wfw run analysis-01 --depends-on 00-context
 ```
 
 See [Execution Guide](execution.md) for details on running workflows with context.
@@ -384,7 +384,7 @@ Use prefixes to group related workflows:
 Create workflow chains using `--depends-on`:
 
 ```bash
-workflow run 02-analysis --depends-on 01-context
+wfw run 02-analysis --depends-on 01-context
 ```
 
 This automatically includes the output from `01-context` as context for `02-analysis`.
@@ -392,7 +392,7 @@ This automatically includes the output from `01-context` as context for `02-anal
 ### Multiple Dependencies
 
 ```bash
-workflow run 03-synthesis --depends-on 01-context,02-analysis
+wfw run 03-synthesis --depends-on 01-context,02-analysis
 ```
 
 ### Dependency Graph Example
@@ -412,10 +412,10 @@ workflow run 03-synthesis --depends-on 01-context,02-analysis
 Create this with:
 
 ```bash
-workflow run 01-data-cleaning --depends-on 00-data-import
-workflow run 02-exploratory-analysis --depends-on 01-data-cleaning
-workflow run 02-statistical-tests --depends-on 01-data-cleaning
-workflow run 03-final-report \
+wfw run 01-data-cleaning --depends-on 00-data-import
+wfw run 02-exploratory-analysis --depends-on 01-data-cleaning
+wfw run 02-statistical-tests --depends-on 01-data-cleaning
+wfw run 03-final-report \
   --depends-on 02-exploratory-analysis,02-statistical-tests
 ```
 
@@ -449,7 +449,7 @@ Specify output format to change file extension:
 OUTPUT_FORMAT=json
 
 # Or at runtime
-workflow run analysis-01 --format-hint json
+wfw run analysis-01 --format-hint json
 ```
 
 Supported formats: `md`, `markdown`, `txt`, `json`, `html`, `xml`, `csv`, `yaml`, etc.
@@ -551,9 +551,9 @@ Format as academic report with methods and results sections.
 Create multiple numbered versions for iterative work:
 
 ```bash
-workflow new draft-v1
-workflow new draft-v2
-workflow new draft-v3
+wfw new draft-v1
+wfw new draft-v2
+wfw new draft-v3
 ```
 
 ### Template Workflows
@@ -561,7 +561,7 @@ workflow new draft-v3
 Create reusable templates:
 
 ```bash
-workflow new template-data-analysis
+wfw new template-data-analysis
 # Set up general config and task structure
 # Copy for specific analyses
 cp -r .workflow/template-data-analysis .workflow/experiment-1-analysis
@@ -572,9 +572,9 @@ cp -r .workflow/template-data-analysis .workflow/experiment-1-analysis
 Create review workflows that analyze other outputs:
 
 ```bash
-workflow new review-analysis
+wfw new review-analysis
 # Set task: "Review the provided analysis for accuracy and completeness"
-workflow run review-analysis --depends-on main-analysis
+wfw run review-analysis --depends-on main-analysis
 ```
 
 ## Next Steps

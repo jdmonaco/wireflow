@@ -2,7 +2,7 @@
 
 Technical implementation details, module reference, and code-level specifics for the Workflow codebase.
 
-**For development workflows, see [CLAUDE.md](https://github.com/jdmonaco/workflow/blob/main/CLAUDE.md) (GitHub).**
+**For development workflows, see [CLAUDE.md](https://github.com/jdmonaco/wireflow/blob/main/CLAUDE.md) (GitHub).**
 **For architecture and design, see [architecture.md](architecture.md).**
 
 ## Module Reference
@@ -155,7 +155,7 @@ Stops at `$HOME` or `/` to avoid escaping user space.
 
 **Shared execution logic:**
 
-Eliminates duplication between run mode (workflow.sh) and task mode (lib/task.sh) by extracting common execution functions. All functions are mode-aware with a `mode` parameter ("run" or "task") for mode-specific behavior.
+Eliminates duplication between run mode (wireflow.sh) and task mode (lib/task.sh) by extracting common execution functions. All functions are mode-aware with a `mode` parameter ("run" or "task") for mode-specific behavior.
 
 **Functions:**
 

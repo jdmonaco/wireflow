@@ -170,12 +170,12 @@ teardown() {
 # Integration Tests
 # =============================================================================
 
-@test "tasks: WORKFLOW_TASK_PREFIX enabled by default in global config" {
+@test "tasks: WIREFLOW_TASK_PREFIX enabled by default in global config" {
     # Trigger global config creation
     bash "$WORKFLOW_SCRIPT" --version > /dev/null
 
-    # Check config has WORKFLOW_TASK_PREFIX uncommented
-    run grep "^WORKFLOW_TASK_PREFIX=" "$GLOBAL_CONFIG_DIR/config"
+    # Check config has WIREFLOW_TASK_PREFIX uncommented
+    run grep "^WIREFLOW_TASK_PREFIX=" "$GLOBAL_CONFIG_DIR/config"
     assert_success
     assert_output --partial ".config/workflow/tasks"
 }

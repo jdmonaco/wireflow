@@ -24,11 +24,11 @@ These provide comprehensive context for understanding how Workflow is built and 
 
 ```bash
 # Clone repository
-git clone https://github.com/jdmonaco/workflow.git
-cd workflow
+git clone https://github.com/jdmonaco/wireflow.git
+cd wireflow
 
 # Install for local development
-ln -s "$(pwd)/workflow.sh" ~/bin/workflow
+ln -s "$(pwd)/wireflow.sh" ~/bin/workflow
 
 # Install test framework
 git submodule update --init --recursive
@@ -51,7 +51,7 @@ bats -t tests/config.bats
 
 ```
 workflow/
-├── workflow.sh           # Main script
+├── wireflow.sh           # Main script
 ├── lib/                  # Library modules
 │   ├── core.sh          # Core subcommands
 │   ├── config.sh        # Configuration management
@@ -145,7 +145,7 @@ process_file() {
 - [Reference](../reference/cli-reference.md): Technical reference
 - [Architecture](architecture.md): System design and architecture patterns
 - [Implementation](implementation.md): Technical implementation details
-- [GitHub Issues](https://github.com/jdmonaco/workflow/issues): Bug tracker
+- [GitHub Issues](https://github.com/jdmonaco/wireflow/issues): Bug tracker
 
 ---
 

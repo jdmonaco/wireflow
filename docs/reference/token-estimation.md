@@ -45,7 +45,7 @@ Sending Messages API request...
 Get estimates without making API calls:
 
 ```bash
-workflow run analysis --count-tokens
+wfw run analysis --count-tokens
 ```
 
 Output:
@@ -193,8 +193,8 @@ CONTEXT_FILES=("data/summary.csv")  # Just the summary
 ```bash
 # Instead of including all raw data
 # Create summarization workflow first
-workflow run 01-summarize  # Processes all data → summary
-workflow run 02-analyze --depends-on 01-summarize  # Uses summary only
+wfw run 01-summarize  # Processes all data → summary
+wfw run 02-analyze --depends-on 01-summarize  # Uses summary only
 ```
 
 ### Split Large Tasks
@@ -204,10 +204,10 @@ Break large tasks into smaller workflows:
 ```bash
 # Instead of one huge workflow with all context
 # Split into stages:
-workflow run 01-gather-data   # Process raw data
-workflow run 02-analyze       # Analyze (depends on 01)
-workflow run 03-visualize     # Visualize (depends on 02)
-workflow run 04-writeup       # Write (depends on all)
+wfw run 01-gather-data   # Process raw data
+wfw run 02-analyze       # Analyze (depends on 01)
+wfw run 03-visualize     # Visualize (depends on 02)
+wfw run 04-writeup       # Write (depends on all)
 ```
 
 Each stage has manageable context.
@@ -251,7 +251,7 @@ Use `MAX_TOKENS` to limit response size:
 MAX_TOKENS=4096
 
 # Or via CLI
-workflow run analysis --max-tokens 4096
+wfw run analysis --max-tokens 4096
 ```
 
 **Default:** 8192 tokens
@@ -325,11 +325,11 @@ Instead of many small API calls, combine into larger workflows:
 ```bash
 # Inefficient: Many small calls
 for file in data/*.csv; do
-  workflow task -i "Summarize" --context-file "$file"
+  wfw task -i "Summarize" --context-file "$file"
 done
 
 # Better: One call with all files
-workflow run summarize-all --context-pattern "data/*.csv"
+wfw run summarize-all --context-pattern "data/*.csv"
 ```
 
 ### Cache Intermediate Results
@@ -338,12 +338,12 @@ Use workflow dependencies to avoid reprocessing:
 
 ```bash
 # Once:
-workflow run expensive-analysis
+wfw run expensive-analysis
 
 # Multiple times (no reprocessing):
-workflow run report-1 --depends-on expensive-analysis
-workflow run report-2 --depends-on expensive-analysis
-workflow run report-3 --depends-on expensive-analysis
+wfw run report-1 --depends-on expensive-analysis
+wfw run report-2 --depends-on expensive-analysis
+wfw run report-3 --depends-on expensive-analysis
 ```
 
 ## Troubleshooting
@@ -374,7 +374,7 @@ ls .workflow/dependency/output/
 - Verify glob patterns aren't too broad
 
 ```bash
-workflow run analysis --count-tokens  # See detailed breakdown
+wfw run analysis --count-tokens  # See detailed breakdown
 ```
 
 ### API Call Exceeds Limit

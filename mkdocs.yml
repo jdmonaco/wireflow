@@ -1,8 +1,8 @@
-site_name: Workflow
+site_name: WireFlow
 site_description: A flexible CLI tool for building persistent AI workflows anywhere you want
 site_author: Joseph Monaco
-repo_url: https://github.com/jdmonaco/workflow
-repo_name: workflow
+repo_url: https://github.com/jdmonaco/wireflow
+repo_name: wireflow
 
 theme:
   name: material

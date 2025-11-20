@@ -13,7 +13,7 @@ Create a new directory and initialize it as a Workflow project:
 ```bash
 mkdir my-analysis
 cd my-analysis
-workflow init .
+wfw init .
 ```
 
 This creates a `.workflow/` directory with default configuration.
@@ -47,7 +47,7 @@ EOF
 Create a workflow to extract action items:
 
 ```bash
-workflow new extract-actions
+wfw new extract-actions
 ```
 
 This creates `.workflow/extract-actions/` with:
@@ -61,7 +61,7 @@ This creates `.workflow/extract-actions/` with:
 Edit the task file (opens in your `$EDITOR`):
 
 ```bash
-workflow edit extract-actions
+wfw edit extract-actions
 ```
 
 Or edit it manually:
@@ -83,7 +83,7 @@ EOF
 Add your notes file as context:
 
 ```bash
-workflow run extract-actions --context-file notes.txt --stream
+wfw run extract-actions --context-file notes.txt --stream
 ```
 
 !!! tip "Streaming Mode"
@@ -94,7 +94,7 @@ workflow run extract-actions --context-file notes.txt --stream
 The response is saved to `.workflow/extract-actions/output.md`. Use the `cat` subcommand for easy viewing:
 
 ```bash
-workflow cat extract-actions
+wfw cat extract-actions
 ```
 
 Or access the file directly:
@@ -107,10 +107,10 @@ cat .workflow/extract-actions/output.md
 
 Let's break down what you did:
 
-1. **`workflow init .`** - Created a `.workflow/` project structure
-2. **`workflow new extract-actions`** - Created a new workflow subdirectory
-3. **`workflow edit extract-actions`** - Opened the task prompt for editing
-4. **`workflow run extract-actions`** - Executed the workflow with the Anthropic API
+1. **`wfw init .`** - Created a `.workflow/` project structure
+2. **`wfw new extract-actions`** - Created a new workflow subdirectory
+3. **`wfw edit extract-actions`** - Opened the task prompt for editing
+4. **`wfw run extract-actions`** - Executed the workflow with the Anthropic API
 
 The workflow:
 
@@ -147,7 +147,7 @@ my-analysis/
 **Task Mode** (quick one-offs):
 
 ```bash
-workflow task -i "Summarize these notes" --context-file notes.txt
+wfw task -i "Summarize these notes" --context-file notes.txt
 ```
 
 - No persistent directories
@@ -161,7 +161,7 @@ workflow task -i "Summarize these notes" --context-file notes.txt
 Use glob patterns to add multiple files:
 
 ```bash
-workflow run extract-actions --context-pattern "*.txt" --stream
+wfw run extract-actions --context-pattern "*.txt" --stream
 ```
 
 ### Modify the Configuration
@@ -170,7 +170,7 @@ Change the AI model or parameters:
 
 ```bash
 # View current config
-workflow config extract-actions
+wfw config extract-actions
 
 # Edit workflow config
 nano .workflow/extract-actions/config
@@ -190,14 +190,14 @@ Create a second workflow that uses the first's output:
 
 ```bash
 # Create new workflow
-workflow new prioritize-actions
+wfw new prioritize-actions
 
 # Edit task
-workflow edit prioritize-actions
+wfw edit prioritize-actions
 # Add task: "Take these action items and create a prioritized implementation plan"
 
 # Run with dependency
-workflow run prioritize-actions --depends-on extract-actions --stream
+wfw run prioritize-actions --depends-on extract-actions --stream
 ```
 
 The `--depends-on` flag automatically includes the output of `extract-actions` as context!
@@ -208,27 +208,27 @@ For quick queries without creating workflows:
 
 ```bash
 # Inline task
-workflow task -i "What are the main themes in these notes?" --context-file notes.txt
+wfw task -i "What are the main themes in these notes?" --context-file notes.txt
 
 # Named task (create reusable task templates)
 mkdir -p ~/.config/workflow/tasks
 echo "Summarize the key points in bullet format" > ~/.config/workflow/tasks/summarize.txt
-workflow task summarize --context-file notes.txt
+wfw task summarize --context-file notes.txt
 ```
 
 ## Common Commands
 
 ```bash
 # List all workflows in project
-workflow list
+wfw list
 
 # View configuration cascade
-workflow config extract-actions
+wfw config extract-actions
 
 # Get help
-workflow help
-workflow help run
-workflow run -h
+wfw help
+wfw help run
+wfw run -h
 ```
 
 ## Next Steps
@@ -244,16 +244,16 @@ You now know the basics! Here's what to explore next:
 
 | Command | What It Does |
 |---------|-------------|
-| `workflow init <dir>` | Initialize a workflow project |
-| `workflow new <name>` | Create a new workflow |
-| `workflow edit <name>` | Edit workflow task |
-| `workflow config <name>` | View configuration |
-| `workflow run <name>` | Execute a workflow |
-| `workflow task -i "<text>"` | Quick one-off task |
-| `workflow cat <name>` | Display workflow output |
-| `workflow open <name>` | Open workflow output in default app |
-| `workflow list` | List all workflows |
-| `workflow help` | Show help |
+| `wfw init <dir>` | Initialize a workflow project |
+| `wfw new <name>` | Create a new workflow |
+| `wfw edit <name>` | Edit workflow task |
+| `wfw config <name>` | View configuration |
+| `wfw run <name>` | Execute a workflow |
+| `wfw task -i "<text>"` | Quick one-off task |
+| `wfw cat <name>` | Display workflow output |
+| `wfw open <name>` | Open workflow output in default app |
+| `wfw list` | List all workflows |
+| `wfw help` | Show help |
 
 ---
 

@@ -2,10 +2,10 @@
 set -e
 
 # Version
-WORKFLOW_VERSION="0.2.0"
+WIREFLOW_VERSION="0.2.0"
 
 # =============================================================================
-# Workflow - AI-Assisted Research and Project Development Tool
+# WireFlow - AI-Assisted Research and Project Development Tool
 # =============================================================================
 # A portable CLI tool for managing AI workflows using the Anthropic Messages
 # API. Features git-like project structure, flexible configuration cascading,
@@ -63,7 +63,7 @@ fi
 # Parse subcommand
 case "$1" in
     --version|-v)
-        echo "workflow version $WORKFLOW_VERSION"
+        echo "wireflow version $WIREFLOW_VERSION"
         exit 0
         ;;
     --help|-h)
