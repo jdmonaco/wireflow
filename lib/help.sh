@@ -232,7 +232,7 @@ show_help_task() {
     cat <<EOF
 Usage: $SCRIPT_NAME task <name>|--inline <text> [options]
 
-Execute a one-off task without creating workflow directories.
+Execute a one-off task outside of existing workflows.
 
 Arguments:
     <name>         Named task from \$WORKFLOW_TASK_PREFIX/<name>.txt

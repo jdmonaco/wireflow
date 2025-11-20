@@ -284,6 +284,25 @@ execute_api_request "task" "$OUTPUT_FILE" "$OUTPUT_FILE_PATH"
 # Task Mode - Post-Processing
 # =============================================================================
 
+# Handle citations output
+if [[ "$ENABLE_CITATIONS" == "true" && -n "$CITATIONS_FILE_PATH" && -f "$CITATIONS_FILE_PATH" && -s "$CITATIONS_FILE_PATH" ]]; then
+    if [[ -z "$OUTPUT_FILE_PATH" ]]; then
+        # Stdout mode: append citations to stdout after separator
+        echo ""
+        echo "---"
+        echo ""
+        cat "$CITATIONS_FILE_PATH"
+        # Citations temp file will be cleaned up automatically
+    else
+        # Explicit output file: move citations alongside with proper naming
+        output_dir=$(dirname "$OUTPUT_FILE")
+        output_base=$(basename "$OUTPUT_FILE" ".${OUTPUT_FORMAT}")
+        citations_output="${output_dir}/${output_base}-citations.md"
+        mv "$CITATIONS_FILE_PATH" "$citations_output"
+        echo "Citations saved to: $citations_output"
+    fi
+fi
+
 # Only post-process if output file was explicitly specified
 if [[ -n "$OUTPUT_FILE_PATH" && -f "$OUTPUT_FILE" ]]; then
     echo ""

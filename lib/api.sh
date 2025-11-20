@@ -139,8 +139,13 @@ anthropic_execute_single() {
         # Save formatted output
         echo "$formatted" > "${params[output_file]}"
 
-        # Write citations sidecar file
-        write_citations_sidecar "$parsed" "$doc_map_file" "${params[output_file]}"
+        # Write citations sidecar file and get path
+        CITATIONS_FILE_PATH=$(write_citations_sidecar "$parsed" "$doc_map_file" "${params[output_file]}")
+
+        # For non-stdout mode, report the file location
+        if [[ -n "${params[output_file]}" && "${params[output_file]}" != "/dev/stdout" ]]; then
+            echo "Citations saved to: $CITATIONS_FILE_PATH" >&2
+        fi
     else
         # No citations - extract first text block as before
         echo "$response" | jq -r '.content[0].text' > "${params[output_file]}"
@@ -371,8 +376,13 @@ anthropic_execute_stream() {
         # Overwrite output file with formatted version
         echo "$formatted" > "${params[output_file]}"
 
-        # Write citations sidecar
-        write_citations_sidecar "$parsed" "$doc_map_file" "${params[output_file]}"
+        # Write citations sidecar file and get path
+        CITATIONS_FILE_PATH=$(write_citations_sidecar "$parsed" "$doc_map_file" "${params[output_file]}")
+
+        # For non-stdout mode, report the file location
+        if [[ -n "${params[output_file]}" && "${params[output_file]}" != "/dev/stdout" ]]; then
+            echo "Citations saved to: $CITATIONS_FILE_PATH" >&2
+        fi
 
         # Cleanup events file
         rm -f "$events_file"
@@ -785,9 +795,8 @@ write_citations_sidecar() {
         output_dir=$(dirname "$output_file")
         sidecar_file="$output_dir/citations.md"
     else
-        # Stdout mode - use temp file
+        # Stdout mode - use temp file (will be output to stdout by caller)
         sidecar_file=$(mktemp -t citations.XXXXXX.md)
-        echo "Citations saved to: $sidecar_file" >&2
     fi
 
     # Load document map if available
@@ -858,5 +867,7 @@ write_citations_sidecar() {
         done
     } > "$sidecar_file"
 
+    # Return the sidecar file path for caller to handle
+    echo "$sidecar_file"
     return 0
 }
