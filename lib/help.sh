@@ -49,11 +49,11 @@ Examples:
 
 Environment variables:
     ANTHROPIC_API_KEY         Your Anthropic API key (required)
-    WIREFLOW_PROMPT_PREFIX    System prompt directory (default: ~/.config/workflow/prompts)
+    WIREFLOW_PROMPT_PREFIX    System prompt directory (default: ~/.config/wireflow/prompts)
     WIREFLOW_TASK_PREFIX      Named task directory (optional, for 'task' subcommand)
 
 Configuration:
-    Global config:   ~/.config/workflow/config
+    Global config:   ~/.config/wireflow/config
     Project config:  .workflow/config
     Workflow config: .workflow/<NAME>/config
 
@@ -324,7 +324,7 @@ Built-in Templates:
     explain       Simplify complex topics
     critique      Identify problems and improvements
 
-Task templates are stored in: \$WIREFLOW_TASK_PREFIX (default: ~/.config/workflow/tasks/)
+Task templates are stored in: \$WIREFLOW_TASK_PREFIX (default: ~/.config/wireflow/tasks/)
 
 Examples:
     wfw tasks

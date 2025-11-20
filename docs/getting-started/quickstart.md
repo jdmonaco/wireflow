@@ -211,8 +211,8 @@ For quick queries without creating workflows:
 wfw task -i "What are the main themes in these notes?" --context-file notes.txt
 
 # Named task (create reusable task templates)
-mkdir -p ~/.config/workflow/tasks
-echo "Summarize the key points in bullet format" > ~/.config/workflow/tasks/summarize.txt
+mkdir -p ~/.config/wireflow/tasks
+echo "Summarize the key points in bullet format" > ~/.config/wireflow/tasks/summarize.txt
 wfw task summarize --context-file notes.txt
 ```
 

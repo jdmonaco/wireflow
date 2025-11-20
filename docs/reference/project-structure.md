@@ -247,7 +247,7 @@ Workflow directory containing all workflow-specific files.
 
 ## Global Configuration
 
-### `~/.config/workflow/`
+### `~/.config/wireflow/`
 
 Global user configuration directory.
 
@@ -258,7 +258,7 @@ Global user configuration directory.
 **Contents:**
 
 ```
-~/.config/workflow/
+~/.config/wireflow/
 ├── config                 # Global configuration
 ├── prompts/               # System prompts
 │   ├── base.txt          # Default prompt (auto-created)
@@ -270,7 +270,7 @@ Global user configuration directory.
     └── extract.txt
 ```
 
-### `~/.config/workflow/config`
+### `~/.config/wireflow/config`
 
 Global configuration file.
 
@@ -280,7 +280,7 @@ Global configuration file.
 
 **See:** [Configuration Guide](../user-guide/configuration.md)
 
-### `~/.config/workflow/prompts/`
+### `~/.config/wireflow/prompts/`
 
 System prompt directory.
 
@@ -292,7 +292,7 @@ System prompt directory.
 
 **See:** [System Prompts Guide](../user-guide/system-prompts.md)
 
-### `~/.config/workflow/tasks/`
+### `~/.config/wireflow/tasks/`
 
 Optional named task directory.
 
@@ -459,8 +459,8 @@ Disk usage grows with iterations. Periodically clean old backups if needed.
 ### Recommended Permissions
 
 ```bash
-chmod 700 ~/.config/workflow/           # User-only access to global config
-chmod 600 ~/.config/workflow/config     # Protect API key
+chmod 700 ~/.config/wireflow/           # User-only access to global config
+chmod 600 ~/.config/wireflow/config     # Protect API key
 chmod 755 .workflow/                    # Project dir
 chmod 644 .workflow/config              # Config files
 chmod 644 .workflow/*/task.txt

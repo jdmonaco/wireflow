@@ -28,7 +28,7 @@ Technical implementation details, module reference, and code-level specifics for
 
 **Configuration management:**
 
-- `ensure_global_config()` - Create `~/.config/workflow/` on first use
+- `ensure_global_config()` - Create `~/.config/wireflow/` on first use
 - `create_default_global_config()` - Write default config and base.txt
 - `load_global_config()` - Load with pass-through logic
 - `extract_config()` - Parse config files (bash variable assignments)

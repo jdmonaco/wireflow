@@ -177,5 +177,5 @@ teardown() {
     # Check config has WIREFLOW_TASK_PREFIX uncommented
     run grep "^WIREFLOW_TASK_PREFIX=" "$GLOBAL_CONFIG_DIR/config"
     assert_success
-    assert_output --partial ".config/workflow/tasks"
+    assert_output --partial ".config/wireflow/tasks"
 }

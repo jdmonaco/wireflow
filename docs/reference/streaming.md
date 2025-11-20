@@ -131,7 +131,7 @@ Response saved to: .workflow/analysis/output.md
 **In global config:**
 
 ```bash
-# ~/.config/workflow/config
+# ~/.config/wireflow/config
 STREAM_MODE=true  # or false
 ```
 

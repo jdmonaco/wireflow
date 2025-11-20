@@ -58,7 +58,7 @@ TEMPERATURE=0.7
 MAX_TOKENS=8192
 OUTPUT_FORMAT="txt"
 SYSTEM_PROMPTS=(base NeuroAI)
-WIREFLOW_PROMPT_PREFIX="$HOME/.config/workflow/prompts"
+WIREFLOW_PROMPT_PREFIX="$HOME/.config/wireflow/prompts"
 EOF
 
     # Create workflow with empty config (should inherit from global)
@@ -171,7 +171,7 @@ TEMPERATURE=0.3
 MAX_TOKENS=16384
 OUTPUT_FORMAT="json"
 SYSTEM_PROMPTS=(base Custom)
-WIREFLOW_PROMPT_PREFIX="$HOME/.config/workflow/prompts"
+WIREFLOW_PROMPT_PREFIX="$HOME/.config/wireflow/prompts"
 EOF
 
     # Create new project in different location (should inherit from global, not parent)
@@ -226,7 +226,7 @@ EOF
     assert_success
     assert_output --partial "Configuration Cascade:"
     assert_output --partial "Global:"
-    assert_output --partial ".config/workflow/config"
+    assert_output --partial ".config/wireflow/config"
     assert_output --partial "Project:"
     assert_output --partial "(global)"
 }

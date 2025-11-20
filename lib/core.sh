@@ -156,13 +156,13 @@ new_workflow() {
 
             # If not found in custom location, try default location as fallback
             if [[ ! -f "$template_file" ]]; then
-                local default_template_file="$HOME/.config/workflow/tasks/${template_task}.txt"
+                local default_template_file="$HOME/.config/wireflow/tasks/${template_task}.txt"
                 if [[ -f "$default_template_file" ]]; then
                     template_file="$default_template_file"
                 else
                     echo "Error: Task template not found: $template_task" >&2
                     echo "  Searched: $WIREFLOW_TASK_PREFIX" >&2
-                    echo "  Searched: $HOME/.config/workflow/tasks (fallback)" >&2
+                    echo "  Searched: $HOME/.config/wireflow/tasks (fallback)" >&2
                     echo ""
                     echo "Available templates:"
                     list_tasks
@@ -376,7 +376,7 @@ list_tasks() {
     echo ""
 
     local shown_tasks=()
-    local default_task_dir="$HOME/.config/workflow/tasks"
+    local default_task_dir="$HOME/.config/wireflow/tasks"
     local has_custom_tasks=false
     local has_builtin_tasks=false
 
@@ -474,7 +474,7 @@ show_task() {
 
     if [[ -z "$WIREFLOW_TASK_PREFIX" || ! -d "$WIREFLOW_TASK_PREFIX" ]]; then
         echo "Error: WIREFLOW_TASK_PREFIX not configured"
-        echo "Set WIREFLOW_TASK_PREFIX in ~/.config/workflow/config"
+        echo "Set WIREFLOW_TASK_PREFIX in ~/.config/wireflow/config"
         return 1
     fi
 
@@ -482,13 +482,13 @@ show_task() {
 
     # If not found in custom location, try default location as fallback
     if [[ ! -f "$task_file" ]]; then
-        local default_task_file="$HOME/.config/workflow/tasks/${task_name}.txt"
+        local default_task_file="$HOME/.config/wireflow/tasks/${task_name}.txt"
         if [[ -f "$default_task_file" ]]; then
             task_file="$default_task_file"
         else
             echo "Error: Task template not found: $task_name" >&2
             echo "  Searched: $WIREFLOW_TASK_PREFIX" >&2
-            echo "  Searched: $HOME/.config/workflow/tasks (fallback)" >&2
+            echo "  Searched: $HOME/.config/wireflow/tasks (fallback)" >&2
             echo ""
             echo "Available templates:"
             list_tasks
@@ -527,7 +527,7 @@ edit_task() {
 
     if [[ -z "$WIREFLOW_TASK_PREFIX" || ! -d "$WIREFLOW_TASK_PREFIX" ]]; then
         echo "Error: WIREFLOW_TASK_PREFIX not configured"
-        echo "Set WIREFLOW_TASK_PREFIX in ~/.config/workflow/config"
+        echo "Set WIREFLOW_TASK_PREFIX in ~/.config/wireflow/config"
         return 1
     fi
 
@@ -535,13 +535,13 @@ edit_task() {
 
     # If not found in custom location, try default location as fallback
     if [[ ! -f "$task_file" ]]; then
-        local default_task_file="$HOME/.config/workflow/tasks/${task_name}.txt"
+        local default_task_file="$HOME/.config/wireflow/tasks/${task_name}.txt"
         if [[ -f "$default_task_file" ]]; then
             task_file="$default_task_file"
         else
             echo "Error: Task template not found: $task_name" >&2
             echo "  Searched: $WIREFLOW_TASK_PREFIX" >&2
-            echo "  Searched: $HOME/.config/workflow/tasks (fallback)" >&2
+            echo "  Searched: $HOME/.config/wireflow/tasks (fallback)" >&2
             echo ""
             echo "Available templates:"
             list_tasks

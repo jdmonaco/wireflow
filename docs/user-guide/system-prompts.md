@@ -20,7 +20,7 @@ System prompts are XML-formatted text files that define Claude's behavior, role,
 System prompts live in `$WIREFLOW_PROMPT_PREFIX/`:
 
 ```
-~/.config/workflow/prompts/
+~/.config/wireflow/prompts/
 ├── base.txt         # Default prompt (always first)
 ├── research.txt     # Research writing
 ├── code.txt         # Code analysis
@@ -30,7 +30,7 @@ System prompts live in `$WIREFLOW_PROMPT_PREFIX/`:
 
 ### Default Prompt Directory
 
-The default location is `~/.config/workflow/prompts/`, created automatically on first use.
+The default location is `~/.config/wireflow/prompts/`, created automatically on first use.
 
 ### Custom Prompt Directory
 
@@ -64,7 +64,7 @@ and ask for clarification if needed. Format output as requested.
 Edit the base prompt for your personal preferences:
 
 ```bash
-nano ~/.config/workflow/prompts/base.txt
+nano ~/.config/wireflow/prompts/base.txt
 ```
 
 Example customization:
@@ -170,7 +170,7 @@ Reporting:
 
 #### Global Default
 
-Set in `~/.config/workflow/config`:
+Set in `~/.config/wireflow/config`:
 
 ```bash
 SYSTEM_PROMPTS=(base)
@@ -414,7 +414,7 @@ Create shareable prompt libraries:
 
 ```bash
 # Personal prompts
-~/.config/workflow/prompts/
+~/.config/wireflow/prompts/
 
 # Shared team prompts
 ~/shared/team-prompts/
@@ -469,7 +469,7 @@ SYSTEM_PROMPTS=(base code)
 Projects can build on global prompts:
 
 ```bash
-# Global: ~/.config/workflow/config
+# Global: ~/.config/wireflow/config
 SYSTEM_PROMPTS=(base)
 
 # Project: .workflow/config

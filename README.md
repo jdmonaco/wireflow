@@ -58,7 +58,7 @@ wfw edit analyze-data
 wfw run analyze-data --context-file data.csv --stream
 ```
 
-Your project files and folders are treated as read-only. All `workflow` files are maintained in a `.workflow/` subfolder.
+Your project files and folders are treated as read-only. All WireFlow files are maintained in a `.workflow/` subfolder.
 
 ## Documentation
 
@@ -105,7 +105,7 @@ wfw run 02-report --depends-on 01-analysis --stream
 Multi-tier cascade with pass-through:
 
 ```
-Global (~/.config/workflow/config)
+Global (~/.config/wireflow/config)
     ↓
 Ancestor Projects (grandparent → parent)
     ↓
@@ -150,7 +150,7 @@ wfw task -i "Extract action items" --context-file meeting-notes.md
 
 ### Global Configuration
 
-Auto-created on first use at `~/.config/workflow/`:
+Auto-created on first use at `~/.config/wireflow/`:
 
 - `config` - Global defaults for all projects
 - `prompts/base.txt` - Default system prompt

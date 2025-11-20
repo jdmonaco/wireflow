@@ -42,15 +42,15 @@ wfw <subcommand> -h     # Quick subcommand help
 | Variable | Description | Required | Default |
 |----------|-------------|----------|---------|
 | `ANTHROPIC_API_KEY` | Anthropic API key | ✅ Yes | None |
-| `WIREFLOW_PROMPT_PREFIX` | System prompt directory | No | `~/.config/workflow/prompts` |
-| `WIREFLOW_TASK_PREFIX` | Named task directory | No | `~/.config/workflow/tasks` |
+| `WIREFLOW_PROMPT_PREFIX` | System prompt directory | No | `~/.config/wireflow/prompts` |
+| `WIREFLOW_TASK_PREFIX` | Named task directory | No | `~/.config/wireflow/tasks` |
 | `EDITOR` | Text editor for file editing | No | `vi` |
 
 ## Configuration Files
 
 | Location | Purpose |
 |----------|---------|
-| `~/.config/workflow/config` | Global user configuration |
+| `~/.config/wireflow/config` | Global user configuration |
 | `.workflow/config` | Project-level configuration |
 | `.workflow/<name>/config` | Workflow-specific configuration |
 
@@ -94,7 +94,7 @@ Opens `project.txt` and `config` in `$EDITOR` for editing.
 
 **Global inheritance:**
 
-New projects inherit defaults from `~/.config/workflow/config`:
+New projects inherit defaults from `~/.config/wireflow/config`:
 
 - `MODEL`, `TEMPERATURE`, `MAX_TOKENS`
 - `SYSTEM_PROMPTS`, `OUTPUT_FORMAT`
@@ -478,7 +478,7 @@ wfw config [<name>] [options]
 ### Configuration Cascade
 
 ```
-1. Global:      ~/.config/workflow/config
+1. Global:      ~/.config/wireflow/config
 2. Ancestors:   Parent project configs (oldest to newest)
 3. Project:     .workflow/config
 4. Workflow:    .workflow/<name>/config
@@ -489,7 +489,7 @@ wfw config [<name>] [options]
 
 | Indicator | Meaning |
 |-----------|---------|
-| `(global)` | From `~/.config/workflow/config` |
+| `(global)` | From `~/.config/wireflow/config` |
 | `(ancestor:path)` | From ancestor project config |
 | `(project)` | From `.workflow/config` |
 | `(workflow)` | From `.workflow/<name>/config` |
@@ -515,7 +515,7 @@ Current Workflow:
   Location: ~/projects/research/.workflow/01-analysis
 
 Configuration Cascade:
-  Global:   ~/.config/workflow/config
+  Global:   ~/.config/wireflow/config
   Ancestor: ~/projects/.workflow/config
   Project:  ~/projects/research/.workflow/config
   Workflow: ~/projects/research/.workflow/01-analysis/config
@@ -739,8 +739,8 @@ Otherwise runs in standalone mode with global config only.
 Create reusable task templates in `$WIREFLOW_TASK_PREFIX/`:
 
 ```bash
-mkdir -p ~/.config/workflow/tasks
-echo "Summarize the key points" > ~/.config/workflow/tasks/summarize.txt
+mkdir -p ~/.config/wireflow/tasks
+echo "Summarize the key points" > ~/.config/wireflow/tasks/summarize.txt
 wfw task summarize --context-file notes.md
 ```
 

@@ -55,7 +55,7 @@ sudo yum install jq curl
 export ANTHROPIC_API_KEY="sk-ant-..."
 
 # Or add to global config
-nano ~/.config/workflow/config
+nano ~/.config/wireflow/config
 # Add: ANTHROPIC_API_KEY=sk-ant-...
 ```
 
@@ -217,10 +217,10 @@ ls $WIREFLOW_PROMPT_PREFIX/
 echo $WIREFLOW_PROMPT_PREFIX
 
 # Check config
-grep WIREFLOW_PROMPT_PREFIX ~/.config/workflow/config
+grep WIREFLOW_PROMPT_PREFIX ~/.config/wireflow/config
 
 # Create missing prompt
-nano ~/.config/workflow/prompts/custom.txt
+nano ~/.config/wireflow/prompts/custom.txt
 ```
 
 ## Execution Issues
@@ -392,7 +392,7 @@ ls .workflow/analysis/output/
 
 ### Global Config Not Created
 
-**Problem:** `~/.config/workflow/` doesn't exist
+**Problem:** `~/.config/wireflow/` doesn't exist
 
 **Solution:**
 
@@ -401,7 +401,7 @@ ls .workflow/analysis/output/
 wfw help
 
 # Or create manually
-mkdir -p ~/.config/workflow/prompts
+mkdir -p ~/.config/wireflow/prompts
 wfw init /tmp/test-project  # Triggers creation
 ```
 
@@ -413,7 +413,7 @@ wfw init /tmp/test-project  # Triggers creation
 
 ```bash
 # Check bash syntax
-bash -n ~/.config/workflow/config
+bash -n ~/.config/wireflow/config
 
 # Common issues:
 # - Missing quotes around values with spaces
@@ -477,8 +477,8 @@ echo $WIREFLOW_TASK_PREFIX
 ls $WIREFLOW_TASK_PREFIX/summarize.txt
 
 # Create task
-mkdir -p ~/.config/workflow/tasks
-echo "Summarize the content" > ~/.config/workflow/tasks/summarize.txt
+mkdir -p ~/.config/wireflow/tasks
+echo "Summarize the content" > ~/.config/wireflow/tasks/summarize.txt
 ```
 
 ### Task Output to File Fails
@@ -595,10 +595,10 @@ command -v curl > /dev/null && echo "✓ curl installed" || echo "✗ curl missi
 [ -d ".workflow" ] && echo "✓ In workflow project" || echo "✗ Not in project"
 
 # Check config
-[ -f ~/.config/workflow/config ] && echo "✓ Global config exists" || echo "✗ No global config"
+[ -f ~/.config/wireflow/config ] && echo "✓ Global config exists" || echo "✗ No global config"
 
 # Check prompts
-[ -d ~/.config/workflow/prompts ] && echo "✓ Prompt directory exists" || echo "✗ No prompt directory"
+[ -d ~/.config/wireflow/prompts ] && echo "✓ Prompt directory exists" || echo "✗ No prompt directory"
 ```
 
 ## See Also

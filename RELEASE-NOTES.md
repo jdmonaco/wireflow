@@ -29,11 +29,11 @@ export WIREFLOW_PROMPT_PREFIX="$HOME/custom/prompts"
 export WIREFLOW_TASK_PREFIX="$HOME/custom/tasks"
 ```
 
-**Preserved:** `.workflow/` directories, `~/.config/workflow/` config location continue working unchanged.
+**Preserved:** `.workflow/` directories, `~/.config/wireflow/` config location continue working unchanged.
 
 ### ✨ Built-In Task Templates
 
-Eight carefully designed generic task templates provide immediate value for common research and development workflows. Templates are created automatically in `~/.config/workflow/tasks/` on first use.
+Eight carefully designed generic task templates provide immediate value for common research and development workflows. Templates are created automatically in `~/.config/wireflow/tasks/` on first use.
 
 **Templates:**
 - `summarize`: Concise summary with key points and action items
@@ -69,7 +69,7 @@ wfw new analysis --task summarize
 
 ### 🔍 Intelligent Fallback Search
 
-When using custom `WIREFLOW_PROMPT_PREFIX` or `WIREFLOW_TASK_PREFIX`, the tool now automatically searches default locations (`~/.config/workflow/prompts/`, `~/.config/workflow/tasks/`) as fallback, preserving access to built-in prompts and templates.
+When using custom `WIREFLOW_PROMPT_PREFIX` or `WIREFLOW_TASK_PREFIX`, the tool now automatically searches default locations (`~/.config/wireflow/prompts/`, `~/.config/wireflow/tasks/`) as fallback, preserving access to built-in prompts and templates.
 
 **Problem Solved:**
 - Setting custom PREFIX no longer breaks access to built-in "base" system prompt
@@ -116,7 +116,7 @@ Sophisticated content-aware cache breakpoint placement maximizes prompt caching 
 Automatic workflow context orientation prompt included as first block in every API request, helping AI assistants understand the workflow structure, content organization, and project hierarchy.
 
 **Implementation:**
-- Created automatically at `~/.config/workflow/prompts/meta.txt`
+- Created automatically at `~/.config/wireflow/prompts/meta.txt`
 - Always included first (before user prompts)
 - Not user-configurable (internal implementation)
 - No cache_control (too small ~50 tokens, below 1024 minimum)

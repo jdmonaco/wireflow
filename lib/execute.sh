@@ -50,7 +50,7 @@ build_system_prompt() {
     local build_success=true
 
     # FIRST: Add meta prompt block (required, auto-included, not cached)
-    local meta_file="$HOME/.config/workflow/prompts/meta.txt"
+    local meta_file="$HOME/.config/wireflow/prompts/meta.txt"
     if [[ ! -f "$meta_file" && -n "$WIREFLOW_PROMPT_PREFIX" ]]; then
         meta_file="$WIREFLOW_PROMPT_PREFIX/meta.txt"
     fi
@@ -86,14 +86,14 @@ build_system_prompt() {
 
         # If not found in custom location, try default location as fallback
         if [[ ! -f "$prompt_file" ]]; then
-            local default_prompt_file="$HOME/.config/workflow/prompts/${prompt_name}.txt"
+            local default_prompt_file="$HOME/.config/wireflow/prompts/${prompt_name}.txt"
             if [[ -f "$default_prompt_file" ]]; then
                 prompt_file="$default_prompt_file"
                 echo "Using built-in prompt: $prompt_name (from default location)" >&2
             else
                 echo "Error: System prompt file not found: ${prompt_name}.txt" >&2
                 echo "  Searched: $WIREFLOW_PROMPT_PREFIX" >&2
-                echo "  Searched: $HOME/.config/workflow/prompts (fallback)" >&2
+                echo "  Searched: $HOME/.config/wireflow/prompts (fallback)" >&2
                 build_success=false
                 break
             fi

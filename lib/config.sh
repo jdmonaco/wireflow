@@ -58,8 +58,8 @@ GLOBAL_CONFIG_FILE="$GLOBAL_CONFIG_DIR/config"
 #   0 - Success (config exists or was created)
 #   1 - Error (permission issues, conflicts)
 # Side effects:
-#   Creates ~/.config/workflow/ directory
-#   Creates ~/.config/workflow/config file
+#   Creates ~/.config/wireflow/ directory
+#   Creates ~/.config/wireflow/config file
 #   Outputs message if created for first time
 ensure_global_config() {
     # Check if path exists and is not a directory (conflict)
@@ -404,7 +404,7 @@ PROMPT_EOF
     # Create global config file
     cat > "$GLOBAL_CONFIG_FILE" <<'EOF'
 # Global Workflow Configuration
-# ~/.config/workflow/config
+# ~/.config/wireflow/config
 #
 # This file sets default values for all workflow projects.
 # Configuration cascade: global → project → workflow → CLI flags
@@ -449,9 +449,9 @@ ENABLE_CITATIONS=false
 SYSTEM_PROMPTS=(base)
 
 # System prompt directory (contains prompt .txt files)
-# Default prompt included at ~/.config/workflow/prompts/base.txt
+# Default prompt included at ~/.config/wireflow/prompts/base.txt
 # Override to use custom prompt directory
-WIREFLOW_PROMPT_PREFIX="$HOME/.config/workflow/prompts"
+WIREFLOW_PROMPT_PREFIX="$HOME/.config/wireflow/prompts"
 
 # =============================================================================
 # Task Files
@@ -460,7 +460,7 @@ WIREFLOW_PROMPT_PREFIX="$HOME/.config/workflow/prompts"
 # Task file directory (contains named task .txt files)
 # Used by 'workflow task NAME' subcommand
 # Built-in task templates are created automatically on first use
-WIREFLOW_TASK_PREFIX="$HOME/.config/workflow/tasks"
+WIREFLOW_TASK_PREFIX="$HOME/.config/wireflow/tasks"
 
 # =============================================================================
 # Optional: API Credentials
@@ -553,7 +553,7 @@ load_ancestor_configs() {
 }
 
 # Load global configuration with fallback to hard-coded defaults
-# Reads from ~/.config/workflow/config if exists
+# Reads from ~/.config/wireflow/config if exists
 # Handles environment variable precedence for API key and prompt prefix
 # Always succeeds (uses fallbacks if global config unavailable)
 #

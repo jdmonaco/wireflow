@@ -70,7 +70,7 @@ project-root/
 **Multi-tier cascade with pass-through:**
 
 1. Global defaults (hardcoded in `lib/config.sh`)
-2. Global config (`~/.config/workflow/config`, auto-created on first use)
+2. Global config (`~/.config/wireflow/config`, auto-created on first use)
 3. Ancestor project configs (grandparent → parent, oldest to newest)
 4. Current project config (`.workflow/config`)
 5. Workflow config (`.workflow/<name>/config`)
@@ -180,7 +180,7 @@ Builds JSON content blocks only. Pseudo-XML files optionally created via custom 
 
 **Build process (every run):**
 
-1. Load meta prompt from `~/.config/workflow/prompts/meta.txt` (auto-included)
+1. Load meta prompt from `~/.config/wireflow/prompts/meta.txt` (auto-included)
 2. Create meta JSON block WITHOUT cache_control (too small to cache)
 3. Add meta block as first element in `SYSTEM_BLOCKS` array
 4. Load user prompts from `$WIREFLOW_PROMPT_PREFIX/{name}.txt`
@@ -218,7 +218,7 @@ Builds JSON content blocks only. Pseudo-XML files optionally created via custom 
 
 **Cache breakpoints:** User prompts and project descriptions are cached (most stable), meta and date are not cached (meta too small, date changes daily).
 
-**Meta prompt:** Automatically included as first block, provides workflow structure orientation to AI. Not user-configurable. Created at `~/.config/workflow/prompts/meta.txt` during initialization.
+**Meta prompt:** Automatically included as first block, provides workflow structure orientation to AI. Not user-configurable. Created at `~/.config/wireflow/prompts/meta.txt` during initialization.
 
 **Date format:** Date-only (not datetime) prevents minute-by-minute cache invalidation.
 

@@ -257,7 +257,7 @@ Lower levels override higher levels:
 ```
 1. Global defaults (hardcoded)
    ↓
-2. Global config (~/.config/workflow/config)
+2. Global config (~/.config/wireflow/config)
    ↓
 3. Project config (.workflow/config)
    ↓

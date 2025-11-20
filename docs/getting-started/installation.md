@@ -180,14 +180,14 @@ echo 'export ANTHROPIC_API_KEY="sk-ant-..."' >> ~/.bashrc
 
 #### Option 2: Global Configuration File (Recommended)
 
-On first use, Workflow automatically creates `~/.config/workflow/config` where you can store your API key:
+On first use, Workflow automatically creates `~/.config/wireflow/config` where you can store your API key:
 
 ```bash
 # Run any workflow command to trigger auto-creation
 wfw help
 
 # Edit the global config
-nano ~/.config/workflow/config
+nano ~/.config/wireflow/config
 ```
 
 Add your API key to the config file:
@@ -201,7 +201,7 @@ ANTHROPIC_API_KEY=sk-ant-...
 
 ### Optional: Custom System Prompts
 
-By default, Workflow creates a base system prompt at `~/.config/workflow/prompts/base.txt`. If you want to use a custom prompt directory:
+By default, Workflow creates a base system prompt at `~/.config/wireflow/prompts/base.txt`. If you want to use a custom prompt directory:
 
 ```bash
 export WIREFLOW_PROMPT_PREFIX="$HOME/custom/prompts"
@@ -218,20 +218,20 @@ WIREFLOW_PROMPT_PREFIX=$HOME/custom/prompts
 If you plan to use named tasks (see [Execution Guide](../user-guide/execution.md#task-mode-task)), set a directory for task templates:
 
 ```bash
-export WIREFLOW_TASK_PREFIX="$HOME/.config/workflow/tasks"
+export WIREFLOW_TASK_PREFIX="$HOME/.config/wireflow/tasks"
 ```
 
 Or in the global config:
 
 ```bash
-WIREFLOW_TASK_PREFIX=$HOME/.config/workflow/tasks
+WIREFLOW_TASK_PREFIX=$HOME/.config/wireflow/tasks
 ```
 
 ## First-Run Auto-Configuration
 
 The first time you run any `workflow` command, it will automatically:
 
-1. Create `~/.config/workflow/` directory
+1. Create `~/.config/wireflow/` directory
 2. Create a default `config` file with sensible defaults
 3. Create `prompts/` subdirectory
 4. Create a default `prompts/base.txt` system prompt
@@ -247,7 +247,7 @@ Verify your installation is working:
 wfw help
 
 # Verify global config was created
-ls ~/.config/workflow/
+ls ~/.config/wireflow/
 
 # Check API key is configured
 wfw config  # Run from any directory
@@ -293,7 +293,7 @@ sudo yum install jq
 If you get API authentication errors:
 
 - Verify your key is set: `echo $ANTHROPIC_API_KEY`
-- Check the global config: `cat ~/.config/workflow/config`
+- Check the global config: `cat ~/.config/wireflow/config`
 - Ensure the key starts with `sk-ant-`
 - Verify the key is active in the Anthropic Console
 

@@ -7,7 +7,7 @@ Master the multi-tier configuration cascade system that makes Workflow flexible 
 Workflow uses a **multi-tier cascade** where each level can override the previous:
 
 ```
-1. Global Config (~/.config/workflow/config)
+1. Global Config (~/.config/wireflow/config)
         ↓
 2. Ancestor Projects (grandparent → parent)
         ↓
@@ -24,14 +24,14 @@ Lower tiers override higher tiers. **Empty values pass through** to inherit from
 
 ### Location
 
-`~/.config/workflow/config`
+`~/.config/wireflow/config`
 
 ### Auto-Creation
 
 On first use, Workflow automatically creates:
 
-- `~/.config/workflow/config` - Global configuration file
-- `~/.config/workflow/prompts/base.txt` - Default system prompt
+- `~/.config/wireflow/config` - Global configuration file
+- `~/.config/wireflow/prompts/base.txt` - Default system prompt
 
 This makes the tool self-contained and ready to use immediately.
 
@@ -46,13 +46,13 @@ OUTPUT_FORMAT="md"
 SYSTEM_PROMPTS=(base)
 
 # System prompt directory
-WIREFLOW_PROMPT_PREFIX="$HOME/.config/workflow/prompts"
+WIREFLOW_PROMPT_PREFIX="$HOME/.config/wireflow/prompts"
 
 # Optional: Store API key (environment variable preferred)
 # ANTHROPIC_API_KEY="sk-ant-..."
 
 # Optional: Named task directory
-# WIREFLOW_TASK_PREFIX="$HOME/.config/workflow/tasks"
+# WIREFLOW_TASK_PREFIX="$HOME/.config/wireflow/tasks"
 ```
 
 ### Why Global Config?
@@ -67,7 +67,7 @@ Set your preferences **once** and they apply to **all projects**:
 ### Editing Global Config
 
 ```bash
-nano ~/.config/workflow/config
+nano ~/.config/wireflow/config
 ```
 
 Or from any directory:
@@ -181,7 +181,7 @@ wfw config
 Output shows:
 ```
 Configuration Cascade:
-  Global:   ~/.config/workflow/config
+  Global:   ~/.config/wireflow/config
   Ancestor: ~/projects/research/.workflow/config
   Project:  ~/projects/research/data-analysis/.workflow/config
 
@@ -389,7 +389,7 @@ MODEL=  # Empty - inherits from project
 | Variable | Type | Description | Default |
 |----------|------|-------------|---------|
 | `SYSTEM_PROMPTS` | Array | Prompt names (no `.txt`) | `(base)` |
-| `WIREFLOW_PROMPT_PREFIX` | String | Prompt directory path | `~/.config/workflow/prompts` |
+| `WIREFLOW_PROMPT_PREFIX` | String | Prompt directory path | `~/.config/wireflow/prompts` |
 
 ### Context Configuration
 
@@ -404,7 +404,7 @@ MODEL=  # Empty - inherits from project
 
 | Variable | Type | Description | Default |
 |----------|------|-------------|---------|
-| `WIREFLOW_TASK_PREFIX` | String | Named task directory | `~/.config/workflow/tasks` |
+| `WIREFLOW_TASK_PREFIX` | String | Named task directory | `~/.config/wireflow/tasks` |
 
 ### Environment Variables
 

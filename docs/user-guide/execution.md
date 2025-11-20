@@ -166,10 +166,10 @@ Create reusable task templates in `$WIREFLOW_TASK_PREFIX/`:
 
 ```bash
 # Setup task directory
-mkdir -p ~/.config/workflow/tasks
+mkdir -p ~/.config/wireflow/tasks
 
 # Create named task
-cat > ~/.config/workflow/tasks/summarize.txt << 'EOF'
+cat > ~/.config/wireflow/tasks/summarize.txt << 'EOF'
 Create a concise summary of the provided content including:
 1. Main topics discussed
 2. Key conclusions
@@ -225,7 +225,7 @@ But it does NOT use workflow directories or dependencies.
 
 Outside a project, task mode uses only:
 
-- Global configuration (`~/.config/workflow/config`)
+- Global configuration (`~/.config/wireflow/config`)
 - CLI-provided options
 
 ## Context Aggregation
@@ -660,7 +660,7 @@ wfw new xyz  # Create it if needed
 
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-..."
-# Or set in ~/.config/workflow/config
+# Or set in ~/.config/wireflow/config
 ```
 
 **"Context file not found":**

@@ -143,7 +143,7 @@ CONTEXT_FILE_PREFIX=./
 Project configuration provides defaults that individual workflows can override:
 
 ```
-Global Config (~/.config/workflow/config)
+Global Config (~/.config/wireflow/config)
     ↓
 Project Config (.workflow/config)
     ↓

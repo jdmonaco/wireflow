@@ -147,10 +147,10 @@ Quick ad-hoc analyses without creating persistent workflows.
 Create reusable task templates:
 
 ```bash
-mkdir -p ~/.config/workflow/tasks
+mkdir -p ~/.config/wireflow/tasks
 
 # Summary task
-cat > ~/.config/workflow/tasks/summarize.txt << 'EOF'
+cat > ~/.config/wireflow/tasks/summarize.txt << 'EOF'
 Create a concise summary with:
 1. Main points (3-5 bullets)
 2. Key takeaways
@@ -158,7 +158,7 @@ Create a concise summary with:
 EOF
 
 # Extract task
-cat > ~/.config/workflow/tasks/extract-data.txt << 'EOF'
+cat > ~/.config/wireflow/tasks/extract-data.txt << 'EOF'
 Extract structured data from the provided content and format as JSON.
 Include all relevant fields and maintain data types appropriately.
 EOF
