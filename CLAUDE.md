@@ -748,29 +748,126 @@ When making interface changes (new features, behavior changes):
 
 ### Version Management
 
-**Current version:** 0.1.0 (pre-release)
+**Current version:** 0.2.0 (pre-release)
 
 **Location:** `WORKFLOW_VERSION` constant in `workflow.sh` (line 5)
 
 **Semantic versioning strategy:**
-- **0.x.x** - Pre-release (API may change)
-- **1.0.0** - First stable release
-- **MAJOR** - Breaking changes to CLI interface or config format
-- **MINOR** - New features (backward compatible)
-- **PATCH** - Bug fixes (backward compatible)
+- **0.x.x:** Pre-release (API may change)
+- **1.0.0:** First stable release
+- **MAJOR:** Breaking changes to CLI interface or config format
+- **MINOR:** New features (backward compatible)
+- **PATCH:** Bug fixes (backward compatible)
 
-**Updating version:**
+**Release Process:**
 
-1. Edit `WORKFLOW_VERSION` in `workflow.sh`
-2. Add entry to `CHANGELOG.md` with date and changes
-3. Update version in `README.md` and `docs/index.md`
-4. Commit: `git commit -m "chore: Bump version to X.Y.Z"`
-5. Tag: `git tag -a vX.Y.Z -m "Release version X.Y.Z"`
+When preparing a new release, follow these steps in order:
+
+1. **Update RELEASE-NOTES.md:**
+   - Add new version section at top: `## Version X.Y.Z (YYYY-MM-DD)`
+   - Write comprehensive release notes including:
+     - Major features and changes
+     - Architecture innovations
+     - Complete feature additions
+     - Breaking changes (if any)
+     - Migration guide (if needed)
+     - Target users and use cases
+     - Technical highlights
+   - Focus on high-level narrative and user impact
+
+2. **Update CHANGELOG.md:**
+   - Add new version entry at top: `## [X.Y.Z] - YYYY-MM-DD`
+   - List changes organized by type:
+     - **Added:** New features
+     - **Changed:** Changes to existing functionality
+     - **Deprecated:** Soon-to-be removed features
+     - **Removed:** Removed features
+     - **Fixed:** Bug fixes
+     - **Security:** Security fixes
+   - Include commit references for traceability
+   - Keep entries concise and commit-focused
+
+3. **Bump version numbers:**
+   - Edit `WORKFLOW_VERSION` in `workflow.sh` (line 5)
+   - Update version in `README.md` (line 3)
+   - Update version in `docs/index.md` (if exists)
+   - Ensure all three match exactly
+
+4. **Create version bump commit:**
+   ```bash
+   git add RELEASE-NOTES.md CHANGELOG.md workflow.sh README.md docs/index.md
+   git commit -m "chore: Release version X.Y.Z
+
+   Add comprehensive release notes documenting:
+   - [Major feature 1]
+   - [Major feature 2]
+   - [Other significant changes]
+
+   Version bump from X.Y.Z to X.Y.Z reflecting:
+   - [Type of changes: new features, bug fixes, etc.]
+
+   [Additional context about the release]
+
+   🤖 Generated with Claude Code
+   Co-Authored-By: Claude <noreply@anthropic.com>"
+   ```
+
+5. **Create annotated git tag:**
+   ```bash
+   git tag -a vX.Y.Z -m "Release version X.Y.Z
+
+   Major features:
+   - [Feature 1]
+   - [Feature 2]
+   - [Feature 3]
+
+   See RELEASE-NOTES.md for complete details."
+   ```
+
+6. **Verify release:**
+   ```bash
+   # Check version command
+   workflow --version
+
+   # Verify tag
+   git tag -l vX.Y.Z
+   git show vX.Y.Z --no-patch
+
+   # Check files updated
+   git show HEAD --stat
+   ```
 
 **Version display:**
-- `workflow --version` or `workflow -v` - Shows version number
-- `workflow --help` - Includes version in header
-- CHANGELOG.md - Tracks all version history
+- `workflow --version` or `workflow -v`: Shows version number
+- `workflow --help`: Includes version in header
+- RELEASE-NOTES.md: Comprehensive release documentation
+- CHANGELOG.md: Commit-focused change tracking
+
+**Release types:**
+
+**Patch release (0.2.0 → 0.2.1):**
+- Bug fixes only
+- No new features
+- No breaking changes
+- Quick turnaround
+
+**Minor release (0.2.0 → 0.3.0):**
+- New features
+- Backward compatible
+- May include bug fixes
+- Enhanced functionality
+
+**Major release (0.9.0 → 1.0.0):**
+- Breaking changes
+- Major architectural changes
+- API incompatibilities
+- Requires migration guide
+
+**Pre-release considerations:**
+- During 0.x.x series, minor versions may include breaking changes
+- Document breaking changes clearly in RELEASE-NOTES.md
+- Consider beta tags for experimental features: v0.3.0-beta.1
+- First 1.0.0 release signals API stability commitment
 
 ## Technical Details
 
