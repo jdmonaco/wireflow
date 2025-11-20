@@ -348,6 +348,7 @@ if [[ -f "$WORKFLOW_DIR/config" ]]; then
             CONTEXT_PATTERN) [[ -n "$value" ]] && CONTEXT_PATTERN="$value" ;;
             CONTEXT_FILES) [[ -n "$value" ]] && CONTEXT_FILES=($value) ;;
             DEPENDS_ON) [[ -n "$value" ]] && DEPENDS_ON=($value) ;;
+            OUTPUT_FILE) [[ -n "$value" ]] && OUTPUT_FILE_PATH="$value" ;;
         esac
     done < <(extract_config "$WORKFLOW_DIR/config")
 fi
@@ -403,6 +404,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --depends-on)
             DEPENDS_ON+=("$2")  # Add to config
+            shift 2
+            ;;
+        --output-file)
+            OUTPUT_FILE_PATH="$2"  # Override workflow config
             shift 2
             ;;
         --model)
@@ -525,6 +530,28 @@ if [[ -f "$OUTPUT_LINK" ]]; then
 fi
 ln "$OUTPUT_FILE" "$OUTPUT_LINK"
 echo "Hardlink created: $OUTPUT_LINK"
+
+# Copy to OUTPUT_FILE_PATH if configured or specified via CLI
+if [[ -n "$OUTPUT_FILE_PATH" ]]; then
+    # Resolve path: expand ~/, resolve relative paths to project root
+    resolved_path="${OUTPUT_FILE_PATH/#\~/$HOME}"
+    if [[ "$resolved_path" != /* ]]; then
+        resolved_path="$PROJECT_ROOT/$resolved_path"
+    fi
+
+    # Create parent directories
+    output_dir=$(dirname "$resolved_path")
+    if mkdir -p "$output_dir" 2>/dev/null; then
+        # Copy with preserved timestamps
+        if cp -p "$OUTPUT_FILE" "$resolved_path" 2>/dev/null; then
+            echo "Output copied to: $resolved_path"
+        else
+            echo "Warning: Failed to copy output to $resolved_path" >&2
+        fi
+    else
+        echo "Warning: Failed to create directory $output_dir" >&2
+    fi
+fi
 
 # Format-specific post-processing
 if [[ -f "$OUTPUT_FILE" ]]; then

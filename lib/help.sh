@@ -34,7 +34,7 @@ Available subcommands:
     tasks            Manage task templates
     help [CMD]       Show help for subcommand
 
-Use 'wfw help <subcommand>' for detailed help on a specific command.
+Use '$SCRIPT_NAME help <subcommand>' for detailed help on a specific command.
 Use '$SCRIPT_NAME <subcommand> -h' for quick help.
 
 Common options:
@@ -42,10 +42,10 @@ Common options:
     -v, --version    Show version information
 
 Examples:
-    wfw init .
-    wfw new 01-analysis
-    wfw run 01-analysis --stream
-    wfw task -i "Summarize findings" --context-file data.md
+    $SCRIPT_NAME init .
+    $SCRIPT_NAME new 01-analysis
+    $SCRIPT_NAME run 01-analysis --stream
+    $SCRIPT_NAME task -i "Summarize findings" --context-file data.md
 
 Environment variables:
     ANTHROPIC_API_KEY         Your Anthropic API key (required)
@@ -66,64 +66,64 @@ EOF
 # =============================================================================
 
 show_quick_help_init() {
-    echo "Usage: wfw init [<directory>]"
-    echo "See 'wfw help init' for complete usage details."
+    echo "Usage: $SCRIPT_NAME init [<directory>]"
+    echo "See '$SCRIPT_NAME help init' for complete usage details."
 }
 
 show_quick_help_new() {
-    echo "Usage: wfw new NAME [--task TEMPLATE]"
-    echo "See 'wfw help new' for complete usage details."
+    echo "Usage: $SCRIPT_NAME new NAME [--task TEMPLATE]"
+    echo "See '$SCRIPT_NAME help new' for complete usage details."
 }
 
 show_quick_help_edit() {
-    echo "Usage: wfw edit [<name>]"
-    echo "See 'wfw help edit' for complete usage details."
+    echo "Usage: $SCRIPT_NAME edit [<name>]"
+    echo "See '$SCRIPT_NAME help edit' for complete usage details."
 }
 
 show_quick_help_config() {
-    echo "Usage: wfw config [<name>] [--edit]"
-    echo "See 'wfw help config' for complete usage details."
+    echo "Usage: $SCRIPT_NAME config [<name>] [--edit]"
+    echo "See '$SCRIPT_NAME help config' for complete usage details."
 }
 
 show_quick_help_run() {
-    echo "Usage: wfw run <name> [options]"
-    echo "See 'wfw help run' for complete usage details."
+    echo "Usage: $SCRIPT_NAME run <name> [options]"
+    echo "See '$SCRIPT_NAME help run' for complete usage details."
 }
 
 show_quick_help_task() {
-    echo "Usage: wfw task <name>|--inline <text> [options]"
-    echo "See 'wfw help task' for complete usage details."
+    echo "Usage: $SCRIPT_NAME task <name>|--inline <text> [options]"
+    echo "See '$SCRIPT_NAME help task' for complete usage details."
 }
 
 show_quick_help_tasks() {
-    echo "Usage: wfw tasks [show|edit <name>]"
-    echo "See 'wfw help tasks' for complete usage details."
+    echo "Usage: $SCRIPT_NAME tasks [show|edit <name>]"
+    echo "See '$SCRIPT_NAME help tasks' for complete usage details."
 }
 
 show_quick_help_cat() {
-    echo "Usage: wfw cat <name>"
-    echo "See 'wfw help cat' for complete usage details."
+    echo "Usage: $SCRIPT_NAME cat <name>"
+    echo "See '$SCRIPT_NAME help cat' for complete usage details."
 }
 
 show_quick_help_open() {
-    echo "Usage: wfw open <name>"
-    echo "See 'wfw help open' for complete usage details."
+    echo "Usage: $SCRIPT_NAME open <name>"
+    echo "See '$SCRIPT_NAME help open' for complete usage details."
 }
 
 show_quick_help_list() {
-    echo "Usage: wfw list"
-    echo "See 'wfw help list' for complete usage details."
+    echo "Usage: $SCRIPT_NAME list"
+    echo "See '$SCRIPT_NAME help list' for complete usage details."
 }
 
 # =============================================================================
-# Subcommand Help Functions (for 'workflow help <cmd>')
+# Subcommand Help Functions (for 'wireflow help <cmd>')
 # =============================================================================
 
 show_help_init() {
     cat <<EOF
-Usage: wfw init [<directory>]
+Usage: $SCRIPT_NAME init [<directory>]
 
-Initialize a workflow project with .workflow/ structure.
+Initialize a WireFlow project with .workflow/ structure.
 
 Arguments:
     <directory>    Directory to initialize (default: current directory)
@@ -132,14 +132,14 @@ Options:
     -h, --help     Quick help
 
 Examples:
-    wfw init .
-    wfw init my-project
+    $SCRIPT_NAME init .
+    $SCRIPT_NAME init my-project
 EOF
 }
 
 show_help_new() {
     cat <<EOF
-Usage: wfw new <name> [options]
+Usage: $SCRIPT_NAME new <name> [options]
 
 Create a new workflow in the current project.
 
@@ -151,7 +151,7 @@ Options:
     -h, --help         Quick help
 
 Built-in Templates:
-    Use 'workflow task ls' to see available templates
+    Use '$SCRIPT_NAME task ls' to see available templates
 
     summarize     Create concise summary with key points
     extract       Extract specific information and data
@@ -163,19 +163,19 @@ Built-in Templates:
     critique      Identify problems and improvements
 
 Examples:
-    wfw new 01-outline
-    wfw new paper-summary --task summarize
-    wfw new data-analysis --task analyze
+    $SCRIPT_NAME new 01-outline
+    $SCRIPT_NAME new paper-summary --task summarize
+    $SCRIPT_NAME new data-analysis --task analyze
 
 See Also:
-    wfw task ls           # List all task templates
-    wfw task show <name>  # Preview task template
+    $SCRIPT_NAME task ls           # List all task templates
+    $SCRIPT_NAME task show <name>  # Preview task template
 EOF
 }
 
 show_help_edit() {
     cat <<EOF
-Usage: wfw edit [<name>]
+Usage: $SCRIPT_NAME edit [<name>]
 
 Edit workflow or project files in text editor.
 
@@ -190,14 +190,14 @@ Behavior:
     With <name>:    Opens workflow files (output, task.txt, config)
 
 Examples:
-    wfw edit
-    wfw edit 01-outline
+    $SCRIPT_NAME edit
+    $SCRIPT_NAME edit 01-outline
 EOF
 }
 
 show_help_config() {
     cat <<EOF
-Usage: wfw config [<name>] [options]
+Usage: $SCRIPT_NAME config [<name>] [options]
 
 Display configuration with source tracking.
 
@@ -209,14 +209,14 @@ Options:
     -h, --help     Quick help
 
 Examples:
-    wfw config
-    wfw config 01-analysis
+    $SCRIPT_NAME config
+    $SCRIPT_NAME config 01-analysis
 EOF
 }
 
 show_help_run() {
     cat <<EOF
-Usage: wfw run <name> [options]
+Usage: $SCRIPT_NAME run <name> [options]
 
 Execute a workflow with full context aggregation.
 
@@ -241,6 +241,9 @@ API Options:
     --enable-citations        Enable Anthropic citations support
     --disable-citations       Disable citations (default)
 
+Output Options:
+    --output-file <path>      Copy output to additional path
+
 Execution Options:
     --stream                  Stream output in real-time
     --count-tokens            Show token estimation only
@@ -248,15 +251,15 @@ Execution Options:
     -h, --help                Quick help
 
 Examples:
-    wfw run 01-analysis --stream
-    wfw run 01-analysis --count-tokens
-    wfw run 01-analysis --dry-run --count-tokens
+    $SCRIPT_NAME run 01-analysis --stream
+    $SCRIPT_NAME run 01-analysis --count-tokens
+    $SCRIPT_NAME run 01-analysis --dry-run --count-tokens
 EOF
 }
 
 show_help_task() {
     cat <<EOF
-Usage: wfw task <name>|--inline <text> [options]
+Usage: $SCRIPT_NAME task <name>|--inline <text> [options]
 
 Execute a one-off task outside of existing workflows.
 
@@ -292,20 +295,20 @@ Other Options:
     -h, --help                Quick help
 
 Examples:
-    wfw task summarize --context-file paper.pdf
-    wfw task -i "Summarize these notes" --context-file notes.md
-    wfw task analyze --input-pattern "data/*.csv" --stream
+    $SCRIPT_NAME task summarize --context-file paper.pdf
+    $SCRIPT_NAME task -i "Summarize these notes" --context-file notes.md
+    $SCRIPT_NAME task analyze --input-pattern "data/*.csv" --stream
 
 See Also:
-    wfw tasks           # List available task templates
-    wfw tasks show <name>  # Preview template
-    wfw new <name> --task <template>  # Create workflow from template
+    $SCRIPT_NAME tasks           # List available task templates
+    $SCRIPT_NAME tasks show <name>  # Preview template
+    $SCRIPT_NAME new <name> --task <template>  # Create workflow from template
 EOF
 }
 
 show_help_tasks() {
     cat <<EOF
-Usage: wfw tasks [show|edit <name>]
+Usage: $SCRIPT_NAME tasks [show|edit <name>]
 
 Manage task templates.
 
@@ -314,32 +317,22 @@ Commands:
     tasks show <name>  Display task template in pager
     tasks edit <name>  Open task template in editor
 
-Built-in Templates:
-    summarize     Create concise summary with key points
-    extract       Extract specific information and data
-    analyze       Deep analysis of patterns and insights
-    review        Critical evaluation with suggestions
-    compare       Side-by-side comparison
-    outline       Generate structured outline
-    explain       Simplify complex topics
-    critique      Identify problems and improvements
-
-Task templates are stored in: \$WIREFLOW_TASK_PREFIX (default: ~/.config/wireflow/tasks/)
+Note: Default task templates are stored in ~/.config/wireflow/tasks.
 
 Examples:
-    wfw tasks
-    wfw tasks show summarize
-    wfw tasks edit summarize
+    $SCRIPT_NAME tasks
+    $SCRIPT_NAME tasks show summarize
+    $SCRIPT_NAME tasks edit summarize
 
 See Also:
-    wfw task <name>  # Execute task template
-    wfw new <name> --task <template>  # Create workflow from template
+    $SCRIPT_NAME task <name>  # Execute task template
+    $SCRIPT_NAME new <name> --task <template>  # Create workflow from template
 EOF
 }
 
 show_help_cat() {
     cat <<EOF
-Usage: wfw cat <name>
+Usage: $SCRIPT_NAME cat <name>
 
 Display workflow output to stdout.
 
@@ -350,14 +343,14 @@ Options:
     -h, --help     Quick help
 
 Examples:
-    wfw cat 01-analysis
-    wfw cat report | less
+    $SCRIPT_NAME cat 01-analysis
+    $SCRIPT_NAME cat report | less
 EOF
 }
 
 show_help_open() {
     cat <<EOF
-Usage: wfw open <name>
+Usage: $SCRIPT_NAME open <name>
 
 Open workflow output in default application (macOS only).
 
@@ -368,14 +361,14 @@ Options:
     -h, --help     Quick help
 
 Examples:
-    wfw open report
-    wfw open data-viz
+    $SCRIPT_NAME open report
+    $SCRIPT_NAME open data-viz
 EOF
 }
 
 show_help_list() {
     cat <<EOF
-Usage: wfw list
+Usage: $SCRIPT_NAME list
 
 List all workflows in the current project.
 
@@ -385,6 +378,6 @@ Options:
 Alias: ls
 
 Example:
-    wfw list
+    $SCRIPT_NAME list
 EOF
 }

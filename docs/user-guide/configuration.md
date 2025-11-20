@@ -224,6 +224,9 @@ INPUT_PATTERN="data/*.csv"
 CONTEXT_FILES=("notes.md" "references.txt")
 DEPENDS_ON=("00-context" "01-preprocessing")
 
+# Output configuration (workflow-specific)
+OUTPUT_FILE="reports/analysis-output.json"  # Copy output to additional location
+
 # API overrides (optional, empty = inherit)
 MODEL=
 TEMPERATURE=0.3  # Override: use lower temperature for this workflow
@@ -244,6 +247,9 @@ Workflow configs distinguish between primary input documents and supporting cont
 - `CONTEXT_PATTERN` - Glob pattern relative to project root
 - `CONTEXT_FILES` - Array of files relative to project root
 - `DEPENDS_ON` - Array of workflow names to include outputs from
+
+**Output Configuration**:
+- `OUTPUT_FILE` - Additional path to copy output (absolute, `~/`, or relative to project root)
 
 ### Editing Workflow Config
 
@@ -277,6 +283,7 @@ Command-line flags **always override** all config levels.
 | `--context-file` | `CONTEXT_FILES` | `--context-file notes.md` |
 | `--context-pattern` | `CONTEXT_PATTERN` | `--context-pattern "*.md"` |
 | `--depends-on` | `DEPENDS_ON` | `--depends-on 01-analysis` |
+| `--output-file` | `OUTPUT_FILE` | `--output-file reports/output.md` |
 
 ### One-Time Overrides
 
@@ -399,6 +406,12 @@ MODEL=  # Empty - inherits from project
 | `CONTEXT_FILES` | Array | Explicit file paths | Project, Workflow |
 | `DEPENDS_ON` | Array | Workflow dependencies | Workflow only |
 | `CONTEXT_FILE_PREFIX` | String | Base path for relative paths | All |
+
+### Output Configuration
+
+| Variable | Type | Description | Scope |
+|----------|------|-------------|-------|
+| `OUTPUT_FILE` | String | Additional copy destination | Workflow only |
 
 ### Task Mode Settings
 

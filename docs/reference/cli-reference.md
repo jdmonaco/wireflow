@@ -573,6 +573,12 @@ wfw run <name> [options]
 | `--system-prompts <list>` | Comma-separated prompt names (e.g., "base,research") |
 | `--format-hint <ext>` | Output format: md, txt, json, html, etc. |
 
+### Output Options
+
+| Option | Description |
+|--------|-------------|
+| `--output-file <path>` | Copy output to additional path |
+
 ### Execution Options
 
 | Option | Description |
@@ -649,6 +655,9 @@ wfw run analysis --system-prompts "base,stats,research"
 
 # Different output format
 wfw run extract --format-hint json
+
+# Copy output to additional location
+wfw run report --output-file ~/Documents/reports/latest.md
 ```
 
 ### See Also
