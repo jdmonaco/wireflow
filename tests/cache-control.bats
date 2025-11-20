@@ -59,7 +59,28 @@ get_last_index() {
 # System Block Cache Tests
 # =============================================================================
 
-@test "cache-control: system prompts block has cache_control" {
+@test "cache-control: meta block is first and has NO cache_control" {
+    # Create simple workflow
+    create_workflow "test-meta"
+
+    # Run with dry-run to inspect JSON
+    run bash "$WORKFLOW_SCRIPT" run test-meta --dry-run
+    assert_success
+
+    # First block should be meta without cache_control
+    run jq -e '.system[0].text' "$TEST_PROJECT/.workflow/test-meta/dry-run-request.json"
+    assert_success
+
+    # Verify it contains workflow-context
+    run bash -c "jq -r '.system[0].text' '$TEST_PROJECT/.workflow/test-meta/dry-run-request.json' | grep -q 'workflow-context'"
+    assert_success
+
+    # Should NOT have cache_control
+    run jq -e '.system[0] | has("cache_control")' "$TEST_PROJECT/.workflow/test-meta/dry-run-request.json"
+    assert_failure
+}
+
+@test "cache-control: user prompts block is second and has cache_control" {
     # Create simple workflow
     create_workflow "test-system"
 
@@ -67,8 +88,8 @@ get_last_index() {
     run bash "$WORKFLOW_SCRIPT" run test-system --dry-run
     assert_success
 
-    # Check system blocks in dry-run output - first block should have cache_control
-    run jq -e '.system[0] | has("cache_control")' "$TEST_PROJECT/.workflow/test-system/dry-run-request.json"
+    # Second block (index 1) should be user prompts with cache_control
+    run jq -e '.system[1] | has("cache_control")' "$TEST_PROJECT/.workflow/test-system/dry-run-request.json"
     assert_success
 }
 

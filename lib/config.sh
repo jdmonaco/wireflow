@@ -345,6 +345,32 @@ create_default_global_config() {
         # Non-fatal, continue
     fi
 
+    # Create meta system prompt (automatically included first, not user-configurable)
+    cat > "$prompt_dir/meta.txt" <<'META_PROMPT_EOF'
+<workflow-context>
+You are assisting with a workflow-based task using the Workflow CLI tool.
+
+STRUCTURE:
+- System blocks: Meta prompt (this), user system prompts, optional project description, current date
+- User blocks: Context materials, input documents, task (in optimized order)
+
+CONTENT:
+User content provided in order: PDFs → text documents → images → task
+- Context: Supporting information (wrapped in <metadata type="context">)
+- Input: Primary materials to analyze (wrapped in <metadata type="input">)
+- Dependency: Outputs from prior workflows (wrapped in <metadata type="dependency">)
+- PDFs: Joint text+visual analysis (citable with document indices)
+- Text files: Various formats (citable with document indices)
+- Images: Vision API (not citable)
+- Task: Final block with your objective (wrapped in <task>)
+
+PROJECT:
+May include nested project hierarchy. Configuration cascade enables project-specific customization.
+
+Produce well-structured output directly addressing the task using provided context and inputs.
+</workflow-context>
+META_PROMPT_EOF
+
     # Create default base system prompt
     cat > "$prompt_dir/base.txt" <<'PROMPT_EOF'
 <system>

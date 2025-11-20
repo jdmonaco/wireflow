@@ -180,13 +180,16 @@ Builds JSON content blocks only. Pseudo-XML files optionally created via custom 
 
 **Build process (every run):**
 
-1. Load prompts from `$WORKFLOW_PROMPT_PREFIX/{name}.txt`
-2. Concatenate in order specified by `SYSTEM_PROMPTS` array
-3. Create JSON content block with `cache_control: {type: "ephemeral"}`
-4. Add to `SYSTEM_BLOCKS` array
-5. Write concatenated prompts to `.workflow/prompts/system.txt` for caching
-6. Add project-description block (if exists) with cache_control
-7. Add current-date block (without cache_control - intentionally volatile)
+1. Load meta prompt from `~/.config/workflow/prompts/meta.txt` (auto-included)
+2. Create meta JSON block WITHOUT cache_control (too small to cache)
+3. Add meta block as first element in `SYSTEM_BLOCKS` array
+4. Load user prompts from `$WORKFLOW_PROMPT_PREFIX/{name}.txt`
+5. Concatenate user prompts in order specified by `SYSTEM_PROMPTS` array
+6. Create user prompts JSON block with `cache_control: {type: "ephemeral"}`
+7. Add to `SYSTEM_BLOCKS` array
+8. Write concatenated prompts to `.workflow/prompts/system.txt` for caching
+9. Add project-description block (if exists) with cache_control
+10. Add current-date block (without cache_control - intentionally volatile)
 
 **JSON content blocks (canonical):**
 
@@ -194,7 +197,11 @@ Builds JSON content blocks only. Pseudo-XML files optionally created via custom 
 [
   {
     "type": "text",
-    "text": "[concatenated system prompts]",
+    "text": "[meta prompt - workflow context orientation]"
+  },
+  {
+    "type": "text",
+    "text": "[concatenated user system prompts]",
     "cache_control": {"type": "ephemeral"}
   },
   {
@@ -209,7 +216,9 @@ Builds JSON content blocks only. Pseudo-XML files optionally created via custom 
 ]
 ```
 
-**Cache breakpoints:** System prompts and project descriptions are cached (most stable), date is not cached (changes daily).
+**Cache breakpoints:** User prompts and project descriptions are cached (most stable), meta and date are not cached (meta too small, date changes daily).
+
+**Meta prompt:** Automatically included as first block, provides workflow structure orientation to AI. Not user-configurable. Created at `~/.config/workflow/prompts/meta.txt` during initialization.
 
 **Date format:** Date-only (not datetime) prevents minute-by-minute cache invalidation.
 

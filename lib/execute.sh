@@ -39,7 +39,7 @@ build_system_prompt() {
         return 1
     fi
 
-    echo "Building system prompt from: ${SYSTEM_PROMPTS[*]}"
+    echo "Building system prompt from: meta (auto) ${SYSTEM_PROMPTS[*]}"
 
     # Ensure parent directory exists
     mkdir -p "$(dirname "$system_prompt_file")"
@@ -49,7 +49,31 @@ build_system_prompt() {
     temp_prompt=$(mktemp)
     local build_success=true
 
-    # Also build JSON content for API
+    # FIRST: Add meta prompt block (required, auto-included, not cached)
+    local meta_file="$HOME/.config/workflow/prompts/meta.txt"
+    if [[ ! -f "$meta_file" && -n "$WORKFLOW_PROMPT_PREFIX" ]]; then
+        meta_file="$WORKFLOW_PROMPT_PREFIX/meta.txt"
+    fi
+
+    if [[ -f "$meta_file" ]]; then
+        local meta_text
+        meta_text=$(cat "$meta_file")
+        local meta_block
+        meta_block=$(jq -n \
+            --arg type "text" \
+            --arg text "$meta_text" \
+            '{
+                type: $type,
+                text: $text
+            }')  # NO cache_control (too small to cache)
+        SYSTEM_BLOCKS+=("$meta_block")
+
+        # Also add to XML file for debugging
+        cat "$meta_file" >> "$temp_prompt"
+        echo "" >> "$temp_prompt"
+    fi
+
+    # THEN: Build user-specified prompts with cache control
     local system_prompts_text=""
 
     # Write opening XML tag
