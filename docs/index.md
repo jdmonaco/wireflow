@@ -1,6 +1,8 @@
 # Workflow
 
-**Build reproducible, configurable workflows for research, development, and analysis with intelligent document processing and sophisticated context management.**
+**A flexible CLI tool for building persistent AI workflows anywhere you want**
+
+*Build reproducible, configurable workflows for research, development, and analysis with intelligent document processing and sophisticated context management.*
 
 **Version:** 0.2.0 (pre-release)
 
