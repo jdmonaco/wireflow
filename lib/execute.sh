@@ -808,11 +808,7 @@ aggregate_context() {
         done
     fi
 
-    # Add cache_control to last context block if any exist
-    if [[ ${#CONTEXT_BLOCKS[@]} -gt 0 ]]; then
-        local last_idx=$((${#CONTEXT_BLOCKS[@]} - 1))
-        CONTEXT_BLOCKS[$last_idx]=$(echo "${CONTEXT_BLOCKS[$last_idx]}" | jq '. + {cache_control: {type: "ephemeral"}}')
-    fi
+    # Cache control for context blocks will be added by adaptive strategy below
 
     # =============================================================================
     # WORKFLOW DEPENDENCIES (medium stability)
@@ -839,11 +835,7 @@ aggregate_context() {
             DEPENDENCY_BLOCKS+=("$block")
         done
 
-        # Add cache_control to last dependency block if any exist
-        if [[ ${#DEPENDENCY_BLOCKS[@]} -gt 0 ]]; then
-            local last_idx=$((${#DEPENDENCY_BLOCKS[@]} - 1))
-            DEPENDENCY_BLOCKS[$last_idx]=$(echo "${DEPENDENCY_BLOCKS[$last_idx]}" | jq '. + {cache_control: {type: "ephemeral"}}')
-        fi
+        # Cache control for dependency blocks will be added by adaptive strategy below
     fi
 
     # =============================================================================
@@ -915,27 +907,85 @@ aggregate_context() {
         done
     fi
 
-    # Add cache_control to last input block if any exist
-    if [[ ${#INPUT_BLOCKS[@]} -gt 0 ]]; then
-        local last_idx=$((${#INPUT_BLOCKS[@]} - 1))
-        INPUT_BLOCKS[$last_idx]=$(echo "${INPUT_BLOCKS[$last_idx]}" | jq '. + {cache_control: {type: "ephemeral"}}')
+    # =============================================================================
+    # ADAPTIVE CACHE CONTROL STRATEGY
+    # =============================================================================
+    # Maximum 2 user breakpoints using adaptive strategy based on content mix
+    # Strategy adapts to: PDFs + text + images combinations
+    # System already uses 2 breakpoints (after prompts, after date)
+    # User content gets maximum 2 adaptive breakpoints for total of 4
+
+    # Determine what content types exist
+    local has_pdfs=false
+    local has_text_docs=false
+    local has_images=false
+
+    [[ ${#CONTEXT_PDF_BLOCKS[@]} -gt 0 || ${#INPUT_PDF_BLOCKS[@]} -gt 0 ]] && has_pdfs=true
+    [[ ${#CONTEXT_BLOCKS[@]} -gt 0 || ${#DEPENDENCY_BLOCKS[@]} -gt 0 || ${#INPUT_BLOCKS[@]} -gt 0 ]] && has_text_docs=true
+    [[ ${#IMAGE_BLOCKS[@]} -gt 0 ]] && has_images=true
+
+    # Adaptive breakpoint placement
+    if [[ "$has_pdfs" == true ]]; then
+        # Scenario: PDFs exist
+        # Breakpoint #1: After last PDF (INPUT_PDF preferred, fallback to CONTEXT_PDF)
+        if [[ ${#INPUT_PDF_BLOCKS[@]} -gt 0 ]]; then
+            local last_idx=$((${#INPUT_PDF_BLOCKS[@]} - 1))
+            INPUT_PDF_BLOCKS[$last_idx]=$(echo "${INPUT_PDF_BLOCKS[$last_idx]}" | jq '. + {cache_control: {type: "ephemeral"}}')
+        elif [[ ${#CONTEXT_PDF_BLOCKS[@]} -gt 0 ]]; then
+            local last_idx=$((${#CONTEXT_PDF_BLOCKS[@]} - 1))
+            CONTEXT_PDF_BLOCKS[$last_idx]=$(echo "${CONTEXT_PDF_BLOCKS[$last_idx]}" | jq '. + {cache_control: {type: "ephemeral"}}')
+        fi
+
+        # Breakpoint #2: After last image (if exist) or last text doc (if no images)
+        if [[ "$has_images" == true ]]; then
+            # Add breakpoint after last image
+            local last_idx=$((${#IMAGE_BLOCKS[@]} - 1))
+            IMAGE_BLOCKS[$last_idx]=$(echo "${IMAGE_BLOCKS[$last_idx]}" | jq '. + {cache_control: {type: "ephemeral"}}')
+        elif [[ "$has_text_docs" == true ]]; then
+            # No images, add breakpoint after last text doc (INPUT preferred)
+            if [[ ${#INPUT_BLOCKS[@]} -gt 0 ]]; then
+                local last_idx=$((${#INPUT_BLOCKS[@]} - 1))
+                INPUT_BLOCKS[$last_idx]=$(echo "${INPUT_BLOCKS[$last_idx]}" | jq '. + {cache_control: {type: "ephemeral"}}')
+            elif [[ ${#DEPENDENCY_BLOCKS[@]} -gt 0 ]]; then
+                local last_idx=$((${#DEPENDENCY_BLOCKS[@]} - 1))
+                DEPENDENCY_BLOCKS[$last_idx]=$(echo "${DEPENDENCY_BLOCKS[$last_idx]}" | jq '. + {cache_control: {type: "ephemeral"}}')
+            elif [[ ${#CONTEXT_BLOCKS[@]} -gt 0 ]]; then
+                local last_idx=$((${#CONTEXT_BLOCKS[@]} - 1))
+                CONTEXT_BLOCKS[$last_idx]=$(echo "${CONTEXT_BLOCKS[$last_idx]}" | jq '. + {cache_control: {type: "ephemeral"}}')
+            fi
+        fi
+        # Note: If only PDFs and task (no text, no images), only 1 user breakpoint (correct)
+
+    elif [[ "$has_text_docs" == true ]]; then
+        # Scenario: No PDFs, have text docs
+        # Breakpoint #1: After last text doc (INPUT preferred, before images if they exist)
+        if [[ ${#INPUT_BLOCKS[@]} -gt 0 ]]; then
+            local last_idx=$((${#INPUT_BLOCKS[@]} - 1))
+            INPUT_BLOCKS[$last_idx]=$(echo "${INPUT_BLOCKS[$last_idx]}" | jq '. + {cache_control: {type: "ephemeral"}}')
+        elif [[ ${#DEPENDENCY_BLOCKS[@]} -gt 0 ]]; then
+            local last_idx=$((${#DEPENDENCY_BLOCKS[@]} - 1))
+            DEPENDENCY_BLOCKS[$last_idx]=$(echo "${DEPENDENCY_BLOCKS[$last_idx]}" | jq '. + {cache_control: {type: "ephemeral"}}')
+        elif [[ ${#CONTEXT_BLOCKS[@]} -gt 0 ]]; then
+            local last_idx=$((${#CONTEXT_BLOCKS[@]} - 1))
+            CONTEXT_BLOCKS[$last_idx]=$(echo "${CONTEXT_BLOCKS[$last_idx]}" | jq '. + {cache_control: {type: "ephemeral"}}')
+        fi
+
+        # Breakpoint #2: After last image (if images exist)
+        if [[ "$has_images" == true ]]; then
+            local last_idx=$((${#IMAGE_BLOCKS[@]} - 1))
+            IMAGE_BLOCKS[$last_idx]=$(echo "${IMAGE_BLOCKS[$last_idx]}" | jq '. + {cache_control: {type: "ephemeral"}}')
+        fi
+        # Note: If only text docs and task (no images), only 1 user breakpoint (correct)
+
+    elif [[ "$has_images" == true ]]; then
+        # Scenario: Only images (no PDFs, no text docs)
+        # Breakpoint #1: After last image
+        local last_idx=$((${#IMAGE_BLOCKS[@]} - 1))
+        IMAGE_BLOCKS[$last_idx]=$(echo "${IMAGE_BLOCKS[$last_idx]}" | jq '. + {cache_control: {type: "ephemeral"}}')
+        # Note: If only images and task, only 1 user breakpoint (correct)
     fi
 
-    # =============================================================================
-    # PDF CACHE CONTROL (Optimized ordering: PDFs processed first)
-    # =============================================================================
-
-    # Add cache_control after PDF section (all PDFs: context + input)
-    # This creates a cache breakpoint after PDFs, before text documents
-    if [[ ${#INPUT_PDF_BLOCKS[@]} -gt 0 ]]; then
-        # Add to last input PDF if any
-        local last_idx=$((${#INPUT_PDF_BLOCKS[@]} - 1))
-        INPUT_PDF_BLOCKS[$last_idx]=$(echo "${INPUT_PDF_BLOCKS[$last_idx]}" | jq '. + {cache_control: {type: "ephemeral"}}')
-    elif [[ ${#CONTEXT_PDF_BLOCKS[@]} -gt 0 ]]; then
-        # Otherwise add to last context PDF
-        local last_idx=$((${#CONTEXT_PDF_BLOCKS[@]} - 1))
-        CONTEXT_PDF_BLOCKS[$last_idx]=$(echo "${CONTEXT_PDF_BLOCKS[$last_idx]}" | jq '. + {cache_control: {type: "ephemeral"}}')
-    fi
+    # Note: If only task (no content at all), no user breakpoints added (correct behavior)
 
     # =============================================================================
     # Summary

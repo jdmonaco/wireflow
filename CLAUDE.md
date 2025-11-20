@@ -730,20 +730,34 @@ JSON-first architecture eliminates dual-track XML/JSON building, reducing comple
 **Running tests:**
 
 ```bash
-# All tests
+# Specific file (PREFERRED - fast, targeted)
+bats tests/config.bats
+bats tests/cache-control.bats
+
+# Multiple specific files
+bats tests/init.bats tests/config.bats
+
+# All tests (AVOID running repeatedly - very slow, 280+ tests)
 bats tests/
 
-# Specific file
-bats tests/config.bats
-
 # Verbose output
-bats -t tests/
+bats -t tests/config.bats
 ```
 
+**IMPORTANT - Test Suite Performance:**
+
+The test suite is extensive (280+ tests) and takes several minutes to complete:
+- **DO NOT** run full suite (`bats tests/`) multiple times in a row
+- **DO NOT** run full suite to view output differently or process results
+- **DO** run specific test files during development: `bats tests/<feature>.bats`
+- **DO** run full suite once at the end to verify no regressions
+- **DO** run targeted tests iteratively as needed
+
 **Test organization:**
-- One file per major feature (init, config, run, task, help, etc.)
+- One file per major feature (init, config, run, task, help, cache-control, etc.)
 - Mock global config via `setup_test_env()` in `tests/test_helper/common.sh`
-- 190+ tests covering all subcommands and features
+- 280+ tests covering all subcommands and features
+- Test files are independent and can be run individually
 
 **Coverage expectations:**
 - All subcommands have basic tests
@@ -751,6 +765,7 @@ bats -t tests/
 - Path resolution tested
 - Error conditions tested
 - Edge cases covered
+- Cache control behavior validated
 
 ### Documentation Update Protocol
 
@@ -1184,10 +1199,25 @@ Code comments           → Inline documentation
   Longer description on next line
 ```
 
+**Nested bullet indentation:**
+
+```markdown
+// ALWAYS use 4 spaces for nested bullets (not 2):
+- Top-level item
+    - Nested item (4 spaces)
+    - Another nested item (4 spaces)
+        - Double-nested (8 spaces)
+
+// NOT 2 spaces:
+- Top-level item
+  - Nested item (2 spaces) ❌ WRONG
+```
+
 **Avoid:**
 - `**Heading** - Description` (old dash style)
 - Emojis outside Key Features
 - Inconsistent punctuation
+- 2-space indentation for nested bullets (use 4 spaces)
 
 ### Testing Strategy
 
