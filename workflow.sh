@@ -193,6 +193,42 @@ case "$1" in
         # Continue to task mode with remaining args
         TASK_MODE=true
         ;;
+    tasks)
+        shift  # Remove 'tasks' from args
+        if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+            show_quick_help_tasks
+            exit 0
+        fi
+        # Handle tasks subcommand
+        case "$1" in
+            show)
+                if [[ -z "$2" ]]; then
+                    echo "Error: Task name required for 'show' command"
+                    show_quick_help_tasks
+                    exit 1
+                fi
+                show_task "$2"
+                ;;
+            edit)
+                if [[ -z "$2" ]]; then
+                    echo "Error: Task name required for 'edit' command"
+                    show_quick_help_tasks
+                    exit 1
+                fi
+                edit_task "$2"
+                ;;
+            "")
+                # No subcommand = list (default)
+                list_tasks
+                ;;
+            *)
+                echo "Error: Unknown tasks subcommand: $1"
+                show_quick_help_tasks
+                exit 1
+                ;;
+        esac
+        exit 0
+        ;;
     help)
         shift  # Remove 'help' from args
         if [[ -n "$1" ]]; then
@@ -207,6 +243,7 @@ case "$1" in
                 config) show_help_config ;;
                 run) show_help_run ;;
                 task) show_help_task ;;
+                tasks) show_help_tasks ;;
                 *)
                     echo "Error: Unknown subcommand: $1"
                     echo "Use 'workflow help' to see all available subcommands"

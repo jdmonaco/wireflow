@@ -31,6 +31,7 @@ Available subcommands:
     cat NAME         Display workflow output
     open NAME        Open workflow output in default app (macOS)
     list, ls         List workflows in project
+    tasks            Manage task templates
     help [CMD]       Show help for subcommand
 
 Use '$SCRIPT_NAME help <subcommand>' for detailed help on a specific command.
@@ -94,6 +95,11 @@ show_quick_help_task() {
     echo "See '$SCRIPT_NAME help task' for complete usage details."
 }
 
+show_quick_help_tasks() {
+    echo "Usage: $SCRIPT_NAME tasks [show|edit <name>]"
+    echo "See '$SCRIPT_NAME help tasks' for complete usage details."
+}
+
 show_quick_help_cat() {
     echo "Usage: $SCRIPT_NAME cat <name>"
     echo "See '$SCRIPT_NAME help cat' for complete usage details."
@@ -133,7 +139,7 @@ EOF
 
 show_help_new() {
     cat <<EOF
-Usage: $SCRIPT_NAME new <name>
+Usage: $SCRIPT_NAME new <name> [options]
 
 Create a new workflow in the current project.
 
@@ -141,11 +147,29 @@ Arguments:
     <name>         Workflow name (required)
 
 Options:
-    -h, --help     Quick help
+    --task <template>  Use task template instead of default skeleton
+    -h, --help         Quick help
+
+Built-in Templates:
+    Use 'workflow task ls' to see available templates
+
+    summarize     Create concise summary with key points
+    extract       Extract specific information and data
+    analyze       Deep analysis of patterns and insights
+    review        Critical evaluation with suggestions
+    compare       Side-by-side comparison
+    outline       Generate structured outline
+    explain       Simplify complex topics
+    critique      Identify problems and improvements
 
 Examples:
     $SCRIPT_NAME new 01-outline
-    $SCRIPT_NAME new analyze-data
+    $SCRIPT_NAME new paper-summary --task summarize
+    $SCRIPT_NAME new data-analysis --task analyze
+
+See Also:
+    $SCRIPT_NAME task ls           # List all task templates
+    $SCRIPT_NAME task show <name>  # Preview task template
 EOF
 }
 
@@ -236,10 +260,8 @@ Usage: $SCRIPT_NAME task <name>|--inline <text> [options]
 
 Execute a one-off task outside of existing workflows.
 
-Arguments:
-    <name>         Named task from \$WORKFLOW_TASK_PREFIX/<name>.txt
-
 Task Specification:
+    <name>                    Named task from \$WORKFLOW_TASK_PREFIX/<name>.txt
     -i, --inline <text>       Inline task specification
 
 Input Options (primary documents to analyze):
@@ -270,8 +292,48 @@ Other Options:
     -h, --help                Quick help
 
 Examples:
+    $SCRIPT_NAME task summarize --context-file paper.pdf
     $SCRIPT_NAME task -i "Summarize these notes" --context-file notes.md
-    $SCRIPT_NAME task summarize --count-tokens
+    $SCRIPT_NAME task analyze --input-pattern "data/*.csv" --stream
+
+See Also:
+    $SCRIPT_NAME tasks           # List available task templates
+    $SCRIPT_NAME tasks show <name>  # Preview template
+    $SCRIPT_NAME new <name> --task <template>  # Create workflow from template
+EOF
+}
+
+show_help_tasks() {
+    cat <<EOF
+Usage: $SCRIPT_NAME tasks [show|edit <name>]
+
+Manage task templates.
+
+Commands:
+    tasks              List available task templates (default)
+    tasks show <name>  Display task template in pager
+    tasks edit <name>  Open task template in editor
+
+Built-in Templates:
+    summarize     Create concise summary with key points
+    extract       Extract specific information and data
+    analyze       Deep analysis of patterns and insights
+    review        Critical evaluation with suggestions
+    compare       Side-by-side comparison
+    outline       Generate structured outline
+    explain       Simplify complex topics
+    critique      Identify problems and improvements
+
+Task templates are stored in: \$WORKFLOW_TASK_PREFIX (default: ~/.config/workflow/tasks/)
+
+Examples:
+    $SCRIPT_NAME tasks
+    $SCRIPT_NAME tasks show summarize
+    $SCRIPT_NAME tasks edit summarize
+
+See Also:
+    $SCRIPT_NAME task <name>  # Execute task template
+    $SCRIPT_NAME new <name> --task <template>  # Create workflow from template
 EOF
 }
 

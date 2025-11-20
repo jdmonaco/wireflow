@@ -29,6 +29,9 @@ setup_test_env() {
     export WORKFLOW_PROMPT_PREFIX="$TEST_TEMP_DIR/prompts"
     export EDITOR="echo"  # Don't actually open vim in tests
 
+    # Unset WORKFLOW_TASK_PREFIX to avoid picking up user's personal templates
+    unset WORKFLOW_TASK_PREFIX
+
     # Mock global config directory (isolate from user's real config)
     export HOME="$TEST_TEMP_DIR/home"
     export XDG_CONFIG_HOME="$TEST_TEMP_DIR/home/.config"

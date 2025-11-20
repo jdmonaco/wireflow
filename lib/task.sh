@@ -26,46 +26,6 @@ CLI_INPUT_PATTERN=""
 CLI_CONTEXT_FILES=()
 CLI_CONTEXT_PATTERN=""
 
-# Check for sub-subcommands first (before parsing flags)
-if [[ $# -gt 0 && "$1" != --* && "$1" != -* ]]; then
-    case "$1" in
-        ls|list)
-            # List available task templates
-            shift
-            # Source lib/core.sh for list_tasks function
-            source "$(dirname "${BASH_SOURCE[0]}")/core.sh"
-            list_tasks
-            exit 0
-            ;;
-        show)
-            # Show task template in pager
-            if [[ -z "$2" ]]; then
-                echo "Error: Task name required for 'show' command"
-                echo "Usage: workflow task show NAME"
-                exit 1
-            fi
-            shift
-            # Source lib/core.sh for show_task function
-            source "$(dirname "${BASH_SOURCE[0]}")/core.sh"
-            show_task "$1"
-            exit 0
-            ;;
-        edit)
-            # Edit task template in editor
-            if [[ -z "$2" ]]; then
-                echo "Error: Task name required for 'edit' command"
-                echo "Usage: workflow task edit NAME"
-                exit 1
-            fi
-            shift
-            # Source lib/core.sh for edit_task function
-            source "$(dirname "${BASH_SOURCE[0]}")/core.sh"
-            edit_task "$1"
-            exit 0
-            ;;
-    esac
-fi
-
 # Parse task-specific and shared arguments
 while [[ $# -gt 0 ]]; do
     case $1 in

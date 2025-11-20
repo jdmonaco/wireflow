@@ -187,6 +187,7 @@ new_workflow() {
   Specific formatting requirements or structure for the output
 </output-format>
 TASK_SKELETON_EOF
+    fi
 
     # Create workflow config file
     cat > "$WORKFLOW_DIR/config" <<WORKFLOW_CONFIG_EOF
