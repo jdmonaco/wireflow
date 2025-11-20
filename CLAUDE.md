@@ -287,23 +287,41 @@ Each file becomes its own content block in the order: context â†’ dependencies â
 
 **Request construction:**
 ```bash
-# Build JSON payload with content blocks
+# Build JSON payload with content blocks from files
+# Use jq --slurpfile to avoid "Argument list too long" errors with large base64 images
 jq -n \
     --arg model "$MODEL" \
     --argjson max_tokens "$MAX_TOKENS" \
     --argjson temperature "$TEMPERATURE" \
-    --argjson system "$system_blocks" \
-    --argjson user_content "$user_blocks" \
+    --slurpfile system "$system_blocks_file" \
+    --slurpfile user_content "$user_blocks_file" \
     '{
         model: $model,
         max_tokens: $max_tokens,
         temperature: $temperature,
-        system: $system,
-        messages: [{role: "user", content: $user_content}]
+        system: $system[0],
+        messages: [{role: "user", content: $user_content[0]}]
     }'
+
+# Pass to curl via stdin to avoid argument size limits
+echo "$json_payload" | curl -s https://api.anthropic.com/v1/messages \
+    -H "x-api-key: $ANTHROPIC_API_KEY" \
+    -H "content-type: application/json" \
+    -d @-
 ```
 
-**Parameter passing:** System and user content blocks are passed via temporary files to avoid bash variable expansion issues.
+**Parameter passing strategy:**
+
+Content blocks are built incrementally in bash and written to JSON files, then:
+1. **Individual image blocks**: Use `printf | jq -Rs` to create each image block with base64 data
+2. **Content block arrays**: Use `jq --slurpfile` to read JSON arrays from files (avoids arg limits)
+3. **API request**: Pass JSON payload to curl via stdin with `-d @-` (avoids arg limits)
+
+**Why not `--rawfile` for images?**
+- `--rawfile` would be ideal if reading individual base64 files directly in the final jq command
+- Our architecture builds blocks incrementally in bash, then assembles arrays
+- Each image block is created via `printf | jq -Rs` (handles base64 correctly)
+- Final assembly uses `--slurpfile` for the complete arrays (not individual images)
 
 **Token Counting API:** Dedicated endpoint `/v1/messages/count_tokens` provides exact token counts.
 
