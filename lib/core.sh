@@ -394,10 +394,14 @@ list_tasks() {
                 local task_name=$(basename "$task_file" .txt)
                 shown_tasks+=("$task_name")
 
-                # Extract description
-                local description=$(sed -n 's/.*<description>\s*\(.*\)<\/description>.*/\1/p' "$task_file" | head -n1 | sed 's/^[[:space:]]*//')
+                # Extract description (first non-empty line from <description> tags, truncated to 64 chars)
+                local description=$(awk '/<description>/,/<\/description>/ {if (!/description>/ && NF) {print; exit}}' "$task_file" | sed 's/^[[:space:]]*//')
                 if [[ -z "$description" ]]; then
                     description=$(grep -v '^[[:space:]]*$' "$task_file" | head -n1 | sed 's/^#\s*//' | sed 's/^[[:space:]]*//')
+                fi
+                # Truncate to 64 characters
+                if [[ ${#description} -gt 64 ]]; then
+                    description="${description:0:64}..."
                 fi
 
                 printf "  %-15s %s\n" "$task_name" "$description"
@@ -428,10 +432,14 @@ list_tasks() {
                 done
                 [[ $already_shown == true ]] && continue
 
-                # Extract description
-                local description=$(sed -n 's/.*<description>\s*\(.*\)<\/description>.*/\1/p' "$task_file" | head -n1 | sed 's/^[[:space:]]*//')
+                # Extract description (first non-empty line from <description> tags, truncated to 64 chars)
+                local description=$(awk '/<description>/,/<\/description>/ {if (!/description>/ && NF) {print; exit}}' "$task_file" | sed 's/^[[:space:]]*//')
                 if [[ -z "$description" ]]; then
                     description=$(grep -v '^[[:space:]]*$' "$task_file" | head -n1 | sed 's/^#\s*//' | sed 's/^[[:space:]]*//')
+                fi
+                # Truncate to 64 characters
+                if [[ ${#description} -gt 64 ]]; then
+                    description="${description:0:64}..."
                 fi
 
                 printf "  %-15s %s\n" "$task_name" "$description"
@@ -472,8 +480,14 @@ show_task() {
     source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
     load_global_config
 
-    if [[ -z "$WIREFLOW_TASK_PREFIX" || ! -d "$WIREFLOW_TASK_PREFIX" ]]; then
-        echo "Error: WIREFLOW_TASK_PREFIX not configured"
+    # Set default if not configured
+    local default_task_dir="$HOME/.config/wireflow/tasks"
+    if [[ -z "$WIREFLOW_TASK_PREFIX" ]]; then
+        WIREFLOW_TASK_PREFIX="$default_task_dir"
+    fi
+
+    if [[ ! -d "$WIREFLOW_TASK_PREFIX" ]]; then
+        echo "Error: WIREFLOW_TASK_PREFIX directory not found: $WIREFLOW_TASK_PREFIX"
         echo "Set WIREFLOW_TASK_PREFIX in ~/.config/wireflow/config"
         return 1
     fi
@@ -525,8 +539,14 @@ edit_task() {
     source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
     load_global_config
 
-    if [[ -z "$WIREFLOW_TASK_PREFIX" || ! -d "$WIREFLOW_TASK_PREFIX" ]]; then
-        echo "Error: WIREFLOW_TASK_PREFIX not configured"
+    # Set default if not configured
+    local default_task_dir="$HOME/.config/wireflow/tasks"
+    if [[ -z "$WIREFLOW_TASK_PREFIX" ]]; then
+        WIREFLOW_TASK_PREFIX="$default_task_dir"
+    fi
+
+    if [[ ! -d "$WIREFLOW_TASK_PREFIX" ]]; then
+        echo "Error: WIREFLOW_TASK_PREFIX directory not found: $WIREFLOW_TASK_PREFIX"
         echo "Set WIREFLOW_TASK_PREFIX in ~/.config/wireflow/config"
         return 1
     fi
