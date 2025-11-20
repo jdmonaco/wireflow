@@ -1,6 +1,6 @@
 # WireFlow: Reproducible AI Workflows for Research and Development
 
-**Version:** 0.2.0 (pre-release)
+**Version:** 0.3.0 (pre-release)
 
 A terminal-based tool for building reproducible AI workflows for research, development, and analysis, featuring flexible configuration cascades, comprehensive document processing (PDFs, Office files, images), workflow dependencies and chaining, and intelligent context management.
 
