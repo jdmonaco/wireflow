@@ -214,6 +214,8 @@ API Options:
     --max-tokens <num>        Override max tokens
     --system-prompts <list>   Comma-separated prompt names
     --output-format <ext>     Output format (md, txt, json, etc.)
+    --enable-citations        Enable Anthropic citations support
+    --disable-citations       Disable citations (default)
 
 Execution Options:
     --stream                  Stream output in real-time
@@ -254,6 +256,8 @@ API Options:
     --max-tokens <num>        Override max tokens
     --system-prompts <list>   Comma-separated prompt names
     --output-format <ext>     Output format
+    --enable-citations        Enable Anthropic citations support
+    --disable-citations       Disable citations (default)
 
 Output Options:
     --output-file <path>      Save to file (default: stdout)
