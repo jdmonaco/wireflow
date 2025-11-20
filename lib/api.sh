@@ -86,17 +86,17 @@ anthropic_execute_single() {
         --arg model "${params[model]}" \
         --argjson max_tokens "${params[max_tokens]}" \
         --argjson temperature "${params[temperature]}" \
-        --argjson system "$system_blocks" \
-        --argjson user_content "$user_blocks" \
+        --slurpfile system "${params[system_blocks_file]}" \
+        --slurpfile user_content "${params[user_blocks_file]}" \
         '{
             model: $model,
             max_tokens: $max_tokens,
             temperature: $temperature,
-            system: $system,
+            system: $system[0],
             messages: [
                 {
                     role: "user",
-                    content: $user_content
+                    content: $user_content[0]
                 }
             ]
         }'
@@ -105,12 +105,13 @@ anthropic_execute_single() {
     # Execute request
     echo -n "Sending Messages API request... "
 
+    # Pass JSON payload via stdin to avoid "Argument list too long" with large images
     local response
-    response=$(curl -s https://api.anthropic.com/v1/messages \
+    response=$(echo "$json_payload" | curl -s https://api.anthropic.com/v1/messages \
         -H "content-type: application/json" \
         -H "x-api-key: ${params[api_key]}" \
         -H "anthropic-version: 2023-06-01" \
-        -d "$json_payload")
+        -d @-)
 
     echo "done!"
 
@@ -196,17 +197,17 @@ anthropic_execute_stream() {
         --arg model "${params[model]}" \
         --argjson max_tokens "${params[max_tokens]}" \
         --argjson temperature "${params[temperature]}" \
-        --argjson system "$system_blocks" \
-        --argjson user_content "$user_blocks" \
+        --slurpfile system "${params[system_blocks_file]}" \
+        --slurpfile user_content "${params[user_blocks_file]}" \
         '{
             model: $model,
             max_tokens: $max_tokens,
             temperature: $temperature,
-            system: $system,
+            system: $system[0],
             messages: [
                 {
                     role: "user",
-                    content: $user_content
+                    content: $user_content[0]
                 }
             ]
         }'
@@ -235,11 +236,12 @@ anthropic_execute_stream() {
     fi
 
     # Stream response and parse SSE events
-    curl -Ns https://api.anthropic.com/v1/messages \
+    # Pass JSON payload via stdin to avoid "Argument list too long" with large images
+    echo "$json_payload" | curl -Ns https://api.anthropic.com/v1/messages \
         -H "content-type: application/json" \
         -H "x-api-key: ${params[api_key]}" \
         -H "anthropic-version: 2023-06-01" \
-        -d "$json_payload" | while IFS= read -r line; do
+        -d @- | while IFS= read -r line; do
         # Skip empty lines
         [[ -z "$line" ]] && continue
 
@@ -416,26 +418,27 @@ anthropic_count_tokens() {
     local json_payload
     json_payload=$(jq -n \
         --arg model "${params[model]}" \
-        --argjson system "$system_blocks" \
-        --argjson user_content "$user_blocks" \
+        --slurpfile system "${params[system_blocks_file]}" \
+        --slurpfile user_content "${params[user_blocks_file]}" \
         '{
             model: $model,
-            system: $system,
+            system: $system[0],
             messages: [
                 {
                     role: "user",
-                    content: $user_content
+                    content: $user_content[0]
                 }
             ]
         }')
 
     # Call count_tokens endpoint
+    # Pass JSON payload via stdin to avoid "Argument list too long" with large images
     local response
-    response=$(curl -s https://api.anthropic.com/v1/messages/count_tokens \
+    response=$(echo "$json_payload" | curl -s https://api.anthropic.com/v1/messages/count_tokens \
         -H "content-type: application/json" \
         -H "x-api-key: ${params[api_key]}" \
         -H "anthropic-version: 2023-06-01" \
-        -d "$json_payload")
+        -d @-)
 
     # Check for errors
     if echo "$response" | jq -e '.error' > /dev/null 2>&1; then

@@ -675,7 +675,8 @@ aggregate_context() {
     if [[ -n "$CLI_CONTEXT_PATTERN" ]]; then
         echo "  Adding context from CLI pattern: $CLI_CONTEXT_PATTERN"
         local pattern_files
-        pattern_files=($(eval "echo $CLI_CONTEXT_PATTERN"))
+        # Use compgen to properly handle filenames with spaces
+        mapfile -t pattern_files < <(compgen -G "$CLI_CONTEXT_PATTERN")
 
         for file in "${pattern_files[@]}"; do
             if [[ -f "$file" ]]; then
@@ -776,7 +777,8 @@ aggregate_context() {
     if [[ -n "$CLI_INPUT_PATTERN" ]]; then
         echo "  Adding input documents from CLI pattern: $CLI_INPUT_PATTERN"
         local pattern_files
-        pattern_files=($(eval "echo $CLI_INPUT_PATTERN"))
+        # Use compgen to properly handle filenames with spaces
+        mapfile -t pattern_files < <(compgen -G "$CLI_INPUT_PATTERN")
 
         echo "  Found ${#pattern_files[@]} file(s) matching pattern" >&2
 
