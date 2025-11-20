@@ -1,6 +1,6 @@
 # WireFlow: Reproducible AI Workflows for Research and Development
 
-**Version:** 0.2.0 (pre-release)
+**Version:** 0.3.0 (pre-release)
 
 A terminal-based tool for building reproducible AI workflows for research, development, and analysis, featuring flexible configuration cascades, comprehensive document processing (PDFs, Office files, images), workflow dependencies and chaining, and intelligent context management.
 
@@ -31,7 +31,7 @@ git clone https://github.com/jdmonaco/wireflow.git
 cd wireflow
 
 # Add to PATH (example using ~/.local/bin)
-ln -s "$(pwd)/wireflow.sh" ~/.local/bin/workflow
+ln -s "$(pwd)/wireflow.sh" ~/.local/bin/wfw
 ```
 
 ### Setup
@@ -62,16 +62,16 @@ Your project files and folders are treated as read-only. All `workflow` files ar
 
 ## Documentation
 
-**📚 Complete documentation:** [https://docs.joemona.co/workflow/](https://docs.joemona.co/workflow/)
+**📚 Complete documentation:** [https://docs.joemona.co/wireflow/](https://docs.joemona.co/wireflow/)
 
 ### Quick Links
 
-- **[Installation Guide](https://docs.joemona.co/workflow/getting-started/installation/):** Detailed setup instructions
-- **[Quick Start Guide](https://docs.joemona.co/workflow/getting-started/quickstart/):** Get running in 5 minutes
-- **[User Guide](https://docs.joemona.co/workflow/user-guide/initialization/):** Complete usage documentation
-- **[CLI Reference](https://docs.joemona.co/workflow/reference/cli-reference/):** All commands and options
-- **[Examples](https://docs.joemona.co/workflow/user-guide/examples/):** Real-world usage patterns
-- **[Troubleshooting](https://docs.joemona.co/workflow/troubleshooting/):** Common issues and solutions
+- **[Installation Guide](https://docs.joemona.co/wireflow/getting-started/installation/):** Detailed setup instructions
+- **[Quick Start Guide](https://docs.joemona.co/wireflow/getting-started/quickstart/):** Get running in 5 minutes
+- **[User Guide](https://docs.joemona.co/wireflow/user-guide/initialization/):** Complete usage documentation
+- **[CLI Reference](https://docs.joemona.co/wireflow/reference/cli-reference/):** All commands and options
+- **[Examples](https://docs.joemona.co/wireflow/user-guide/examples/):** Real-world usage patterns
+- **[Troubleshooting](https://docs.joemona.co/wireflow/troubleshooting/):** Common issues and solutions
 
 ## Core Concepts
 
@@ -174,7 +174,7 @@ wfw <subcommand> -h   # Quick help
 
 ## Contributing
 
-Contributions welcome! See [CONTRIBUTING.md](https://docs.joemona.co/workflow/contributing/) for guidelines.
+Contributions welcome! See [CONTRIBUTING.md](https://docs.joemona.co/wireflow/contributing/) for guidelines.
 
 ## License
 

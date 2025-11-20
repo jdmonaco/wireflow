@@ -2,7 +2,7 @@
 set -e
 
 # Version
-WIREFLOW_VERSION="0.2.0"
+WIREFLOW_VERSION="0.3.0"
 
 # =============================================================================
 # WireFlow - AI-Assisted Research and Project Development Tool

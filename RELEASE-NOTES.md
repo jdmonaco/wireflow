@@ -1,5 +1,171 @@
 # Release Notes
 
+## Version 0.3.0 (2025-11-20)
+
+**Project Renamed: Workflow → WireFlow**
+
+This release represents a major milestone with the project rebrand to **WireFlow** (command: `wfw`), alongside significant new features including built-in task templates, intelligent prompt/task fallback search, adaptive cache optimization, and automatic workflow context orientation.
+
+### 🎯 Project Rebrand: WireFlow
+
+The tool has been renamed from "Workflow" to "WireFlow" with `wfw` as the standard command alias for a distinctive, searchable identity without namespace collisions.
+
+**Breaking Changes:**
+- Command: `workflow` → `wireflow` (use alias `wfw` for convenience)
+- Script: `workflow.sh` → `wireflow.sh`
+- Environment variables: `WORKFLOW_*_PREFIX` → `WIREFLOW_*_PREFIX`
+- GitHub repo: `github.com/jdmonaco/workflow` → `github.com/jdmonaco/wireflow`
+
+**Migration:**
+```bash
+# Update symlink
+ln -s $(pwd)/wireflow.sh ~/.local/bin/wfw
+
+# Add alias (optional, for muscle memory)
+echo "alias wfw='wireflow'" >> ~/.bashrc
+
+# Update environment variables (if customized)
+export WIREFLOW_PROMPT_PREFIX="$HOME/custom/prompts"
+export WIREFLOW_TASK_PREFIX="$HOME/custom/tasks"
+```
+
+**Preserved:** `.workflow/` directories, `~/.config/workflow/` config location continue working unchanged.
+
+### ✨ Built-In Task Templates
+
+Eight carefully designed generic task templates provide immediate value for common research and development workflows. Templates are created automatically in `~/.config/workflow/tasks/` on first use.
+
+**Templates:**
+- `summarize`: Concise summary with key points and action items
+- `extract`: Extract specific information, quotes, data, references
+- `analyze`: Deep analysis identifying patterns and insights
+- `review`: Critical evaluation with strengths/weaknesses
+- `compare`: Side-by-side comparison with trade-offs
+- `outline`: Generate structured hierarchical outline
+- `explain`: Simplify complex topics with examples
+- `critique`: Identify problems, gaps, improvements
+
+**Discovery:**
+```bash
+wfw tasks                    # List all templates
+wfw tasks show summarize     # Preview in pager
+wfw tasks edit summarize     # Customize template
+```
+
+**Usage:**
+```bash
+# Execute template
+wfw task summarize --context-file paper.pdf
+
+# Create workflow from template
+wfw new analysis --task summarize
+```
+
+**Benefits:**
+- Immediate productivity for new users
+- Consistent task structure across projects
+- Fully customizable (edit templates or create your own)
+- XML skeleton format matches workflow task.txt structure
+
+### 🔍 Intelligent Fallback Search
+
+When using custom `WIREFLOW_PROMPT_PREFIX` or `WIREFLOW_TASK_PREFIX`, the tool now automatically searches default locations (`~/.config/workflow/prompts/`, `~/.config/workflow/tasks/`) as fallback, preserving access to built-in prompts and templates.
+
+**Problem Solved:**
+- Setting custom PREFIX no longer breaks access to built-in "base" system prompt
+- Custom task locations preserve access to all 8 built-in templates
+- No need to manually copy built-ins to custom directories
+
+**Behavior:**
+- Custom location searched first (allows overriding built-ins)
+- Default location searched as fallback
+- `wfw tasks` shows templates from both locations
+- Custom templates override built-ins with same name
+
+**Benefits:**
+- No breakage when customizing PREFIX locations
+- Layered template system (custom + built-in)
+- Zero configuration required for most users
+
+### 💰 Adaptive Cache-Control Strategy
+
+Sophisticated content-aware cache breakpoint placement maximizes prompt caching efficiency while respecting Anthropic's 4-breakpoint API limit.
+
+**Architecture:**
+- Content-type detection (PDFs, text documents, images)
+- Strategic breakpoint placement at semantic boundaries
+- Adaptive strategy based on content mix
+- 90% cost reduction on cached content
+
+**Strategy:**
+- System: 2 breakpoints (user prompts, project description)
+- User: Up to 2 adaptive breakpoints based on content:
+  - PDFs exist: after last PDF, then after images OR text
+  - No PDFs: after last text, then after images
+  - Only task: no breakpoints (re-processed each run)
+
+**Fixes:**
+- Images now properly cached (was missing entirely)
+- Per-section caching replaced with adaptive strategy
+- Never exceeds 4-breakpoint limit (was violating with 5+ breakpoints)
+
+**Test Coverage:** 14/14 cache-control tests passing (100%)
+
+### 🧭 Meta System Prompt
+
+Automatic workflow context orientation prompt included as first block in every API request, helping AI assistants understand the workflow structure, content organization, and project hierarchy.
+
+**Implementation:**
+- Created automatically at `~/.config/workflow/prompts/meta.txt`
+- Always included first (before user prompts)
+- Not user-configurable (internal implementation)
+- No cache_control (too small ~50 tokens, below 1024 minimum)
+- Describes system/user block structure, XML metadata, content types
+
+**Benefits:**
+- Better AI understanding of workflow context
+- Modular design (separate block, easy to update)
+- No cache budget impact (uncached by design)
+- Transparent to users
+
+### 📚 Documentation Improvements
+
+**CLAUDE.md Refactoring:**
+- Split 1,333-line file into 3 focused documents (74% reduction)
+- CLAUDE.md (346 lines): Development workflows and processes
+- docs/contributing/architecture.md (419 lines): System design
+- docs/contributing/implementation.md (493 lines): Technical details
+- Faster AI context loading, better organization
+
+**Features Documentation:**
+- Updated Key Features in README.md and docs/index.md
+- 12 accurate features highlighting innovations
+- Removed outdated claims, added quantified benefits
+- Consistent between both files
+
+**Contributing Docs:**
+- Streamlined contributing/index.md (60% smaller)
+- Added architecture and implementation to navigation
+- Better contributor onboarding journey
+
+### 🧪 Testing Enhancements
+
+- Added cache-control.bats (14 tests, 100% passing)
+- Added tasks.bats (11 tests for template system)
+- Test suite performance guidelines (avoid repeated full runs)
+- Total: 290+ tests
+
+### Target Users
+
+**Research and development workflows** requiring:
+- Document analysis and synthesis
+- Multi-stage processing pipelines
+- Reproducible AI-assisted content generation
+- Cost-effective prompt caching
+- Template-based workflow creation
+
+---
+
 ## Version 0.2.0 (2025-01-20)
 
 This release marks a significant milestone with comprehensive document processing capabilities and architectural maturity.
@@ -59,283 +225,57 @@ JSON-first content block architecture with strategic cache breakpoint placement 
 
 Optional Anthropic citations API support via `--enable-citations` flag. Generates document map for citable sources (text and PDFs, not images). Parses citation responses and formats them appropriately. Creates sidecar citations files for reference.
 
-**Innovation:** Enables AI-generated content with proper source attribution.
+**Innovation:** Enables source attribution for AI-generated content with proper citation tracking.
 
-### Complete Feature List
+### Implementation Highlights
 
-#### Core Workflow Management
+**JSON-First Architecture:**
+- Content blocks are canonical JSON structures
+- Pseudo-XML files created for debugging only (via custom converter)
+- Eliminates dual-track complexity
 
-- `init` - Initialize project with .workflow/ structure
-- `new` - Create workflows with XML task skeleton
-- `edit` - Open workflow/project files in editor
-- `config` - View configuration cascade with source tracking
-- `run` - Execute workflows with full context aggregation
-- `task` - Lightweight one-off task execution
-- `cat` - Display output to stdout
-- `open` - Open output in default application (macOS)
-- `list` - List all workflows in project
-
-#### Configuration System
-
-- Multi-tier cascade: global → ancestors → project → workflow → CLI
-- Pass-through inheritance (empty values inherit, non-empty override)
-- Nested project support with automatic ancestor discovery
-- Subshell isolation for safe config sourcing
-- Source tracking (shows where each value comes from)
-- Cross-platform editor detection
-
-#### Context Aggregation
-
-- Three methods: glob patterns, explicit file lists, workflow dependencies
-- Semantic separation: INPUT vs CONTEXT materials
-- Project-relative paths in configs, PWD-relative in CLI
-- Brace expansion and recursive glob patterns
-- Automatic file type detection (text, PDF, Office, images)
-
-#### Document Processing
-
-- PDFs: Native support via Claude PDF API (32MB limit)
-- Office files: Automatic conversion via LibreOffice (.docx, .pptx)
-- Images: Vision API support with validation, resizing, caching
-- Text files: Multiple formats with metadata embedding
-- Smart caching with mtime validation
-
-#### API Integration
-
-- Anthropic Messages API with streaming and batch modes
-- Prompt caching with strategic breakpoint placement
-- Token estimation: dual approach (heuristic + exact API count)
-- Citations support with document mapping
-- Dry-run mode for prompt inspection
-- Large payload handling via jq --slurpfile
-
-#### Output Management
-
+**Safe Execution:**
 - Automatic timestamped backups
-- Hardlinked copies for convenient access
-- Format-specific post-processing (mdformat, jq)
-- Multiple output formats (md, json, txt, html, etc.)
-- Atomic updates with trap-based cleanup
-
-#### Safety and Robustness
-
-- Automatic backups before overwriting
+- Hardlinked outputs for convenient access
 - Atomic file operations
-- Trap-based cleanup on exit
-- Subshell isolation for config extraction
-- Git-like project boundary detection (stops at $HOME)
+- Trap-based cleanup
 
-#### Developer Experience
+**Token Estimation:**
+- Dual approach: fast heuristic + exact API counting
+- Detailed breakdowns by source (system, task, input, context, images)
+- Conservative estimates (~2000 tokens/PDF page, ~1600 tokens/image)
 
-- XML task skeleton with structured sections
-- Named task templates (reusable task definitions)
-- Token estimation before API calls
-- Comprehensive help system (git-style)
-- 205+ test suite using Bats
-- Detailed documentation with MkDocs
+### Technical Specifications
 
-### Current API Support & Extensibility
+**Document Limits:**
+- PDFs: 32MB per file, unlimited count
+- Images: 5MB per file, 8000x8000px max, auto-resize at 1568px
+- Office files: Converted to PDF (inherits PDF limits)
+- Text files: No size limit
 
-#### Anthropic API Support
+**API Integration:**
+- Streaming mode: Real-time SSE parsing
+- Batch mode: Single-request with pager
+- Token Counting API: Exact token counts
+- Citations API: Source attribution support
 
-- Messages API (single and streaming)
-- Prompt Caching API (ephemeral cache control)
-- Token Counting API (exact token estimation)
-- PDF API (native document support)
-- Vision API (image processing)
-- Citations API (source attribution)
+**Caching:**
+- Up to 4 breakpoints per API limits
+- 90% cost reduction potential
+- 5-minute TTL (extendable to 1 hour)
+- 1024 token minimum per cached block
 
-#### Extensibility Architecture
+### Target Audiences
 
-**Modular library structure** (lib/):
-- `api.sh` - API interaction
-- `config.sh` - Configuration loading
-- `core.sh` - Subcommand implementations
-- `execute.sh` - Shared execution logic
-- `utils.sh` - File processing utilities
-- `task.sh` - Task mode logic
-- `help.sh` - Help text
-- `edit.sh` - Editor selection
+**Researchers:** Literature review, paper analysis, synthesis across documents
+**Developers:** Code analysis, documentation generation, technical writing
+**Analysts:** Data interpretation, report generation, multi-source synthesis
+**Writers:** Content creation with research context, structured output generation
 
-**Configuration as code:**
-- Config files are bash scripts (can include logic)
-- Easy to extend with new variables
-- Pass-through mechanism scales automatically
+---
 
-**Content block architecture:**
-- JSON-first design
-- Each file becomes a separate content block
-- Enables future format support (e.g., more document types)
-- Custom converter for pseudo-XML convenience views
+## Version 0.1.0 (2025-11-18)
 
-**Custom system prompts:**
-- User-definable prompts in ~/.config/workflow/prompts/
-- Composable via SYSTEM_PROMPTS array
-- Project and workflow overrides
+Initial pre-release version with core workflow management capabilities and configuration cascade system.
 
-**Named task templates:**
-- Reusable task definitions in ~/.config/workflow/tasks/
-- Shareable across projects
-
-### Target Users & Use Cases
-
-#### Primary Audience
-
-Technical users with high AI/LLM familiarity and shell proficiency who need:
-- Reproducible AI workflows
-- Complex multi-stage processing pipelines
-- Project-aware context management
-- Cost-effective prompt caching
-- Integration with existing tools
-
-#### Key User Profiles
-
-**Research Scientists:**
-- Multi-stage analysis pipelines
-- Paper writing with context management
-- Data analysis and visualization workflows
-- Citation tracking for AI-generated content
-
-**Software Developers:**
-- Code review workflows
-- Documentation generation
-- Multi-file refactoring analysis
-- Architecture and design assistance
-
-**Technical Writers:**
-- Structured content generation
-- Document transformation (Office → PDF → Markdown)
-- Multi-stage editing workflows
-- Cross-referencing and citations
-
-**Data Scientists:**
-- Exploratory data analysis
-- Report generation from datasets
-- Multi-format output (JSON, Markdown, HTML)
-- Pipeline orchestration
-
-#### Enabled Workflows
-
-**Research Pipelines:**
-Context gathering from PDFs/papers → Outline generation → Section drafting → Review/refinement
-
-**Code Analysis:**
-Codebase exploration → Architecture analysis → Documentation generation → Review
-
-**Data Processing:**
-Data ingestion → Exploratory analysis → Statistical testing → Report generation → Visualization
-
-**Content Creation:**
-Research/context → Outline → Draft → Edit → Format conversion
-
-**Iterative Development:**
-Initial attempt → Review output → Refine task → Re-run (with automatic backup)
-
-### Pain Points Solved
-
-**Context Management Complexity:**
-- **Problem:** Managing large codebases/datasets as context for AI
-- **Solution:** Glob patterns, explicit files, and workflow dependencies with semantic separation
-
-**Cost of Repetitive Prompts:**
-- **Problem:** Paying for same system prompts and context repeatedly
-- **Solution:** Prompt caching with 90% cost reduction on cached content
-
-**Configuration Sprawl:**
-- **Problem:** Repeating settings across projects and workflows
-- **Solution:** Pass-through cascade enables change-once, affect-many
-
-**Multi-Stage Processing:**
-- **Problem:** Manually copying outputs between stages
-- **Solution:** Workflow dependencies with automatic context passing
-
-**Output Management:**
-- **Problem:** Losing previous versions when iterating
-- **Solution:** Automatic timestamped backups with hardlinked access
-
-**Format Fragmentation:**
-- **Problem:** Different tools for PDFs, images, Office files, text
-- **Solution:** Unified document processing with automatic detection and conversion
-
-**One-Off vs Persistent Workflows:**
-- **Problem:** Need both quick queries and persistent workflows
-- **Solution:** Dual execution modes optimized for each use case
-
-**Source Attribution:**
-- **Problem:** AI-generated content lacks proper citations
-- **Solution:** Citations API integration with document mapping
-
-### Unique Selling Points vs Other AI CLI Tools
-
-**vs aider/cursor/copilot:**
-- Not code-focused; document and workflow-focused
-- Multi-stage pipelines with dependencies
-- Sophisticated context aggregation beyond current file
-- Prompt caching for cost optimization
-
-**vs chatgpt-cli/claude-cli:**
-- Persistent workflows with configuration
-- Project-aware with automatic discovery
-- Multi-tier config cascade
-- Workflow chaining and dependencies
-- Native document processing (PDFs, Office, images)
-
-**vs custom scripts:**
-- Structured configuration system
-- Built-in prompt caching
-- Safe output management
-- Cross-platform compatibility
-- Comprehensive documentation and testing
-
-#### Key Differentiators
-
-1. **Configuration sophistication:** Pass-through cascade is unique
-2. **Workflow chaining:** DAG-based pipeline orchestration
-3. **Document processing breadth:** Unified handling of text, PDFs, Office, images
-4. **Cost optimization:** Strategic prompt caching architecture
-5. **Git-like UX:** Familiar project discovery and structure
-6. **Dual execution modes:** Both persistent and ad-hoc in one tool
-7. **Citations support:** Source attribution for generated content
-
-### Technical Highlights
-
-- **205+ comprehensive test suite** using Bats testing framework
-- **Modular architecture** with 8 separate library modules
-- **Cross-platform support** (macOS, Linux, WSL)
-- **Safe execution** with atomic operations and automatic backups
-- **Efficient caching** for images and Office file conversions
-- **Robust error handling** with graceful degradation
-
-### Installation & Requirements
-
-**Required:**
-- Bash 4.0+
-- curl
-- jq
-- Anthropic API key
-
-**Optional:**
-- LibreOffice (for .docx/.pptx support)
-- ImageMagick (for optimal image resizing)
-- mdformat (for Markdown formatting)
-
-### What's Next
-
-This pre-release (0.2.0) represents a mature foundation with comprehensive document processing. The tool is production-ready for personal and research use. Future directions may include:
-
-- Additional API provider support (OpenAI-compatible endpoints)
-- Batch API integration for cost-effective processing
-- Enhanced citation formatting options
-- Additional document format support
-- Web-based workflow visualization
-
-### Commits in This Release
-
-- bc12145: feat: Add PDF document support with optimized API ordering
-- 5023475: feat: Add Microsoft Office file support with PDF conversion
-- 45cac86: docs: Add comprehensive document type support documentation
-- 8af897e: fix: Correct context aggregation order in execution guide
-
-### Acknowledgments
-
-This tool represents a sophisticated approach to AI workflow management, built with attention to cost optimization, reproducibility, and developer experience. Special thanks to the Anthropic team for their excellent API documentation and the LibreOffice project for enabling Office file conversion.
+See CHANGELOG.md for detailed commit-level changes.

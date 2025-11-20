@@ -4,9 +4,9 @@
 
 *Build reproducible, configurable workflows for research, development, and analysis with intelligent document processing and sophisticated context management.*
 
-**Version:** 0.2.0 (pre-release)
+**Version:** 0.3.0 (pre-release)
 
-Workflow is a bash-based command-line tool that lets you easily create and run reproducible AI workflows for research, development, and analysis. Key features include flexible configuration cascades, native document processing (PDFs, Office, images), workflow chaining and dependencies, and sophisticated context management with cost-optimized prompt caching.
+WireFlow is a bash-based command-line tool that lets you easily create and run reproducible AI workflows for research, development, and analysis. Key features include flexible configuration cascades, native document processing (PDFs, Office, images), workflow chaining and dependencies, and sophisticated context management with cost-optimized prompt caching.
 
 ## Key Features
 
