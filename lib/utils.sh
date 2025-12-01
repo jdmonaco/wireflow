@@ -1217,6 +1217,122 @@ validate_pdf_file() {
     return 0
 }
 
+# Check if pdftoppm is available for PDF-to-image conversion
+# Returns:
+#   0 if available, 1 if not
+has_pdftoppm() {
+    command -v pdftoppm >/dev/null 2>&1
+}
+
+# Convert PDF file to PNG images (one per page)
+# Used for OpenAI provider which doesn't support native PDF
+# Uses project-level cache at $CACHE_DIR/conversions/pdf/
+#
+# Arguments:
+#   $1 - Source PDF file path (will be resolved to absolute)
+# Returns:
+#   Newline-separated list of image paths (stdout)
+#   Returns 1 on error
+# Requires:
+#   pdftoppm (from poppler-utils)
+#   CACHE_DIR global must be set (empty = use temp directory)
+# Side effects:
+#   Creates cache directory if needed
+#   Writes converted PNGs and .meta sidecar to cache
+convert_pdf_to_images() {
+    local source_file="$1"
+
+    if [[ ! -f "$source_file" ]]; then
+        echo "Error: PDF file not found: $source_file" >&2
+        return 1
+    fi
+
+    # Check pdftoppm availability
+    if ! has_pdftoppm; then
+        echo "Error: pdftoppm not found. Install poppler-utils:" >&2
+        echo "  macOS: brew install poppler" >&2
+        echo "  Linux: apt install poppler-utils" >&2
+        return 1
+    fi
+
+    # Resolve to absolute path
+    local abs_source
+    if [[ "$source_file" == /* ]]; then
+        abs_source="$source_file"
+    else
+        abs_source="$(cd "$(dirname "$source_file")" && pwd)/$(basename "$source_file")"
+    fi
+
+    local source_basename
+    source_basename=$(basename "$abs_source")
+
+    # Determine cache location
+    local cache_dir cache_subdir use_cache=true
+
+    if [[ -n "$CACHE_DIR" ]]; then
+        # Project cache available - use hash-based cache ID
+        local cache_id
+        cache_id=$(generate_cache_id "$abs_source")
+        cache_dir="$CACHE_DIR/conversions/pdf"
+        cache_subdir="$cache_dir/$cache_id"
+    else
+        # No project cache (standalone task mode outside project)
+        # Convert to temp, no caching
+        use_cache=false
+        cache_dir="${TMPDIR:-/tmp}/wireflow-pdf-conversion"
+        cache_subdir="$cache_dir/${source_basename%.*}"
+    fi
+
+    # Check cache validity (only if caching enabled)
+    local meta_file="$cache_subdir/metadata.meta"
+    if $use_cache && [[ -f "$meta_file" ]] && validate_cache_entry "$meta_file"; then
+        # Cache valid - return existing images
+        find "$cache_subdir" -name "page-*.png" -type f | sort
+        return 0
+    fi
+
+    # Create/clear cache subdirectory
+    rm -rf "$cache_subdir"
+    mkdir -p "$cache_subdir"
+
+    # Convert PDF to PNG images
+    # -png: Output PNG format
+    # -r 150: 150 DPI (balance quality and file size)
+    echo "  Converting PDF to images: $source_basename" >&2
+
+    if ! pdftoppm -png -r 150 "$abs_source" "$cache_subdir/page" 2>/dev/null; then
+        echo "Error: Failed to convert PDF to images: $source_file" >&2
+        rm -rf "$cache_subdir"
+        return 1
+    fi
+
+    # Check if any images were generated
+    local image_count
+    image_count=$(find "$cache_subdir" -name "page-*.png" -type f | wc -l | tr -d ' ')
+
+    if [[ "$image_count" -eq 0 ]]; then
+        echo "Error: PDF conversion produced no images: $source_file" >&2
+        rm -rf "$cache_subdir"
+        return 1
+    fi
+
+    echo "  Converted $image_count pages" >&2
+
+    # Write metadata sidecar (only if caching enabled)
+    if $use_cache; then
+        # Write metadata for the directory (using first image as reference)
+        local first_image
+        first_image=$(find "$cache_subdir" -name "page-*.png" -type f | sort | head -1)
+        write_cache_metadata "$first_image" "$abs_source" "pdf_to_images"
+        # Also copy metadata to standard location
+        cp "${first_image}.meta" "$meta_file" 2>/dev/null || true
+    fi
+
+    # Return list of image paths (sorted by page number)
+    find "$cache_subdir" -name "page-*.png" -type f | sort
+    return 0
+}
+
 # =============================================================================
 # Shared Conversion Cache System
 # =============================================================================

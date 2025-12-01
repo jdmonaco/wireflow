@@ -98,6 +98,17 @@ extract_config() {
         # Effort parameter
         echo "EFFORT=${EFFORT:-}"
 
+        # Provider selection
+        echo "PROVIDER=${PROVIDER:-}"
+
+        # OpenAI-compatible provider settings
+        echo "OPENAI_BASE_URL=${OPENAI_BASE_URL:-}"
+        echo "OPENAI_API_KEY=${OPENAI_API_KEY:-}"
+        echo "OPENAI_MODEL=${OPENAI_MODEL:-}"
+        echo "OPENAI_MODEL_FAST=${OPENAI_MODEL_FAST:-}"
+        echo "OPENAI_MODEL_BALANCED=${OPENAI_MODEL_BALANCED:-}"
+        echo "OPENAI_MODEL_DEEP=${OPENAI_MODEL_DEEP:-}"
+
         # Other API parameters
         echo "TEMPERATURE=${TEMPERATURE:-}"
         echo "MAX_TOKENS=${MAX_TOKENS:-}"
@@ -331,6 +342,38 @@ THINKING_BUDGET=$BUILTIN_THINKING_BUDGET
 #   low    - Most efficient, some capability reduction
 
 EFFORT=$BUILTIN_EFFORT
+
+# =============================================================================
+# Provider Selection
+# =============================================================================
+#
+# Select the API provider for LLM requests.
+# PROVIDER: anthropic (default) | openai
+#
+# "anthropic" uses the Anthropic Messages API (Claude models)
+# "openai" uses OpenAI-compatible endpoints (LM Studio, ollama, vLLM, etc.)
+
+PROVIDER=$BUILTIN_PROVIDER
+
+# =============================================================================
+# OpenAI-Compatible Provider Settings
+# =============================================================================
+#
+# Settings for OpenAI-compatible local servers (LM Studio, ollama, vLLM).
+# Only used when PROVIDER=openai
+#
+# OPENAI_BASE_URL: Server endpoint including /v1 path
+#   Examples: http://localhost:1234/v1, http://192.168.0.114:1234/v1
+# OPENAI_API_KEY: API key (many local servers accept any value)
+# OPENAI_MODEL: Explicit model override (bypasses profile system)
+# OPENAI_MODEL_*: Model for each profile tier (like Anthropic profiles)
+
+OPENAI_BASE_URL=$BUILTIN_OPENAI_BASE_URL
+OPENAI_API_KEY=$BUILTIN_OPENAI_API_KEY
+OPENAI_MODEL=$BUILTIN_OPENAI_MODEL
+OPENAI_MODEL_FAST=$BUILTIN_OPENAI_MODEL_FAST
+OPENAI_MODEL_BALANCED=$BUILTIN_OPENAI_MODEL_BALANCED
+OPENAI_MODEL_DEEP=$BUILTIN_OPENAI_MODEL_DEEP
 
 # =============================================================================
 # API Request Parameters

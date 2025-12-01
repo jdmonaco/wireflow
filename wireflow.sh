@@ -11,7 +11,7 @@ set -e
 # workflow dependencies and chaining, and intelligent context management.
 #
 # =============================================================================
-WIREFLOW_VERSION="0.6.0"
+WIREFLOW_VERSION="0.7.0"
 # =============================================================================
 
 # Script name -- as called by the user
@@ -25,6 +25,7 @@ source "$SCRIPT_DIR/lib/config.sh"
 source "$SCRIPT_DIR/lib/core.sh"
 source "$SCRIPT_DIR/lib/execute.sh"
 source "$SCRIPT_DIR/lib/help.sh"
+source "$SCRIPT_DIR/lib/openai.sh"
 source "$SCRIPT_DIR/lib/pipeline.sh"
 source "$SCRIPT_DIR/lib/run.sh"
 source "$SCRIPT_DIR/lib/task.sh"
@@ -56,6 +57,17 @@ BUILTIN_THINKING_BUDGET=10000
 # Effort parameter (Opus 4.5 only; high = API default)
 BUILTIN_EFFORT="high"
 
+# Provider selection: anthropic (default) or openai (for OpenAI-compatible servers)
+BUILTIN_PROVIDER="anthropic"
+
+# OpenAI-compatible provider settings
+BUILTIN_OPENAI_BASE_URL=""
+BUILTIN_OPENAI_API_KEY="lm-studio"
+BUILTIN_OPENAI_MODEL=""
+BUILTIN_OPENAI_MODEL_FAST=""
+BUILTIN_OPENAI_MODEL_BALANCED=""
+BUILTIN_OPENAI_MODEL_DEEP=""
+
 # Other API parameters
 BUILTIN_TEMPERATURE=1.0
 BUILTIN_MAX_TOKENS=16000
@@ -69,6 +81,8 @@ declare -A CONFIG_SOURCE_MAP
 CONFIG_KEYS=(
     "PROFILE" "MODEL_FAST" "MODEL_BALANCED" "MODEL_DEEP" "MODEL"
     "ENABLE_THINKING" "THINKING_BUDGET" "EFFORT"
+    "PROVIDER" "OPENAI_BASE_URL" "OPENAI_API_KEY" "OPENAI_MODEL"
+    "OPENAI_MODEL_FAST" "OPENAI_MODEL_BALANCED" "OPENAI_MODEL_DEEP"
     "TEMPERATURE" "MAX_TOKENS" "ENABLE_CITATIONS"
     "SYSTEM_PROMPTS" "OUTPUT_FORMAT"
 )  

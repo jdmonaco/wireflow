@@ -1,5 +1,67 @@
 # Release Notes
 
+## Version 0.7.0 (2025-12-01)
+
+**Multi-Provider Support: Run Local LLMs with OpenAI-Compatible APIs**
+
+This release adds support for OpenAI-compatible API endpoints, enabling WireFlow to work with local LLM servers like LM Studio, ollama, and vLLM alongside the default Anthropic Claude API.
+
+### 🔌 OpenAI-Compatible Provider
+
+Use any OpenAI API-compatible endpoint for local or self-hosted inference:
+
+```bash
+# ~/.config/wireflow/config
+PROVIDER="openai"
+OPENAI_BASE_URL="http://localhost:1234/v1"
+OPENAI_MODEL_BALANCED="qwen2.5-14b"
+```
+
+Supported servers:
+
+- **LM Studio** - Desktop app with one-click local LLM serving
+- **ollama** - Lightweight local LLM runner
+- **vLLM** - High-throughput production serving
+- Any OpenAI `/v1/chat/completions` compatible endpoint
+
+### 🧠 Provider-Specific Model Profiles
+
+The profile system (`fast`/`balanced`/`deep`) works with both providers:
+
+```bash
+# Anthropic models (default)
+MODEL_FAST=claude-haiku-4-5
+MODEL_BALANCED=claude-sonnet-4-5
+MODEL_DEEP=claude-opus-4-5
+
+# OpenAI-compatible models
+OPENAI_MODEL_FAST=phi-4-mini
+OPENAI_MODEL_BALANCED=qwen2.5-14b
+OPENAI_MODEL_DEEP=qwen2.5-72b
+```
+
+### 📄 Automatic PDF Conversion
+
+PDFs are automatically converted to page images when using the OpenAI provider (which lacks native PDF support):
+
+- Uses `pdftoppm` from poppler-utils
+- Cached conversions for efficiency
+- Each page becomes an image content block for vision-capable models
+
+### ⚠️ Feature Compatibility
+
+Some Anthropic-specific features are gracefully handled:
+
+| Feature | OpenAI Provider |
+|---------|-----------------|
+| Extended thinking | Warned, skipped |
+| Effort parameter | Warned, skipped |
+| Citations | Disabled with warning |
+| Prompt caching | Silently ignored |
+| Batch API | Not supported |
+
+---
+
 ## Version 0.6.0 (2025-11-29)
 
 **Shell Integration, Obsidian Embeds & Automatic Dependencies**

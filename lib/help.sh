@@ -46,9 +46,18 @@ Examples:
     $SCRIPT_NAME batch my-workflow -in data/
 
 Environment variables:
-    ANTHROPIC_API_KEY         Your Anthropic API key (required)
+    ANTHROPIC_API_KEY         Your Anthropic API key (required for anthropic provider)
     WIREFLOW_PROMPT_PREFIX    System prompt directory ($(display_absolute_path "$WIREFLOW_PROMPT_PREFIX"))
     WIREFLOW_TASK_PREFIX      Named task directory ($(display_absolute_path "$WIREFLOW_TASK_PREFIX"))
+
+Provider settings (set in config or environment):
+    PROVIDER                  API provider: anthropic (default) | openai
+    OPENAI_BASE_URL           OpenAI-compatible server URL (e.g., http://localhost:1234/v1)
+    OPENAI_API_KEY            API key for OpenAI-compatible server
+    OPENAI_MODEL              Explicit model override for OpenAI provider
+    OPENAI_MODEL_FAST         Model for --profile fast (OpenAI provider)
+    OPENAI_MODEL_BALANCED     Model for --profile balanced (OpenAI provider)
+    OPENAI_MODEL_DEEP         Model for --profile deep (OpenAI provider)
 
 Configuration:
     Global config:   $(display_absolute_path "$GLOBAL_CONFIG_FILE")

@@ -957,6 +957,39 @@ build_and_track_document_block() {
     if [[ "$file_type" == "document" ]]; then
         echo "    Processing PDF document: $(basename "$file")" >&2
 
+        # OpenAI provider: Convert PDF to images (no native PDF support)
+        if [[ "${PROVIDER:-anthropic}" == "openai" ]]; then
+            echo "    Converting PDF to images for OpenAI provider..." >&2
+
+            # Convert PDF to images
+            local image_paths
+            if ! image_paths=$(convert_pdf_to_images "$file"); then
+                echo "    Warning: Failed to convert PDF to images: $file" >&2
+                return 1
+            fi
+
+            # Build image blocks for each page
+            local page_num=0
+            while IFS= read -r image_path; do
+                [[ -z "$image_path" ]] && continue
+                ((page_num++))
+
+                local block
+                block=$(build_image_content_block "$image_path" "false")
+                if [[ -z "$block" ]]; then
+                    echo "    Warning: Failed to process PDF page $page_num" >&2
+                    continue
+                fi
+
+                # Add to IMAGE_BLOCKS (PDFs converted to images go with other images)
+                IMAGE_BLOCKS+=("$block")
+            done <<< "$image_paths"
+
+            # PDFs converted to images are NOT citable (no document index)
+            return 0
+        fi
+
+        # Anthropic provider: Use native PDF support
         # Build document content block (no cache control yet, will be added at section boundary)
         local block
         block=$(build_document_content_block "$file" "false")
@@ -1008,6 +1041,38 @@ build_and_track_document_block() {
             return 1
         fi
 
+        # OpenAI provider: Convert PDF to images (no native PDF support)
+        if [[ "${PROVIDER:-anthropic}" == "openai" ]]; then
+            echo "    Converting to images for OpenAI provider..." >&2
+
+            # Convert PDF to images
+            local image_paths
+            if ! image_paths=$(convert_pdf_to_images "$cached_pdf"); then
+                echo "    Warning: Failed to convert Office file to images: $file" >&2
+                return 1
+            fi
+
+            # Build image blocks for each page
+            local page_num=0
+            while IFS= read -r image_path; do
+                [[ -z "$image_path" ]] && continue
+                ((page_num++))
+
+                local block
+                block=$(build_image_content_block "$image_path" "false")
+                if [[ -z "$block" ]]; then
+                    echo "    Warning: Failed to process page $page_num" >&2
+                    continue
+                fi
+
+                IMAGE_BLOCKS+=("$block")
+            done <<< "$image_paths"
+
+            # Office files converted to images are NOT citable
+            return 0
+        fi
+
+        # Anthropic provider: Use native PDF support
         # Build document content block from cached PDF
         local block
         block=$(build_document_content_block "$cached_pdf" "false")
@@ -1481,59 +1546,111 @@ execute_api_request() {
         echo ""
     fi
 
-    # Validate API key
-    anthropic_validate "$ANTHROPIC_API_KEY" || exit 1
-
-    # Resolve effective model from profile system
-    local effective_model
-    effective_model=$(resolve_model)
-
-    # Validate API configuration for model compatibility
-    validate_api_config "$effective_model" "$ENABLE_THINKING" "$EFFORT"
-
     # Pass JSON via temp files to avoid parameter parsing issues
     local temp_system=$(mktemp)
     local temp_user=$(mktemp)
     echo "$system_blocks_json" > "$temp_system"
     echo "$user_blocks_json" > "$temp_user"
 
-    # Execute API request (stream or single mode)
-    if [[ "$STREAM_MODE" == true ]]; then
-        anthropic_execute_stream \
-            api_key="$ANTHROPIC_API_KEY" \
-            model="$effective_model" \
-            max_tokens="$MAX_TOKENS" \
-            temperature="$TEMPERATURE" \
-            system_blocks_file="$temp_system" \
-            user_blocks_file="$temp_user" \
-            output_file="$output_file" \
-            enable_citations="$ENABLE_CITATIONS" \
-            output_format="$OUTPUT_FORMAT" \
-            doc_map_file="$DOCUMENT_MAP_FILE" \
-            enable_thinking="$ENABLE_THINKING" \
-            thinking_budget="$THINKING_BUDGET" \
-            effort="$EFFORT" || exit 1
-    else
-        anthropic_execute_single \
-            api_key="$ANTHROPIC_API_KEY" \
-            model="$effective_model" \
-            max_tokens="$MAX_TOKENS" \
-            temperature="$TEMPERATURE" \
-            system_blocks_file="$temp_system" \
-            user_blocks_file="$temp_user" \
-            output_file="$output_file" \
-            enable_citations="$ENABLE_CITATIONS" \
-            output_format="$OUTPUT_FORMAT" \
-            doc_map_file="$DOCUMENT_MAP_FILE" \
-            enable_thinking="$ENABLE_THINKING" \
-            thinking_budget="$THINKING_BUDGET" \
-            effort="$EFFORT" || exit 1
+    # =============================================================================
+    # Provider Dispatch
+    # =============================================================================
 
-        # Task mode: Display output to stdout if no explicit output file
-        if [[ "$mode" == "task" && -z "$output_file_path" ]]; then
-            cat "$output_file"
-        fi
-    fi
+    case "${PROVIDER:-anthropic}" in
+        anthropic)
+            # Validate API key
+            anthropic_validate "$ANTHROPIC_API_KEY" || exit 1
+
+            # Resolve effective model from profile system
+            local effective_model
+            effective_model=$(resolve_model)
+
+            # Validate API configuration for model compatibility
+            validate_api_config "$effective_model" "$ENABLE_THINKING" "$EFFORT"
+
+            # Execute API request (stream or single mode)
+            if [[ "$STREAM_MODE" == true ]]; then
+                anthropic_execute_stream \
+                    api_key="$ANTHROPIC_API_KEY" \
+                    model="$effective_model" \
+                    max_tokens="$MAX_TOKENS" \
+                    temperature="$TEMPERATURE" \
+                    system_blocks_file="$temp_system" \
+                    user_blocks_file="$temp_user" \
+                    output_file="$output_file" \
+                    enable_citations="$ENABLE_CITATIONS" \
+                    output_format="$OUTPUT_FORMAT" \
+                    doc_map_file="$DOCUMENT_MAP_FILE" \
+                    enable_thinking="$ENABLE_THINKING" \
+                    thinking_budget="$THINKING_BUDGET" \
+                    effort="$EFFORT" || exit 1
+            else
+                anthropic_execute_single \
+                    api_key="$ANTHROPIC_API_KEY" \
+                    model="$effective_model" \
+                    max_tokens="$MAX_TOKENS" \
+                    temperature="$TEMPERATURE" \
+                    system_blocks_file="$temp_system" \
+                    user_blocks_file="$temp_user" \
+                    output_file="$output_file" \
+                    enable_citations="$ENABLE_CITATIONS" \
+                    output_format="$OUTPUT_FORMAT" \
+                    doc_map_file="$DOCUMENT_MAP_FILE" \
+                    enable_thinking="$ENABLE_THINKING" \
+                    thinking_budget="$THINKING_BUDGET" \
+                    effort="$EFFORT" || exit 1
+
+                # Task mode: Display output to stdout if no explicit output file
+                if [[ "$mode" == "task" && -z "$output_file_path" ]]; then
+                    cat "$output_file"
+                fi
+            fi
+            ;;
+
+        openai)
+            # Validate OpenAI configuration
+            openai_validate || exit 1
+
+            # Check for unsupported features
+            [[ "$ENABLE_THINKING" == "true" ]] && openai_check_feature "thinking"
+            [[ "$EFFORT" != "high" ]] && openai_check_feature "effort"
+            [[ "$ENABLE_CITATIONS" == "true" ]] && openai_check_feature "citations"
+
+            # Resolve effective model from OpenAI profile system
+            local effective_model
+            effective_model=$(openai_resolve_model "$PROFILE") || exit 1
+
+            # Execute API request (stream or single mode)
+            if [[ "$STREAM_MODE" == true ]]; then
+                openai_execute_stream \
+                    model="$effective_model" \
+                    max_tokens="$MAX_TOKENS" \
+                    temperature="$TEMPERATURE" \
+                    system_blocks_file="$temp_system" \
+                    user_blocks_file="$temp_user" \
+                    output_file="$output_file" || exit 1
+            else
+                openai_execute_single \
+                    model="$effective_model" \
+                    max_tokens="$MAX_TOKENS" \
+                    temperature="$TEMPERATURE" \
+                    system_blocks_file="$temp_system" \
+                    user_blocks_file="$temp_user" \
+                    output_file="$output_file" || exit 1
+
+                # Task mode: Display output to stdout if no explicit output file
+                if [[ "$mode" == "task" && -z "$output_file_path" ]]; then
+                    cat "$output_file"
+                fi
+            fi
+            ;;
+
+        *)
+            echo "Error: Unknown provider: $PROVIDER" >&2
+            echo "Supported providers: anthropic, openai" >&2
+            exit 1
+            ;;
+    esac
 
     # =============================================================================
     # Save JSON Files for Reference (run mode only)

@@ -2,7 +2,7 @@
 
 **Reproducible AI Workflows for Research & Development**
 
-Version 0.6.0 (pre-release)
+Version 0.7.0 (pre-release)
 
 ## Key Features
 
@@ -13,6 +13,8 @@ Version 0.6.0 (pre-release)
 - 📎 **Obsidian Embeds:** `![[file]]` syntax auto-resolves. Embedded images and PDFs become content blocks.
 
 - 🧠 **Model Profiles:** Switch between `fast`, `balanced`, and `deep` reasoning. Enable extended thinking for complex tasks.
+
+- 🔌 **Multi-Provider:** Use Anthropic Claude API or any OpenAI-compatible endpoint (LM Studio, ollama, vLLM).
 
 - 📦 **Batch Processing:** Process hundreds of documents at 50% cost savings with the Message Batches API.
 
@@ -45,12 +47,20 @@ cd wireflow
 ./wireflow.sh shell install
 ```
 
-For Anthropic requests, ensure your API key is set in your shell environment:
+**For Anthropic Claude API (default):**
 
 ```bash
-# Set up environment
 export ANTHROPIC_API_KEY="your-key"
 export PATH="$HOME/.local/bin:$PATH"  # if not already in PATH
+```
+
+**For local LLM servers (LM Studio, ollama, etc.):**
+
+```bash
+# In ~/.config/wireflow/config
+PROVIDER="openai"
+OPENAI_BASE_URL="http://localhost:1234/v1"
+OPENAI_MODEL_BALANCED="your-model-name"
 ```
 
 Try out initializing `wireflow` in any folder containing a project or files you want to process:

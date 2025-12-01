@@ -2,7 +2,7 @@
 
 **Reproducible AI Workflows for Research & Development**
 
-Version 0.6.0 (pre-release) · [Documentation](https://docs.joemona.co/wireflow/) · [GitHub](https://github.com/jdmonaco/wireflow)
+Version 0.7.0 (pre-release) · [Documentation](https://docs.joemona.co/wireflow/) · [GitHub](https://github.com/jdmonaco/wireflow)
 
 ## Key Features
 
@@ -10,6 +10,7 @@ Version 0.6.0 (pre-release) · [Documentation](https://docs.joemona.co/wireflow/
 - 📄 **Native Documents:** PDFs, Office files, images (including HEIC, TIFF, SVG) handled natively with automatic conversion.
 - 📎 **Obsidian Embeds:** `![[file]]` syntax auto-resolves. Embedded images and PDFs become content blocks.
 - 🧠 **Model Profiles:** Switch between `fast`, `balanced`, and `deep` reasoning. Enable extended thinking for complex tasks.
+- 🔌 **Multi-Provider:** Use Anthropic Claude API or any OpenAI-compatible endpoint (LM Studio, ollama, vLLM).
 - 📦 **Batch Processing:** Process hundreds of documents at 50% cost savings with the Message Batches API.
 - 🔧 **Config Cascade:** Global → project → workflow → CLI. Set once, override where needed.
 - 🏗️ **Nested Projects:** Inherit settings from parent projects. Perfect for monorepos.
@@ -37,9 +38,18 @@ cd wireflow
 
 ### Setup
 
+**For Anthropic Claude API (default):**
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-..."
 export PATH="$HOME/.local/bin:$PATH"  # if not already in PATH
+```
+
+**For local LLM servers (LM Studio, ollama, etc.):**
+```bash
+# In ~/.config/wireflow/config
+PROVIDER="openai"
+OPENAI_BASE_URL="http://localhost:1234/v1"
+OPENAI_MODEL_BALANCED="your-model-name"
 ```
 
 ### Create Your First Workflow

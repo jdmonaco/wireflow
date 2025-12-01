@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2025-12-01
+
+### Added
+- OpenAI-compatible API provider support for local LLM servers (LM Studio, ollama, vLLM)
+- New `lib/openai.sh` library with streaming and non-streaming API handlers
+- Provider selection via `PROVIDER` config variable (`anthropic` or `openai`)
+- OpenAI model profiles: `OPENAI_MODEL_FAST`, `OPENAI_MODEL_BALANCED`, `OPENAI_MODEL_DEEP`
+- PDF-to-image conversion for OpenAI provider using `pdftoppm` (poppler-utils)
+- `convert_pdf_to_images()` function with caching in `lib/utils.sh`
+- Provider dispatch in `execute_api_request()` with feature compatibility warnings
+- Unit tests for OpenAI provider functions (`tests/unit/openai.bats`)
+- Integration tests for provider configuration (`tests/integration/openai.bats`)
+- Provider documentation in installation guide and configuration reference
+
+### Changed
+- Updated README.md and docs/index.md with Multi-Provider key feature
+- Updated help text to show provider settings
+- Installation guide now covers both Anthropic and OpenAI-compatible setups
+
 ## [0.6.0] - 2025-11-29
 
 ### Added

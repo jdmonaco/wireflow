@@ -120,6 +120,39 @@ CONTEXT=(
 | `MAX_TOKENS` | Max response tokens | `16000` |
 | `ENABLE_CITATIONS` | Enable source citations | `false` |
 
+### Provider Selection
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PROVIDER` | API provider: `anthropic` or `openai` | `anthropic` |
+| `OPENAI_BASE_URL` | OpenAI-compatible server URL | (empty) |
+| `OPENAI_API_KEY` | API key for OpenAI provider | `lm-studio` |
+| `OPENAI_MODEL` | Explicit model override | (empty) |
+| `OPENAI_MODEL_FAST` | Model for fast profile | (empty) |
+| `OPENAI_MODEL_BALANCED` | Model for balanced profile | (empty) |
+| `OPENAI_MODEL_DEEP` | Model for deep profile | (empty) |
+
+**Example configuration for LM Studio:**
+
+```bash
+# ~/.config/wireflow/config
+PROVIDER="openai"
+OPENAI_BASE_URL="http://localhost:1234/v1"
+OPENAI_MODEL_FAST="phi-4-mini"
+OPENAI_MODEL_BALANCED="qwen2.5-14b"
+OPENAI_MODEL_DEEP="qwen2.5-72b"
+```
+
+!!! note "Feature Differences"
+    When using the OpenAI provider, some Anthropic-specific features are unavailable:
+
+    - **Extended thinking:** Warned and skipped
+    - **Effort parameter:** Warned and skipped
+    - **Citations:** Disabled with warning
+    - **Native PDF:** Automatically converted to page images
+    - **Batch API:** Not supported
+    - **Prompt caching:** Silently ignored (no cost savings)
+
 ### Output & Prompts
 
 | Variable | Description | Default |

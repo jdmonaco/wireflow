@@ -9,9 +9,13 @@ Before installing WireFlow, ensure you have the following:
 - **Bash 4.0+:** The tool is written as a bash script
 - **curl:** For downloading files and making API calls
 - **jq:** For JSON processing
-- **Anthropic API key:** Required for making API calls
+- **LLM API access:** Either an Anthropic API key OR an OpenAI-compatible local server
 
-### Getting an Anthropic API Key
+### API Provider Options
+
+WireFlow supports two API providers:
+
+#### Option 1: Anthropic Claude API (Default)
 
 If you don't have an Anthropic API key yet:
 
@@ -23,6 +27,17 @@ If you don't have an Anthropic API key yet:
 
 !!! warning "Keep Your API Key Secure"
     Never commit your API key to version control or share it publicly. Use environment variables or the global configuration file to store it securely.
+
+#### Option 2: OpenAI-Compatible Local Server
+
+WireFlow works with any OpenAI API-compatible endpoint, including:
+
+- **[LM Studio](https://lmstudio.ai/):** Run local LLMs with OpenAI-compatible API
+- **[ollama](https://ollama.ai/):** Local LLM runner with API server
+- **[vLLM](https://docs.vllm.ai/):** High-throughput LLM serving
+- **Any OpenAI-compatible server:** Self-hosted or cloud
+
+No API key required for most local servers. See [Provider Configuration](#provider-configuration) below.
 
 ## Optional Dependencies
 
@@ -102,6 +117,24 @@ brew install imagemagick
 sudo apt-get install imagemagick  # Ubuntu/Debian
 sudo dnf install imagemagick      # Fedora/RHEL
 ```
+
+### PDF to Image Conversion (OpenAI Provider)
+
+**Requires poppler-utils:** When using the OpenAI provider (local LLMs), PDF files are automatically converted to page images since OpenAI API doesn't support native PDFs. This requires `pdftoppm`:
+
+**macOS:**
+```bash
+brew install poppler
+```
+
+**Linux:**
+```bash
+sudo apt-get install poppler-utils  # Ubuntu/Debian
+sudo dnf install poppler-utils      # Fedora/RHEL
+```
+
+!!! note "Anthropic Provider"
+    If using the default Anthropic provider, `pdftoppm` is not required - PDFs are processed natively.
 
 ## Installation Methods
 
@@ -271,6 +304,45 @@ ANTHROPIC_API_KEY=sk-ant-...
 
 !!! note "Environment Variables Take Precedence"
     If you set the API key in both places, the environment variable will take precedence over the config file.
+
+### Provider Configuration
+
+To use an OpenAI-compatible local server instead of Anthropic:
+
+```bash
+# Edit global config
+"${EDITOR:-nano}" ~/.config/wireflow/config
+```
+
+Add provider settings:
+
+```bash
+# Use OpenAI-compatible API (e.g., LM Studio)
+PROVIDER="openai"
+OPENAI_BASE_URL="http://localhost:1234/v1"
+
+# Model profiles for local models
+OPENAI_MODEL_FAST="phi-4-mini"
+OPENAI_MODEL_BALANCED="qwen2.5-14b"
+OPENAI_MODEL_DEEP="qwen2.5-72b"
+```
+
+!!! tip "LM Studio Setup"
+    1. Download and install [LM Studio](https://lmstudio.ai/)
+    2. Download models (e.g., Qwen 2.5, Phi-4)
+    3. Open Settings (`Cmd`/`Ctrl` + `,`) and configure:
+        - **Serve on Local Network:** Enable to access from other machines
+        - **Just-in-Time Model Loading:** Enable so `/v1/models` returns all downloaded models
+        - **Auto Unload Unused Models:** Set idle TTL (e.g., 60 min) to free memory
+        - **Only Keep Last JIT Loaded Model:** Enable to avoid memory issues with multiple models
+    4. Start the local server (default: `http://localhost:1234`)
+    5. Configure WireFlow with the server URL and model names
+
+    **Optional: Run as headless service**
+
+    - Enable "Run LLM server on login" in Settings for background operation
+    - Or start programmatically: `lms server start`
+    - Exiting the app minimizes to system tray while server continues running
 
 ### Optional: Custom System Prompts
 
