@@ -294,7 +294,7 @@ PROMPT_EOF
 #   - Leave EMPTY to use builtin default:     PROFILE=
 #   - Set VALUE to override builtin:          PROFILE=deep
 #
-# This file sets defaults for all Wireflow projects and workflows.
+# This file sets defaults for all WireFlow projects and workflows.
 # Run 'wfw config' from any project to view effective configuration.
 
 # =============================================================================

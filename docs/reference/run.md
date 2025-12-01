@@ -82,13 +82,16 @@ Background materials and references.
 - **Hardlink:** `.workflow/output/<name>.<format>`
 - **Backups:** `.workflow/run/<name>/output-TIMESTAMP.<format>`
 
-## Notes
+## Path Handling
 
-- Directory paths are expanded non-recursively
-- All supported files in a directory are included
-- Duplicate paths are ignored
-- Inputs take precedence over context if same path appears in both
-- For batch processing, use [`wfw batch`](batch.md) instead
+- **Relative paths:** Resolved from current working directory
+- **Absolute paths:** Used directly (access files anywhere on filesystem)
+- **Directory paths:** Expanded non-recursively to supported files
+- **Glob patterns:** Shell-expanded before passing to WireFlow (quote to prevent early expansion)
+
+Duplicate paths are deduplicated. Inputs take precedence over context if the same path appears in both.
+
+For batch processing, use [`wfw batch`](batch.md) instead.
 
 ## Examples
 

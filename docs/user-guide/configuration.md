@@ -166,9 +166,20 @@ OPENAI_MODEL_DEEP="qwen2.5-72b"
 
 | Variable | Description | Scope |
 |----------|-------------|-------|
-| `CONTEXT` | Context file paths (globs expand at source time) | Project, Workflow |
-| `INPUT` | Input file paths (globs expand at source time) | Workflow |
+| `CONTEXT` | Context file paths | Project, Workflow |
+| `INPUT` | Input file paths | Workflow |
 | `DEPENDS_ON` | Workflow dependencies | Workflow |
+
+**Path types accepted:** Relative paths (project-root relative), absolute paths, directory paths, and glob patterns (expand at source time). See [Path Specification](context.md#path-specification) for details.
+
+```bash
+# Examples
+CONTEXT=(docs/notes.md)                    # Relative file
+CONTEXT=(/tmp/shared/reference.pdf)        # Absolute file
+CONTEXT=(data/)                            # Directory (non-recursive)
+CONTEXT=(data/*.csv notes/**/*.md)         # Glob patterns
+INPUT=(/external/data.csv local-report.md) # Mixed paths
+```
 
 ## CLI Flags
 

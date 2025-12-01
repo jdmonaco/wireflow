@@ -1191,6 +1191,25 @@ aggregate_context() {
         fi
     }
 
+    # Helper function: resolve config path (may be relative to project_root or absolute)
+    # and expand directories to individual files
+    # Arguments: $1 - path from config array
+    # Output: resolved file paths (one per line)
+    resolve_config_path() {
+        local path="$1"
+        local resolved_path
+
+        # Handle absolute vs relative paths
+        if [[ "$path" == /* ]]; then
+            resolved_path="$path"
+        else
+            resolved_path="$project_root/$path"
+        fi
+
+        # Delegate to expand_path_to_files for file/directory handling
+        expand_path_to_files "$resolved_path"
+    }
+
     # Associative arrays for deduplication (keys are absolute paths)
     declare -A seen_input_files=()
     declare -A seen_context_files=()
@@ -1213,18 +1232,22 @@ aggregate_context() {
     # Order: Config CONTEXT → CLI_CONTEXT_PATHS
     # =============================================================================
 
-    # Run mode: Add files from config CONTEXT array (project-relative, already glob-expanded)
+    # Run mode: Add files from config CONTEXT array
+    # Supports: relative paths (project-relative), absolute paths, directories
     if [[ "$mode" == "run" && ${#CONTEXT[@]} -gt 0 ]]; then
         echo "  Adding context files from config..."
-        for file in "${CONTEXT[@]}"; do
-            local resolved_file="$project_root/$file"
-            if [[ ! -f "$resolved_file" ]]; then
-                echo "Warning: Context file not found: $file (resolved: $resolved_file)" >&2
-                continue
-            fi
-
-            # Build and track document block
-            build_and_track_document_block "$resolved_file" "context" "$ENABLE_CITATIONS" "doc_index" "" "" "$project_root" "$workflow_dir"
+        for path in "${CONTEXT[@]}"; do
+            while IFS= read -r resolved_file; do
+                [[ -z "$resolved_file" ]] && continue
+                local abs_path
+                abs_path=$(realpath "$resolved_file" 2>/dev/null) || abs_path="$resolved_file"
+                # Skip if already seen (deduplication)
+                if [[ -z "${seen_context_files[$abs_path]:-}" ]]; then
+                    seen_context_files[$abs_path]=1
+                    # Build and track document block
+                    build_and_track_document_block "$resolved_file" "context" "$ENABLE_CITATIONS" "doc_index" "" "" "$project_root" "$workflow_dir"
+                fi
+            done < <(resolve_config_path "$path")
         done
     fi
 
@@ -1268,18 +1291,22 @@ aggregate_context() {
     # Note: CLI_INPUT_PATHS processed first to establish precedence over context
     # =============================================================================
 
-    # Run mode: Add files from config INPUT array (project-relative, already glob-expanded)
+    # Run mode: Add files from config INPUT array
+    # Supports: relative paths (project-relative), absolute paths, directories
     if [[ "$mode" == "run" && ${#INPUT[@]} -gt 0 ]]; then
         echo "  Adding input files from config..."
-        for file in "${INPUT[@]}"; do
-            local resolved_file="$project_root/$file"
-            if [[ ! -f "$resolved_file" ]]; then
-                echo "Warning: Input file not found: $file (resolved: $resolved_file)" >&2
-                continue
-            fi
-
-            # Build and track document block
-            build_and_track_document_block "$resolved_file" "input" "$ENABLE_CITATIONS" "doc_index" "" "" "$project_root" "$workflow_dir"
+        for path in "${INPUT[@]}"; do
+            while IFS= read -r resolved_file; do
+                [[ -z "$resolved_file" ]] && continue
+                local abs_path
+                abs_path=$(realpath "$resolved_file" 2>/dev/null) || abs_path="$resolved_file"
+                # Skip if already seen (deduplication)
+                if [[ -z "${seen_input_files[$abs_path]:-}" ]]; then
+                    seen_input_files[$abs_path]=1
+                    # Build and track document block
+                    build_and_track_document_block "$resolved_file" "input" "$ENABLE_CITATIONS" "doc_index" "" "" "$project_root" "$workflow_dir"
+                fi
+            done < <(resolve_config_path "$path")
         done
     fi
 

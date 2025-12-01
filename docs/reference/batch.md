@@ -65,6 +65,13 @@ Context is shared across all requests.
 | `--dry-run` | `-n` | Save request JSON, open in editor |
 | `--help` | `-h` | Quick help |
 
+## Path Handling
+
+- **Relative paths:** Resolved from current working directory
+- **Absolute paths:** Used directly (access files anywhere on filesystem)
+- **Directory paths:** Expanded non-recursively to supported files
+- **Glob patterns:** Shell-expanded before passing to WireFlow
+
 ## Batch Characteristics
 
 - **Cost:** 50% discount via Message Batches API

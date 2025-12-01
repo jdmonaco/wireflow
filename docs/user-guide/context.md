@@ -108,43 +108,107 @@ Content is assembled in this order:
 5. Images
 6. Task prompt (inline or template)
 
-## Path Resolution
+## Path Specification
+
+Both config files and CLI options accept flexible path specifications for INPUT and CONTEXT. All path types work consistently across both methods.
+
+### Supported Path Types
+
+| Path Type | Config File | CLI Option | Example |
+|-----------|-------------|------------|---------|
+| Relative file | Project-root relative | CWD-relative | `data/notes.md` |
+| Absolute file | Direct resolution | Direct resolution | `/tmp/shared/ref.pdf` |
+| Relative directory | Project-root relative | CWD-relative | `data/` |
+| Absolute directory | Direct resolution | Direct resolution | `/external/docs/` |
+| Glob pattern | Expands from project root | Shell-expands from CWD | `data/*.csv` |
 
 ### Config File Paths
 
-Paths in config files are **relative to project root**. Glob patterns expand when the config is sourced:
+Paths in config files support relative paths (resolved from project root), absolute paths (anywhere on filesystem), and directories (expanded non-recursively):
 
 ```bash
 # In .workflow/config or .workflow/run/<name>/config
-CONTEXT=(notes/analysis.md refs/paper.pdf data/*.csv)
-INPUT=(main-report.pdf reports/*.pdf)
+
+# Relative paths (project-root relative)
+CONTEXT=(notes/analysis.md refs/paper.pdf)
+
+# Absolute paths (external files)
+CONTEXT=(/tmp/shared-docs/reference.pdf /home/user/data/notes.md)
+
+# Directories (expanded to supported files, non-recursive)
+CONTEXT=(docs/ /external/shared-resources/)
+
+# Glob patterns (expand at config source time from project root)
+CONTEXT=(data/*.csv notes/**/*.md)
+
+# Mixed paths
+CONTEXT=(
+    notes/local.md              # Relative file
+    /tmp/external.pdf           # Absolute file
+    data/                       # Relative directory
+    /shared/docs/               # Absolute directory
+    "reports/*.pdf"             # Glob pattern
+)
+
+INPUT=(main-report.pdf /external/data.csv)
 ```
 
 ### CLI Paths
 
-CLI paths are **relative to current directory**:
+CLI paths are resolved relative to your current working directory:
 
 ```bash
 cd /project/subdir
 wfw run analysis -cx local-notes.md
 # Looks for: /project/subdir/local-notes.md
+
+# Relative to CWD
+wfw run analysis -cx data.csv -in report.pdf
+
+# Absolute paths
+wfw run analysis -cx /tmp/external-notes.md
+
+# Directories (expanded non-recursively)
+wfw run analysis -cx docs/ -in /external/data/
+
+# Glob patterns (shell-expands before passing to WireFlow)
+wfw run analysis -cx "data/*.csv" -in "reports/*.pdf"
 ```
 
 ### Glob Patterns
 
 ```bash
-# Single directory
+# Single directory pattern
 -cx "data/*.csv"
 
-# Recursive
+# Recursive pattern
 -cx "notes/**/*.md"
 
-# Multiple directories
+# Multiple directories with brace expansion
 -cx "data/{exp1,exp2}/*"
 
 # In config (globs expand at source time from project root)
 CONTEXT=(data/*.csv notes/**/*.md)
 INPUT=(reports/**/*.pdf)
+```
+
+### Directory Expansion
+
+When a directory path is specified:
+
+- Expansion is **non-recursive** (only immediate children)
+- Only **supported file types** are included (text, PDF, Office, images)
+- Binary files (executables, archives, etc.) are automatically excluded
+
+```bash
+# Directory with mixed content
+data/
+├── results.csv      # ✓ Included (text)
+├── chart.png        # ✓ Included (image)
+├── report.pdf       # ✓ Included (PDF)
+├── archive.zip      # ✗ Excluded (binary)
+└── subdir/          # ✗ Not traversed (non-recursive)
+    └── more.txt     # ✗ Excluded (in subdirectory)
 ```
 
 ## Caching

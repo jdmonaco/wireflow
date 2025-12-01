@@ -58,6 +58,7 @@ nav:
     - wfw open: reference/open.md
     - wfw tasks: reference/tasks.md
     - wfw list: reference/list.md
+    - wfw shell: reference/shell.md
     - wfw help: reference/help.md
 
   - Developer Guide:

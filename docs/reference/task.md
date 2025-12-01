@@ -71,12 +71,18 @@ wfw task <name>|--inline <text> [options] [-- <input>...]
 | `--dry-run` | `-n` | Save API request files and inspect in editor |
 | `--help` | `-h` | Quick help |
 
+## Path Handling
+
+- **Relative paths:** Resolved from current working directory
+- **Absolute paths:** Used directly (access files anywhere on filesystem)
+- **Directory paths:** Expanded non-recursively to supported files
+- **Glob patterns:** Shell-expanded before passing to WireFlow
+
 ## Notes
 
 - Output streams to stdout by default (no persistence)
 - Uses global config only (not project/workflow config)
 - Dependencies (`--depends-on`) not supported
-- Directory paths expanded non-recursively
 
 ## Examples
 
