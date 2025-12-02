@@ -258,7 +258,7 @@ Thinking & Effort Options:
 API Options:
     --temperature, -t <temp>      Override temperature (0.0-1.0)
     --max-tokens <num>            Override max tokens
-    --system, -p <list>           Comma-separated prompt names
+    --system, -p <name>...        System prompts to include
     --format, -f <ext>            Output format (md, txt, json, etc.)
     --enable-citations            Enable Anthropic citations support
     --disable-citations           Disable citations (default)
@@ -321,7 +321,7 @@ Thinking & Effort Options:
 API Options:
     --temperature, -t <temp>      Override temperature
     --max-tokens <num>            Override max tokens
-    --system, -p <list>           Comma-separated prompt names
+    --system, -p <name>...        System prompts to include
     --format, -f <ext>            Output format
     --enable-citations            Enable Anthropic citations support
     --disable-citations           Disable citations (default)
@@ -494,7 +494,7 @@ Thinking & Effort Options:
 API Options:
     --temperature, -t <temp>      Override temperature (0.0-1.0)
     --max-tokens <num>            Override max tokens
-    --system, -p <list>           Comma-separated prompt names
+    --system, -p <name>...        System prompts to include
     --format, -f <ext>            Output format (md, txt, json, etc.)
     --enable-citations            Enable Anthropic citations support
     --disable-citations           Disable citations (default)

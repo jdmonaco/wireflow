@@ -919,10 +919,12 @@ cmd_batch() {
                 ;;
             --system|-p)
                 shift
-                [[ $# -eq 0 ]] && { echo "Error: --system requires argument" >&2; return 1; }
-                IFS=',' read -ra SYSTEM_PROMPTS <<< "$1"
+                [[ $# -eq 0 || "$1" =~ ^- ]] && { echo "Error: --system requires at least one argument" >&2; return 1; }
+                while [[ $# -gt 0 && ! "$1" =~ ^- ]]; do
+                    SYSTEM_PROMPTS+=("$1")
+                    shift
+                done
                 CONFIG_SOURCE_MAP[SYSTEM_PROMPTS]="cli"
-                shift
                 ;;
             --format|-f)
                 shift

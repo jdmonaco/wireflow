@@ -98,17 +98,20 @@ _wireflow_list_prompts_from_dir() {
 
 # Get list of available prompts (with subdirectory support)
 # Lists custom location first, then builtins
+# Filters out 'meta' since it's auto-included
 _wireflow_list_prompts() {
     local builtin_dir="${XDG_CONFIG_HOME:-$HOME/.config}/wireflow/prompts/system"
     local custom_dir="${WIREFLOW_PROMPT_PREFIX:-}"
 
-    # List from custom location first (if set and different from builtin)
-    if [[ -n "$custom_dir" && -d "$custom_dir" && "$custom_dir" != "$builtin_dir" ]]; then
-        _wireflow_list_prompts_from_dir "$custom_dir"
-    fi
+    {
+        # List from custom location first (if set and different from builtin)
+        if [[ -n "$custom_dir" && -d "$custom_dir" && "$custom_dir" != "$builtin_dir" ]]; then
+            _wireflow_list_prompts_from_dir "$custom_dir"
+        fi
 
-    # List from builtin location
-    _wireflow_list_prompts_from_dir "$builtin_dir"
+        # List from builtin location
+        _wireflow_list_prompts_from_dir "$builtin_dir"
+    } | grep -v '^meta$'
 }
 
 # Common API options
@@ -152,7 +155,7 @@ _wireflow_in_multi_value_context() {
         # If we hit an option, check if it's a multi-value one
         [[ "$word" == -* ]] && {
             case "$word" in
-                --context|-cx|--input|-in|--depends-on|-dp)
+                --context|-cx|--input|-in|--depends-on|-dp|--system|-p)
                     return 0  # Yes, in multi-value context
                     ;;
                 *)
@@ -175,6 +178,10 @@ _wireflow_get_multi_value_option() {
                 ;;
             --depends-on|-dp)
                 echo "workflow"
+                return 0
+                ;;
+            --system|-p)
+                echo "prompt"
                 return 0
                 ;;
         esac
@@ -293,7 +300,7 @@ _wireflow_run() {
         return 0
     fi
 
-    # Handle multi-value options (-cx, -in, -dp)
+    # Handle multi-value options (-cx, -in, -dp, -p)
     if [[ "$cur" != -* ]]; then
         case "$prev" in
             --context|-cx|--input|-in)
@@ -302,6 +309,10 @@ _wireflow_run() {
                 ;;
             --depends-on|-dp)
                 COMPREPLY=($(compgen -W "$(_wireflow_list_workflows)" -- "$cur"))
+                return 0
+                ;;
+            --system|-p)
+                COMPREPLY=($(compgen -W "$(_wireflow_list_prompts)" -- "$cur"))
                 return 0
                 ;;
         esac
@@ -317,6 +328,10 @@ _wireflow_run() {
                     ;;
                 workflow)
                     COMPREPLY=($(compgen -W "$(_wireflow_list_workflows)" -- "$cur"))
+                    return 0
+                    ;;
+                prompt)
+                    COMPREPLY=($(compgen -W "$(_wireflow_list_prompts)" -- "$cur"))
                     return 0
                     ;;
             esac
@@ -344,8 +359,7 @@ _wireflow_run() {
             COMPREPLY=($(compgen -W "low medium high" -- "$cur"))
             ;;
         --system|-p)
-            # No completion (comma-separated list)
-            return 0
+            COMPREPLY=($(compgen -W "$(_wireflow_list_prompts)" -- "$cur"))
             ;;
         --format|-f)
             COMPREPLY=($(compgen -W "md txt json html xml" -- "$cur"))
@@ -401,11 +415,15 @@ _wireflow_task() {
         return 0
     fi
 
-    # Handle multi-value options (-cx, -in)
+    # Handle multi-value options (-cx, -in, -p)
     if [[ "$cur" != -* ]]; then
         case "$prev" in
             --context|-cx|--input|-in)
                 _filedir
+                return 0
+                ;;
+            --system|-p)
+                COMPREPLY=($(compgen -W "$(_wireflow_list_prompts)" -- "$cur"))
                 return 0
                 ;;
         esac
@@ -414,10 +432,16 @@ _wireflow_task() {
         if _wireflow_in_multi_value_context; then
             local context_type
             context_type=$(_wireflow_get_multi_value_option)
-            if [[ "$context_type" == "file" ]]; then
-                _filedir
-                return 0
-            fi
+            case "$context_type" in
+                file)
+                    _filedir
+                    return 0
+                    ;;
+                prompt)
+                    COMPREPLY=($(compgen -W "$(_wireflow_list_prompts)" -- "$cur"))
+                    return 0
+                    ;;
+            esac
         fi
     fi
 
@@ -446,7 +470,7 @@ _wireflow_task() {
             COMPREPLY=($(compgen -W "low medium high" -- "$cur"))
             ;;
         --system|-p)
-            return 0
+            COMPREPLY=($(compgen -W "$(_wireflow_list_prompts)" -- "$cur"))
             ;;
         --format|-f)
             COMPREPLY=($(compgen -W "md txt json html xml" -- "$cur"))
@@ -516,7 +540,7 @@ _wireflow_batch() {
     # If batch subcommand was specified, no more completions needed
     [[ -n "$batch_subcmd" ]] && return 0
 
-    # Handle multi-value options for batch submit
+    # Handle multi-value options for batch submit (-cx, -in, -dp, -p)
     if [[ "$cur" != -* ]]; then
         case "$prev" in
             --context|-cx|--input|-in)
@@ -525,6 +549,10 @@ _wireflow_batch() {
                 ;;
             --depends-on|-dp)
                 COMPREPLY=($(compgen -W "$(_wireflow_list_workflows)" -- "$cur"))
+                return 0
+                ;;
+            --system|-p)
+                COMPREPLY=($(compgen -W "$(_wireflow_list_prompts)" -- "$cur"))
                 return 0
                 ;;
         esac
@@ -539,6 +567,10 @@ _wireflow_batch() {
                     ;;
                 workflow)
                     COMPREPLY=($(compgen -W "$(_wireflow_list_workflows)" -- "$cur"))
+                    return 0
+                    ;;
+                prompt)
+                    COMPREPLY=($(compgen -W "$(_wireflow_list_prompts)" -- "$cur"))
                     return 0
                     ;;
             esac
@@ -566,7 +598,7 @@ _wireflow_batch() {
             COMPREPLY=($(compgen -W "low medium high" -- "$cur"))
             ;;
         --system|-p)
-            return 0
+            COMPREPLY=($(compgen -W "$(_wireflow_list_prompts)" -- "$cur"))
             ;;
         --format|-f)
             COMPREPLY=($(compgen -W "md txt json html xml" -- "$cur"))

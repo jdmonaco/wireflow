@@ -78,10 +78,14 @@ parse_common_option() {
             PARSE_CONSUMED=2
             ;;
         --system|-p)
-            [[ $# -eq 0 ]] && { echo "Error: --system requires argument" >&2; return 1; }
-            IFS=',' read -ra SYSTEM_PROMPTS <<< "$1"
+            local orig_count=$#
+            [[ $# -eq 0 || "$1" =~ ^- ]] && { echo "Error: --system requires at least one argument" >&2; return 1; }
+            while [[ $# -gt 0 && ! "$1" =~ ^- ]]; do
+                SYSTEM_PROMPTS+=("$1")
+                shift
+            done
             CONFIG_SOURCE_MAP[SYSTEM_PROMPTS]="cli"
-            PARSE_CONSUMED=2
+            PARSE_CONSUMED=$((1 + orig_count - $#))
             ;;
         --format|-f)
             [[ $# -eq 0 ]] && { echo "Error: --format requires argument" >&2; return 1; }
