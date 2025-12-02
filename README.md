@@ -9,16 +9,18 @@ Version 0.7.1 (pre-release) · [Documentation](https://docs.joemona.co/wireflow/
 - 🎯 **Git-like Discovery:** Run from anywhere in your project tree. WireFlow walks up to find `.workflow/` automatically.
 - 📄 **Native Documents:** PDFs, Office files, images (including HEIC, TIFF, SVG) handled natively with automatic conversion.
 - 📎 **Obsidian Embeds:** `![[file]]` syntax auto-resolves. Embedded images and PDFs become content blocks.
-- 🧠 **Model Profiles:** Switch between `fast`, `balanced`, and `deep` reasoning. Enable extended thinking for complex tasks.
+- 🧠 **Model Profiles:** Switch between `fast`, `balanced`, and `deep` tiers. Enable extended thinking or effort levels for complex tasks.
 - 🔌 **Multi-Provider:** Use Anthropic Claude API or any OpenAI-compatible endpoint (LM Studio, ollama, vLLM).
 - 📦 **Batch Processing:** Process hundreds of documents at 50% cost savings with the Message Batches API.
-- 🔧 **Config Cascade:** Global → project → workflow → CLI. Set once, override where needed.
+- 🔧 **Config Cascade:** Global → ancestors → project → workflow → CLI. Set once, override where needed.
 - 🏗️ **Nested Projects:** Inherit settings from parent projects. Perfect for monorepos.
 - 🔗 **Workflow Chains:** Build pipelines with `--depends-on`. Stale dependencies auto-execute before the target.
 - 📥 **Input vs Context:** Separate primary documents from supporting materials for cleaner prompts.
-- 💰 **90% Cache Savings:** Smart prompt caching puts stable content first. Pay less for repeated runs.
+- 💰 **Prompt Caching:** Smart ordering puts stable content first. Up to 90% savings on cached input tokens.
 - 📚 **Citations:** Enable source attribution with `--enable-citations`. Get references you can verify.
-- ⚡ **Three Modes:** Persistent workflows for iteration, quick `task` mode for one-offs, or `batch` for bulk processing.
+- ⚡ **Three Modes:** Persistent workflows for iteration, quick `task` mode with hierarchical templates, or `batch` for bulk processing.
+- 📺 **Streaming Output:** Watch responses generate in real-time with incremental Markdown rendering in the terminal.
+- 🐚 **Shell Integration:** Bash completion, project-aware prompt (`__wfw_ps1`), and streamlined CLI.
 - 💾 **Safe Outputs:** Timestamped backups, hardlinked copies, atomic writes. Never lose work.
 
 ## Quick Start
