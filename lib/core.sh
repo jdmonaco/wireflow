@@ -1066,20 +1066,18 @@ EOF
         fi
     fi
 
-    # Check PS1/__wfw_ps1 status
+    # Check __wfw_ps1 function availability
+    # Note: Can't check PS1 directly since it's not exported to subprocesses
     echo ""
-    if [[ "$PS1" == *'__wfw_ps1'* ]]; then
-        echo "Prompt: __wfw_ps1 is in PS1"
-        if type -t __wfw_ps1 &>/dev/null; then
-            echo "  Function: defined"
-        else
-            echo "  Warning: __wfw_ps1 not defined in current shell"
-            echo "  Add to ~/.bashrc: source $prompt_target"
-        fi
+    if type -t __wfw_ps1 &>/dev/null; then
+        echo "Prompt: __wfw_ps1 function is available"
+        echo "  (PS1 integration cannot be verified from subprocess)"
     else
-        echo "Prompt: __wfw_ps1 not in PS1 (optional)"
-        echo "  To enable: source $prompt_target"
-        echo "  Then: export PS1='\\w\$(__wfw_ps1 \" (%s)\")\\$ '"
+        echo "Prompt: __wfw_ps1 not loaded (optional)"
+        echo "  To enable, add to ~/.bashrc:"
+        echo "    source $prompt_target"
+        echo "    # Then add to your PS1, e.g.:"
+        echo "    # PS1='\\w\$(__wfw_ps1 \" (%s)\")\\$ '"
     fi
 }
 
