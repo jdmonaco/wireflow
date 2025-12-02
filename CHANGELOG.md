@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - 2025-12-01
+
+### Added
+- Streaming markdown renderer for terminal output using rich library (b82b2a0)
+- New `lib/output.sh` module with FIFO-based renderer lifecycle management
+- `bin/md-render` Python script with uv auto-dependency management (PEP 723)
+- Unit tests for output.sh renderer functions
+
+### Changed
+- Streaming console output now displays formatted markdown in terminal mode
+- Piped/redirected output passes through raw markdown unchanged
+- Extended thinking blocks bypass renderer, keep ANSI dim formatting
+
 ## [0.7.0] - 2025-12-01
 
 ### Added

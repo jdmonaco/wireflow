@@ -1,5 +1,39 @@
 # Release Notes
 
+## Version 0.7.1 (2025-12-01)
+
+**Rich Markdown Rendering for Streaming Output**
+
+This release adds a streaming markdown renderer that formats API responses in real-time when running in a terminal.
+
+### ✨ Formatted Terminal Output
+
+Streaming responses now display with rich markdown formatting:
+
+- **Headers** styled with color-coded levels
+- **Code blocks** with syntax highlighting
+- **Lists, bold, italic** properly rendered
+- **Thinking blocks** displayed dimmed (bypass renderer)
+
+The renderer activates automatically when stdout is a terminal. Piped or redirected output remains raw markdown for compatibility with tools like `mdformat`.
+
+### 🔧 Zero-Config Dependencies
+
+The renderer uses Python's `rich` library with automatic installation via `uv`:
+
+- First run: ~1-2 second delay as `uv` caches `rich`
+- Subsequent runs: instant startup
+- Fallback: raw output with helpful tip if `uv` not available
+
+### 📦 Technical Details
+
+- FIFO-based architecture for reliable streaming through subshells
+- Works with both Anthropic and OpenAI providers
+- New `lib/output.sh` module with `init_md_renderer()`, `stream_to_console()`, `cleanup_md_renderer()`
+- Renderer script at `bin/md-render` using PEP 723 inline metadata
+
+---
+
 ## Version 0.7.0 (2025-12-01)
 
 **Multi-Provider Support: Run Local LLMs with OpenAI-Compatible APIs**
