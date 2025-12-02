@@ -578,7 +578,7 @@ extract_task_description() {
     echo "$description"
 }
 
-# List tasks from a directory
+# List tasks from a directory (with subdirectory support)
 # Arguments:
 #   $1 - Directory path
 #   $2 - Section title (optional)
@@ -590,21 +590,21 @@ list_tasks_from_dir() {
 
     [[ ! -d "$dir" ]] && return 1
 
-    local -a task_files=("$dir"/*.txt)
-    [[ ! -e "${task_files[0]}" ]] && return 1
+    # Find .txt files up to 3 levels deep
+    local -a task_files
+    mapfile -t task_files < <(find "$dir" -maxdepth 3 -name "*.txt" -type f 2>/dev/null | sort)
+    [[ ${#task_files[@]} -eq 0 ]] && return 1
 
-    # Adapt column width for task names (minimum 15)
-    local namelen
+    # Calculate column width for task names (relative paths)
     local maxlen=0
     local minwidth=12
     for file in "${task_files[@]}"; do
-        base="$(basename "$file")"
-        namelen="$(echo "${base%.txt}" | wc -m)"
-        if [[ $namelen -gt $maxlen ]]; then
-            maxlen=$namelen
-        fi
+        local relpath="${file#$dir/}"
+        local taskname="${relpath%.txt}"
+        local namelen=${#taskname}
+        [[ $namelen -gt $maxlen ]] && maxlen=$namelen
     done
-    namejust=$(test $maxlen -lt $minwidth && echo $minwidth || echo $maxlen)
+    local namejust=$((maxlen < minwidth ? minwidth : maxlen))
 
     # Print section title if provided
     if [[ -n "$title" ]]; then
@@ -612,9 +612,10 @@ list_tasks_from_dir() {
         echo
     fi
 
-    # List each task with description
+    # List each task with description (using relative path as name)
     for task_file in "${task_files[@]}"; do
-        local task_name=$(basename "$task_file" .txt)
+        local relpath="${task_file#$dir/}"
+        local task_name="${relpath%.txt}"
         local description=$(extract_task_description "$task_file")
         printf "  %-${namejust}s %s\n" "$task_name" "$description"
     done

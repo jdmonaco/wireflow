@@ -56,18 +56,31 @@ _wireflow_list_workflows() {
     find "$run_dir" -mindepth 1 -maxdepth 1 -type d -exec basename {} \;
 }
 
-# Get list of available tasks
+# Helper: List tasks from a directory with subdirectory support
+_wireflow_list_tasks_from_dir() {
+    local dir="$1"
+    [[ ! -d "$dir" ]] && return
+
+    # Find .txt files up to 3 levels deep, output relative paths without .txt
+    find "$dir" -maxdepth 3 -name "*.txt" -type f 2>/dev/null | while read -r file; do
+        local relpath="${file#$dir/}"
+        echo "${relpath%.txt}"
+    done
+}
+
+# Get list of available tasks (with subdirectory support)
+# Lists custom location first, then builtins
 _wireflow_list_tasks() {
     local builtin_dir="${XDG_CONFIG_HOME:-$HOME/.config}/wireflow/prompts/tasks"
     local custom_dir="${WIREFLOW_TASK_PREFIX:-}"
 
-    # List from builtin location
-    [[ -d "$builtin_dir" ]] && find "$builtin_dir" -name "*.txt" -exec basename {} .txt \;
-
-    # List from custom location if set and different
+    # List from custom location first (if set and different from builtin)
     if [[ -n "$custom_dir" && -d "$custom_dir" && "$custom_dir" != "$builtin_dir" ]]; then
-        find "$custom_dir" -name "*.txt" -exec basename {} .txt \;
+        _wireflow_list_tasks_from_dir "$custom_dir"
     fi
+
+    # List from builtin location
+    _wireflow_list_tasks_from_dir "$builtin_dir"
 }
 
 # Common API options
@@ -83,14 +96,24 @@ _wireflow_input_options() {
     echo "--input -in --context -cx"
 }
 
-# Common execution options
-_wireflow_execution_options() {
-    echo "--stream -s --no-stream -b --count-tokens --dry-run -n"
+# Run-mode execution options (streaming is opt-in, no --no-stream)
+_wireflow_run_execution_options() {
+    echo "--stream -s --count-tokens --dry-run -n"
+}
+
+# Task-mode execution options (streaming is default, --no-stream available)
+_wireflow_task_execution_options() {
+    echo "--stream -s --no-stream --count-tokens --dry-run -n"
+}
+
+# Batch-mode execution options (no streaming at all)
+_wireflow_batch_execution_options() {
+    echo "--count-tokens --dry-run -n"
 }
 
 # Run-specific options
 _wireflow_run_options() {
-    echo "--depends-on -dp --export -ex --force --no-auto-deps"
+    echo "--depends-on -dp --export -ex --no-auto-deps"
 }
 
 # Check if we're in a multi-value option context (-cx, -in, -dp)
@@ -128,6 +151,15 @@ _wireflow_get_multi_value_option() {
                 ;;
         esac
         [[ "${words[i]}" == -* ]] && break
+    done
+    return 1
+}
+
+# Check if we're after a '--' separator (input paths only, no options)
+_wireflow_after_double_dash() {
+    local i
+    for ((i=1; i<cword; i++)); do
+        [[ "${words[i]}" == "--" ]] && return 0
     done
     return 1
 }
@@ -197,6 +229,12 @@ _wireflow_config() {
 }
 
 _wireflow_run() {
+    # Early return for paths after --
+    if _wireflow_after_double_dash; then
+        _filedir
+        return 0
+    fi
+
     local workflow_specified=false
     local i
 
@@ -218,7 +256,7 @@ _wireflow_run() {
     if ! $workflow_specified; then
         # First arg: complete workflow names
         if [[ "$cur" == -* ]]; then
-            local opts="$(_wireflow_api_options) $(_wireflow_input_options) $(_wireflow_execution_options) $(_wireflow_run_options)"
+            local opts="$(_wireflow_api_options) $(_wireflow_input_options) $(_wireflow_run_execution_options) $(_wireflow_run_options)"
             opts="$opts --help -h"
             COMPREPLY=($(compgen -W "$opts" -- "$cur"))
         else
@@ -289,7 +327,7 @@ _wireflow_run() {
             ;;
         *)
             if [[ "$cur" == -* ]]; then
-                local opts="$(_wireflow_api_options) $(_wireflow_input_options) $(_wireflow_execution_options) $(_wireflow_run_options)"
+                local opts="$(_wireflow_api_options) $(_wireflow_input_options) $(_wireflow_run_execution_options) $(_wireflow_run_options)"
                 opts="$opts --help -h"
                 COMPREPLY=($(compgen -W "$opts" -- "$cur"))
             fi
@@ -298,6 +336,12 @@ _wireflow_run() {
 }
 
 _wireflow_task() {
+    # Early return for paths after --
+    if _wireflow_after_double_dash; then
+        _filedir
+        return 0
+    fi
+
     local task_specified=false
     local i
 
@@ -384,7 +428,7 @@ _wireflow_task() {
             ;;
         *)
             if [[ "$cur" == -* ]]; then
-                local opts="$(_wireflow_api_options) $(_wireflow_input_options) $(_wireflow_execution_options)"
+                local opts="$(_wireflow_api_options) $(_wireflow_input_options) $(_wireflow_task_execution_options)"
                 opts="$opts --export -ex --help -h"
                 COMPREPLY=($(compgen -W "$opts" -- "$cur"))
             fi
@@ -393,6 +437,12 @@ _wireflow_task() {
 }
 
 _wireflow_batch() {
+    # Early return for paths after --
+    if _wireflow_after_double_dash; then
+        _filedir
+        return 0
+    fi
+
     local batch_subcmd=""
     local workflow_specified=false
     local i
@@ -498,7 +548,7 @@ _wireflow_batch() {
             ;;
         *)
             if [[ "$cur" == -* ]]; then
-                local opts="$(_wireflow_api_options) $(_wireflow_input_options) $(_wireflow_execution_options) $(_wireflow_run_options)"
+                local opts="$(_wireflow_api_options) $(_wireflow_input_options) $(_wireflow_batch_execution_options) $(_wireflow_run_options)"
                 opts="$opts --help -h"
                 COMPREPLY=($(compgen -W "$opts" -- "$cur"))
             fi
