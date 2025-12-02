@@ -286,6 +286,10 @@ anthropic_execute_stream() {
     # Initialize output file
     > "${params[output_file]}"
 
+    # Initialize markdown renderer for terminal output
+    init_md_renderer
+    trap cleanup_md_renderer EXIT
+
     # Use error flag file to communicate from pipeline subshell
     # Empty file = no error; write to it on error
     local error_flag="$(mktemp)"
@@ -331,7 +335,7 @@ anthropic_execute_stream() {
                         # Extract and print text incrementally
                         delta_text=$(echo "$json_data" | jq -r '.delta.text // empty')
                         if [[ -n "$delta_text" ]]; then
-                            printf '%s' "$delta_text"
+                            stream_to_console "$delta_text"
                             printf '%s' "$delta_text" >> "${params[output_file]}"
                         fi
                     elif [[ "$delta_type" == "thinking_delta" ]]; then
@@ -353,10 +357,10 @@ anthropic_execute_stream() {
                     ;;
                 "content_block_stop")
                     # Add newline between blocks
-                    printf '\n'
+                    stream_to_console $'\n'
                     ;;
                 "message_stop")
-                    printf '\n'
+                    stream_to_console $'\n'
                     ;;
                 "error")
                     echo ""
@@ -371,10 +375,14 @@ anthropic_execute_stream() {
 
     # Check if error occurred in pipeline (non-empty file = error)
     if [[ -s "$error_flag" ]]; then
+        cleanup_md_renderer
         rm -f "$error_flag"
         return 1
     fi
     rm -f "$error_flag"
+
+    # Cleanup renderer before status messages
+    cleanup_md_renderer
 
     echo ""
     echo "---"

@@ -303,6 +303,10 @@ openai_execute_stream() {
     # Initialize output file
     > "${params[output_file]}"
 
+    # Initialize markdown renderer for terminal output
+    init_md_renderer
+    trap cleanup_md_renderer EXIT
+
     # Use error flag file to communicate from pipeline subshell
     local error_flag
     error_flag=$(mktemp)
@@ -343,7 +347,7 @@ openai_execute_stream() {
             delta_content=$(echo "$json_data" | jq -r '.choices[0].delta.content // empty')
 
             if [[ -n "$delta_content" ]]; then
-                printf '%s' "$delta_content"
+                stream_to_console "$delta_content"
                 printf '%s' "$delta_content" >> "${params[output_file]}"
             fi
 
@@ -352,17 +356,21 @@ openai_execute_stream() {
             finish_reason=$(echo "$json_data" | jq -r '.choices[0].finish_reason // empty')
 
             if [[ "$finish_reason" == "stop" ]]; then
-                printf '\n'
+                stream_to_console $'\n'
             fi
         fi
     done
 
     # Check if error occurred in pipeline
     if [[ -s "$error_flag" ]]; then
+        cleanup_md_renderer
         rm -f "$error_flag"
         return 1
     fi
     rm -f "$error_flag"
+
+    # Cleanup renderer before status messages
+    cleanup_md_renderer
 
     echo ""
     echo "---"

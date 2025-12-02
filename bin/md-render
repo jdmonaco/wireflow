@@ -1,0 +1,95 @@
+#!/usr/bin/env -S uv run --quiet --script
+# /// script
+# requires-python = ">=3.10"
+# dependencies = ["rich"]
+# ///
+"""Streaming markdown renderer. Requires: pip install rich"""
+
+import sys
+import select
+import re
+import time
+from rich.console import Console
+from rich.markdown import Markdown
+
+console = Console()
+
+def has_input(timeout=0.01):
+    r, _, _ = select.select([sys.stdin], [], [], timeout)
+    return bool(r)
+
+def split_blocks(text):
+    blocks, current, in_code = [], [], False
+    for line in text.split('\n'):
+        if line.startswith('```'):
+            in_code = not in_code
+        if line == '' and not in_code and current:
+            blocks.append('\n'.join(current))
+            current = []
+        else:
+            current.append(line)
+    pending = '\n'.join(current) if current else ''
+    if blocks:
+        pending = blocks[-1] + '\n\n' + pending if pending else blocks[-1]
+        blocks = blocks[:-1]
+    return blocks, pending
+
+def is_heading(block):
+    match = re.match(r'^(#{1,6})\s+(.+)$', block.strip())
+    return (len(match.group(1)), match.group(2)) if match else None
+
+def render_block(block):
+    block = block.strip()
+    if not block:
+        return
+    heading = is_heading(block)
+    if heading:
+        styles = {1: "bold cyan", 2: "bold yellow", 3: "bold green",
+                  4: "bold blue", 5: "bold magenta", 6: "bold white"}
+        console.print()
+        console.print(f"{'#' * heading[0]} {heading[1]}", style=styles.get(heading[0], "bold"))
+        console.print()
+        return
+    try:
+        console.print(Markdown(block))
+    except Exception:
+        console.print(block)
+
+def main():
+    full_text, rendered_count, last_pending = "", 0, ""
+    try:
+        while True:
+            if has_input():
+                char = sys.stdin.read(1)
+                if not char:
+                    break
+                full_text += char
+                if char == '\n':
+                    finalized, pending = split_blocks(full_text)
+                    for i, block in enumerate(finalized):
+                        if i >= rendered_count and block.strip():
+                            if last_pending:
+                                sys.stdout.write(f"\033[{last_pending.count(chr(10))+1}A\033[J")
+                                sys.stdout.flush()
+                                last_pending = ""
+                            render_block(block)
+                            rendered_count += 1
+                    if pending.strip() and pending != last_pending:
+                        if last_pending:
+                            sys.stdout.write(f"\033[{last_pending.count(chr(10))+1}A\033[J")
+                            sys.stdout.flush()
+                        console.print(pending, style="dim")
+                        last_pending = pending
+            else:
+                time.sleep(0.001)
+        if last_pending:
+            sys.stdout.write(f"\033[{last_pending.count(chr(10))+1}A\033[J")
+            sys.stdout.flush()
+        _, pending = split_blocks(full_text)
+        if pending.strip():
+            render_block(pending)
+    except (KeyboardInterrupt, BrokenPipeError):
+        pass
+
+if __name__ == '__main__':
+    main()
