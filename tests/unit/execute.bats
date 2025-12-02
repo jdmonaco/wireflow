@@ -103,10 +103,10 @@ EOF
 }
 
 # ============================================================================
-# resolve_system_dependencies tests
+# collect_all_dependencies tests (system prompts)
 # ============================================================================
 
-@test "resolve_system_dependencies: returns empty for no deps" {
+@test "collect_all_dependencies: returns component for no deps" {
     # Create component with no dependencies
     mkdir -p "$WIREFLOW_PROMPT_PREFIX/core"
     cat > "$WIREFLOW_PROMPT_PREFIX/core/simple.txt" <<'EOF'
@@ -119,12 +119,16 @@ EOF
 </system-component>
 EOF
 
-    run resolve_system_dependencies "core/simple"
+    declare -A TEST_TRACKER=()
+    run collect_all_dependencies "TEST_TRACKER" \
+        "WIREFLOW_PROMPT_PREFIX" "BUILTIN_WIREFLOW_PROMPT_PREFIX" \
+        "core/simple"
     assert_success
-    assert_output ""
+    # Should output the component itself (topological order: component after deps)
+    assert_output "core/simple"
 }
 
-@test "resolve_system_dependencies: resolves single dependency" {
+@test "collect_all_dependencies: resolves single dependency" {
     # Create base component (no deps)
     mkdir -p "$WIREFLOW_PROMPT_PREFIX/core"
     cat > "$WIREFLOW_PROMPT_PREFIX/core/base.txt" <<'EOF'
@@ -151,12 +155,17 @@ EOF
 </system-component>
 EOF
 
-    run resolve_system_dependencies "core/derived"
+    declare -A TEST_TRACKER=()
+    run collect_all_dependencies "TEST_TRACKER" \
+        "WIREFLOW_PROMPT_PREFIX" "BUILTIN_WIREFLOW_PROMPT_PREFIX" \
+        "core/derived"
     assert_success
-    assert_output "core/base"
+    # Topological order: base first, then derived
+    assert_line --index 0 "core/base"
+    assert_line --index 1 "core/derived"
 }
 
-@test "resolve_system_dependencies: resolves dependency chain" {
+@test "collect_all_dependencies: resolves dependency chain" {
     # Create chain: level3 -> level2 -> level1
     mkdir -p "$WIREFLOW_PROMPT_PREFIX/chain"
 
@@ -199,14 +208,18 @@ EOF
 </system-component>
 EOF
 
-    run resolve_system_dependencies "chain/level3"
+    declare -A TEST_TRACKER=()
+    run collect_all_dependencies "TEST_TRACKER" \
+        "WIREFLOW_PROMPT_PREFIX" "BUILTIN_WIREFLOW_PROMPT_PREFIX" \
+        "chain/level3"
     assert_success
-    # Should resolve in order: level1, level2 (transitive deps first)
+    # Topological order: level1, level2, level3
     assert_line --index 0 "chain/level1"
     assert_line --index 1 "chain/level2"
+    assert_line --index 2 "chain/level3"
 }
 
-@test "resolve_system_dependencies: handles circular dependency" {
+@test "collect_all_dependencies: handles circular dependency" {
     # Create circular: comp-a -> comp-b -> comp-a
     mkdir -p "$WIREFLOW_PROMPT_PREFIX/circular"
 
@@ -237,17 +250,81 @@ EOF
 EOF
 
     # Should complete without infinite loop
-    run resolve_system_dependencies "circular/comp-a"
+    declare -A TEST_TRACKER=()
+    run collect_all_dependencies "TEST_TRACKER" \
+        "WIREFLOW_PROMPT_PREFIX" "BUILTIN_WIREFLOW_PROMPT_PREFIX" \
+        "circular/comp-a"
     assert_success
     # Output should be bounded (no infinite recursion)
     assert [ "${#output}" -lt 1000 ]
 }
 
+@test "collect_all_dependencies: deduplicates shared dependencies" {
+    # This tests the core bug fix: multiple components sharing a dependency
+    # Previously, shared deps would appear multiple times
+    mkdir -p "$WIREFLOW_PROMPT_PREFIX/core"
+    mkdir -p "$WIREFLOW_PROMPT_PREFIX/feature"
+
+    # Shared dependency
+    cat > "$WIREFLOW_PROMPT_PREFIX/core/shared.txt" <<'EOF'
+<system-component>
+  <metadata>
+    <name>shared</name>
+    <version>1.0</version>
+  </metadata>
+  <content>Shared component</content>
+</system-component>
+EOF
+
+    # Feature A depends on shared
+    cat > "$WIREFLOW_PROMPT_PREFIX/feature/a.txt" <<'EOF'
+<system-component>
+  <metadata>
+    <name>feature-a</name>
+    <version>1.0</version>
+    <dependencies>
+      <dependency>core/shared</dependency>
+    </dependencies>
+  </metadata>
+  <content>Feature A</content>
+</system-component>
+EOF
+
+    # Feature B also depends on shared
+    cat > "$WIREFLOW_PROMPT_PREFIX/feature/b.txt" <<'EOF'
+<system-component>
+  <metadata>
+    <name>feature-b</name>
+    <version>1.0</version>
+    <dependencies>
+      <dependency>core/shared</dependency>
+    </dependencies>
+  </metadata>
+  <content>Feature B</content>
+</system-component>
+EOF
+
+    # Resolve both features - shared should appear only ONCE
+    declare -A TEST_TRACKER=()
+    run collect_all_dependencies "TEST_TRACKER" \
+        "WIREFLOW_PROMPT_PREFIX" "BUILTIN_WIREFLOW_PROMPT_PREFIX" \
+        "feature/a" "feature/b"
+    assert_success
+
+    # Count occurrences of core/shared - should be exactly 1
+    local count=$(echo "$output" | grep -c "^core/shared$")
+    assert [ "$count" -eq 1 ]
+
+    # Should have exactly 3 lines: core/shared, feature/a, feature/b
+    local lines=$(echo "$output" | wc -l | tr -d ' ')
+    assert [ "$lines" -eq 3 ]
+}
+
 # ============================================================================
-# resolve_task_dependencies tests
+# collect_all_dependencies tests (tasks)
 # ============================================================================
 
-@test "resolve_task_dependencies: resolves single dependency" {
+@test "collect_all_dependencies: resolves task single dependency" {
     # Create base task (no deps)
     mkdir -p "$WIREFLOW_TASK_PREFIX/base"
     cat > "$WIREFLOW_TASK_PREFIX/base/task.txt" <<'EOF'
@@ -274,13 +351,17 @@ EOF
 </user-task>
 EOF
 
-    run resolve_task_dependencies "base/derived"
+    declare -A TEST_TRACKER=()
+    run collect_all_dependencies "TEST_TRACKER" \
+        "WIREFLOW_TASK_PREFIX" "BUILTIN_WIREFLOW_TASK_PREFIX" \
+        "base/derived"
     assert_success
-    # Output contains the dependency (may have extra whitespace from recursive calls)
-    assert_output --partial "base/task"
+    # Topological order: base/task first, then base/derived
+    assert_line --index 0 "base/task"
+    assert_line --index 1 "base/derived"
 }
 
-@test "resolve_task_dependencies: resolves chain" {
+@test "collect_all_dependencies: resolves task chain" {
     # Create chain: task3 -> task2 -> task1
     mkdir -p "$WIREFLOW_TASK_PREFIX/chain"
 
@@ -320,14 +401,18 @@ EOF
 </user-task>
 EOF
 
-    run resolve_task_dependencies "chain/task3"
+    declare -A TEST_TRACKER=()
+    run collect_all_dependencies "TEST_TRACKER" \
+        "WIREFLOW_TASK_PREFIX" "BUILTIN_WIREFLOW_TASK_PREFIX" \
+        "chain/task3"
     assert_success
-    # Verifies recursive resolution completes and finds dependencies
-    # Note: resolve_task_dependencies outputs deps at each recursion level
-    assert_output --partial "chain/task1"
+    # Topological order: task1, task2, task3
+    assert_line --index 0 "chain/task1"
+    assert_line --index 1 "chain/task2"
+    assert_line --index 2 "chain/task3"
 }
 
-@test "resolve_task_dependencies: handles circular dependency" {
+@test "collect_all_dependencies: handles task circular dependency" {
     # Create circular: task-x -> task-y -> task-x
     mkdir -p "$WIREFLOW_TASK_PREFIX/circular"
 
@@ -358,7 +443,10 @@ EOF
 EOF
 
     # Should complete without infinite loop
-    run resolve_task_dependencies "circular/task-x"
+    declare -A TEST_TRACKER=()
+    run collect_all_dependencies "TEST_TRACKER" \
+        "WIREFLOW_TASK_PREFIX" "BUILTIN_WIREFLOW_TASK_PREFIX" \
+        "circular/task-x"
     assert_success
     # Output should be bounded (no infinite recursion)
     assert [ "${#output}" -lt 1000 ]

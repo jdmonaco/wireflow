@@ -115,10 +115,6 @@ parse_common_option() {
 # System Prompt Building
 # =============================================================================
 
-# Track loaded dependencies to prevent duplicates
-declare -A LOADED_SYSTEM_DEPS
-declare -A LOADED_TASK_DEPS
-
 # Find component file with fallback to builtin
 # Args:
 #   $1 - component_path: Path relative to PREFIX (e.g., "core/user")
@@ -176,121 +172,80 @@ extract_dependencies() {
     ' "$file"
 }
 
-# Resolve system component dependencies recursively
+# =============================================================================
+# Generic Dependency Resolution
+# =============================================================================
+# These functions handle recursive dependency resolution for both system prompts
+# and task templates. They use nameref to avoid subshell variable loss.
+# =============================================================================
+
+# Generic recursive dependency resolver
+# Uses nameref to update tracker in-place, avoiding subshell variable loss.
 # Args:
 #   $1 - component_path: Path to component (e.g., "domains/neuro-ai")
-# Returns:
-#   Prints ordered list of dependencies (excluding already loaded)
+#   $2 - tracker_varname: Name of associative array to track loaded components
+#   $3 - prefix_var: Name of primary prefix variable (e.g., "WIREFLOW_PROMPT_PREFIX")
+#   $4 - builtin_prefix_var: Name of builtin prefix variable
 # Side effect:
-#   Updates LOADED_SYSTEM_DEPS
-resolve_system_dependencies() {
+#   Updates tracker via nameref
+# Output:
+#   Prints dependencies in topological order (deps before dependents)
+resolve_component_dependencies() {
     local component_path="$1"
-    local -a dep_chain=()
+    local -n _tracker="$2"  # nameref to tracker array
+    local prefix_var="$3"
+    local builtin_prefix_var="$4"
 
-    # Ensure LOADED_SYSTEM_DEPS is an associative array (needed for test contexts)
-    if ! declare -p LOADED_SYSTEM_DEPS 2>/dev/null | grep -q '^declare -A'; then
-        declare -gA LOADED_SYSTEM_DEPS=()
-    fi
+    # Skip if already processed (prevents duplicates and circular deps)
+    [[ -n "${_tracker[$component_path]}" ]] && return 0
 
-    # Skip if already loaded (or currently being processed - prevents circular deps)
-    if [[ -n "${LOADED_SYSTEM_DEPS[$component_path]}" ]]; then
-        return 0
-    fi
+    # Mark as processed BEFORE recursing
+    _tracker[$component_path]=1
 
-    # Mark as being processed BEFORE recursing to prevent circular dependency loops
-    LOADED_SYSTEM_DEPS[$component_path]=1
-
-    # Find the component file
-    local file=$(find_component_file "$component_path" \
-                                     "WIREFLOW_PROMPT_PREFIX" \
-                                     "BUILTIN_WIREFLOW_PROMPT_PREFIX")
-
+    # Find component file
+    local file
+    file=$(find_component_file "$component_path" "$prefix_var" "$builtin_prefix_var")
     if [[ -z "$file" ]]; then
         echo "Warning: Component not found: $component_path" >&2
         return 1
     fi
 
-    # Extract its dependencies
+    # Extract and resolve dependencies first (depth-first for topological order)
     local -a deps
     mapfile -t deps < <(extract_dependencies "$file")
-
-    # Recursively resolve each dependency
     for dep in "${deps[@]}"; do
         if [[ -n "$dep" ]]; then
-            # Check if already loaded before recursive call
-            if [[ -z "${LOADED_SYSTEM_DEPS[$dep]}" ]]; then
-                # Get transitive dependencies first
-                local -a transitive_deps
-                mapfile -t transitive_deps < <(resolve_system_dependencies "$dep")
-
-                # Add transitive dependencies to chain
-                for trans_dep in "${transitive_deps[@]}"; do
-                    if [[ -n "$trans_dep" ]]; then
-                        dep_chain+=("$trans_dep")
-                    fi
-                done
-
-                # Add the direct dependency itself
-                dep_chain+=("$dep")
-            fi
+            # Direct recursive call - tracker updates persist via nameref
+            resolve_component_dependencies "$dep" "$2" "$prefix_var" "$builtin_prefix_var"
         fi
     done
 
-    # Output the dependency chain
-    printf '%s\n' "${dep_chain[@]}"
+    # Output this component AFTER its deps (topological order)
+    echo "$component_path"
 }
 
-# Resolve task component dependencies recursively
+# Collect all dependencies for a list of root components
 # Args:
-#   $1 - task_path: Path to task (e.g., "summaries/meeting")
-# Returns:
-#   Prints ordered list of dependencies (excluding already loaded)
-# Side effect:
-#   Updates LOADED_TASK_DEPS
-resolve_task_dependencies() {
-    local task_path="$1"
-    local -a dep_chain=()
+#   $1 - tracker_varname: Name of associative array to use as tracker
+#   $2 - prefix_var: Name of primary prefix variable
+#   $3 - builtin_prefix_var: Name of builtin prefix variable
+#   $4+ - root components to resolve
+# Output:
+#   Prints all components in topological order, deduplicated
+collect_all_dependencies() {
+    local tracker_var="$1"
+    local prefix_var="$2"
+    local builtin_prefix_var="$3"
+    shift 3
 
-    # Ensure LOADED_TASK_DEPS is an associative array (needed for test contexts)
-    if ! declare -p LOADED_TASK_DEPS 2>/dev/null | grep -q '^declare -A'; then
-        declare -gA LOADED_TASK_DEPS=()
-    fi
+    # Reset tracker for fresh resolution
+    local -n _tracker_ref="$tracker_var"
+    _tracker_ref=()
 
-    # Skip if already loaded (or currently being processed - prevents circular deps)
-    if [[ -n "${LOADED_TASK_DEPS[$task_path]}" ]]; then
-        return 0
-    fi
-
-    # Mark as being processed BEFORE recursing to prevent circular dependency loops
-    LOADED_TASK_DEPS[$task_path]=1
-
-    # Find the task file
-    local file=$(find_component_file "$task_path" \
-                                     "WIREFLOW_TASK_PREFIX" \
-                                     "BUILTIN_WIREFLOW_TASK_PREFIX")
-
-    if [[ -z "$file" ]]; then
-        echo "Warning: Task not found: $task_path" >&2
-        return 1
-    fi
-
-    # Extract its dependencies
-    local -a deps
-    mapfile -t deps < <(extract_dependencies "$file")
-
-    # Recursively resolve each dependency
-    for dep in "${deps[@]}"; do
-        if [[ -n "$dep" ]]; then
-            # Only process if not already loaded
-            if [[ -z "${LOADED_TASK_DEPS[$dep]}" ]]; then
-                resolve_task_dependencies "$dep"
-                dep_chain+=("$dep")
-            fi
-        fi
+    # Resolve each root component
+    for component in "$@"; do
+        resolve_component_dependencies "$component" "$tracker_var" "$prefix_var" "$builtin_prefix_var"
     done
-
-    # Output the dependency chain
-    printf '%s\n' "${dep_chain[@]}"
 }
 
 # Build system prompt from SYSTEM_PROMPTS configuration array
@@ -316,9 +271,6 @@ build_system_prompt() {
         return 1
     fi
 
-    # Reset dependency tracker for this build
-    LOADED_SYSTEM_DEPS=()
-
     # FIRST: Add meta prompt block (required, auto-included, not cached)
     local meta_file=$(find_component_file "meta" \
                                           "WIREFLOW_PROMPT_PREFIX" \
@@ -339,24 +291,14 @@ build_system_prompt() {
     fi
 
     # THEN: Build user-specified prompts with dependency resolution and cache control
-    local all_components=()
-
-    # For each component in SYSTEM_PROMPTS, resolve dependencies
-    for component in "${SYSTEM_PROMPTS[@]}"; do
-        # Get dependencies (recursively resolved)
-        local -a deps
-        mapfile -t deps < <(resolve_system_dependencies "$component")
-
-        # Add dependencies to list (already deduped by tracker)
-        for dep in "${deps[@]}"; do
-            if [[ -n "$dep" ]]; then
-                all_components+=("$dep")
-            fi
-        done
-
-        # Add the component itself
-        all_components+=("$component")
-    done
+    # Use generic resolver to collect all components with dependencies (deduplicated)
+    local -A SYSTEM_COMPONENT_TRACKER=()
+    local -a all_components
+    mapfile -t all_components < <(collect_all_dependencies \
+        "SYSTEM_COMPONENT_TRACKER" \
+        "WIREFLOW_PROMPT_PREFIX" \
+        "BUILTIN_WIREFLOW_PROMPT_PREFIX" \
+        "${SYSTEM_PROMPTS[@]}")
 
     echo "Building system prompt from: meta (auto) ${all_components[*]}"
 
@@ -785,8 +727,8 @@ build_prompts() {
     # Build User Message Blocks (for JSON API)
     # =============================================================================
 
-    # Reset task dependency tracker
-    LOADED_TASK_DEPS=()
+    # Task dependency tracker and blocks
+    local -A TASK_COMPONENT_TRACKER=()
     local -a TASK_BLOCKS=()
 
     # Process task with dependency resolution
@@ -801,50 +743,35 @@ build_prompts() {
         local -a task_deps
         mapfile -t task_deps < <(extract_dependencies "$task_source")
 
-        # Resolve dependencies and build blocks for each
-        for dep in "${task_deps[@]}"; do
-            if [[ -n "$dep" ]]; then
-                # Get transitive dependencies
-                local -a transitive_deps
-                mapfile -t transitive_deps < <(resolve_task_dependencies "$dep")
+        # Resolve all dependencies using generic resolver (deduplicated, topological order)
+        if [[ ${#task_deps[@]} -gt 0 ]]; then
+            local -a resolved_deps
+            mapfile -t resolved_deps < <(collect_all_dependencies \
+                "TASK_COMPONENT_TRACKER" \
+                "WIREFLOW_TASK_PREFIX" \
+                "BUILTIN_WIREFLOW_TASK_PREFIX" \
+                "${task_deps[@]}")
 
-                # Add all transitive dependencies first
-                for trans_dep in "${transitive_deps[@]}"; do
-                    if [[ -n "$trans_dep" ]]; then
-                        local dep_file=$(find_component_file "$trans_dep" \
-                                                            "WIREFLOW_TASK_PREFIX" \
-                                                            "BUILTIN_WIREFLOW_TASK_PREFIX")
-                        if [[ -n "$dep_file" && -f "$dep_file" ]]; then
-                            local dep_content=$(<"$dep_file")
-                            local dep_block=$(jq -n \
-                                --arg type "text" \
-                                --arg text "$dep_content" \
-                                '{
-                                    type: $type,
-                                    text: $text
-                                }')
-                            TASK_BLOCKS+=("$dep_block")
-                        fi
+            # Build blocks for each resolved dependency
+            for dep_path in "${resolved_deps[@]}"; do
+                if [[ -n "$dep_path" ]]; then
+                    local dep_file=$(find_component_file "$dep_path" \
+                                                        "WIREFLOW_TASK_PREFIX" \
+                                                        "BUILTIN_WIREFLOW_TASK_PREFIX")
+                    if [[ -n "$dep_file" && -f "$dep_file" ]]; then
+                        local dep_content=$(<"$dep_file")
+                        local dep_block=$(jq -n \
+                            --arg type "text" \
+                            --arg text "$dep_content" \
+                            '{
+                                type: $type,
+                                text: $text
+                            }')
+                        TASK_BLOCKS+=("$dep_block")
                     fi
-                done
-
-                # Add the direct dependency
-                local dep_file=$(find_component_file "$dep" \
-                                                    "WIREFLOW_TASK_PREFIX" \
-                                                    "BUILTIN_WIREFLOW_TASK_PREFIX")
-                if [[ -n "$dep_file" && -f "$dep_file" ]]; then
-                    local dep_content=$(<"$dep_file")
-                    local dep_block=$(jq -n \
-                        --arg type "text" \
-                        --arg text "$dep_content" \
-                        '{
-                            type: $type,
-                            text: $text
-                        }')
-                    TASK_BLOCKS+=("$dep_block")
                 fi
-            fi
-        done
+            done
+        fi
 
         # Get the main task content
         local task_content=$(<"$task_source")
@@ -1568,14 +1495,14 @@ execute_api_request() {
                     --arg model "$effective_model" \
                     --argjson max_tokens "$MAX_TOKENS" \
                     --argjson temperature "$TEMPERATURE" \
-                    --argjson system "$system_blocks_json" \
-                    --argjson user_content "$user_blocks_json" \
+                    --slurpfile system "$temp_system" \
+                    --slurpfile user_content "$temp_user" \
                     '{
                         model: $model,
                         max_tokens: $max_tokens,
                         temperature: $temperature,
-                        system: $system,
-                        messages: [{role: "user", content: $user_content}]
+                        system: $system[0],
+                        messages: [{role: "user", content: $user_content[0]}]
                     }')
 
                 # Add thinking config if enabled
@@ -1709,14 +1636,14 @@ execute_api_request() {
             --arg model "$effective_model" \
             --argjson max_tokens "$MAX_TOKENS" \
             --argjson temperature "$TEMPERATURE" \
-            --argjson system "$system_blocks_json" \
-            --argjson user_content "$user_blocks_json" \
+            --slurpfile system "$temp_system" \
+            --slurpfile user_content "$temp_user" \
             '{
                 model: $model,
                 max_tokens: $max_tokens,
                 temperature: $temperature,
-                system: $system,
-                messages: [{role: "user", content: $user_content}]
+                system: $system[0],
+                messages: [{role: "user", content: $user_content[0]}]
             }')
 
         # Add thinking config if enabled
