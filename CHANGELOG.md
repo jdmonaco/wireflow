@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.2] - 2025-12-02
+
+### Added
+- Full nested project path display in `__wfw_ps1` prompt function (b641032)
+- Ancestor project discovery helper `__wfw_find_ancestor_projects()` in wfw-prompt.sh
+
+### Changed
+- Bash completion overhauled for current CLI options (e8cd517)
+- Task template completion discovers subdirectories up to 3 levels deep
+- Mode-specific execution options (run/task/batch have separate option sets)
+- Custom task templates listed before builtins in completion
+- Key Features documentation updated for accuracy (c1d36ed)
+
+### Fixed
+- Shell doctor now detects `__wfw_ps1` by checking function definition instead of PS1 string (8a1d128)
+- Dry-run output simplified with accurate config source tracking (2350436)
+- Removed stale `--force` and `-b` options from bash completion
+
 ## [0.7.1] - 2025-12-01
 
 ### Added

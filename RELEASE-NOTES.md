@@ -1,5 +1,43 @@
 # Release Notes
 
+## Version 0.7.2 (2025-12-02)
+
+**Shell Integration Polish & Completion Improvements**
+
+This patch release enhances shell integration with improved prompt display for nested projects and modernized bash completion for the current CLI.
+
+### 🐚 Full Nested Project Path in Prompt
+
+The `__wfw_ps1` prompt function now displays the complete ancestor hierarchy for nested projects:
+
+```bash
+# Before (v0.7.1)
+(subproject) $
+
+# After (v0.7.2)
+(root/parent/subproject) $
+```
+
+This provides immediate context about where you are in a multi-level project hierarchy.
+
+### ⌨️ Bash Completion Updates
+
+The completion script has been overhauled for current CLI options:
+
+- **Subdirectory task templates:** Now discovers templates up to 3 levels deep in task directories
+- **Mode-specific options:** Run, task, and batch modes offer their respective flags
+- **Trailing `--` handling:** Input path completion works after double-dash separator
+- **Custom tasks first:** Custom task templates are listed before builtins for faster access
+- **Removed stale options:** `--force` and `-b` flags removed from completions
+
+### 🔧 Fixes
+
+- **Shell doctor detection:** `wfw shell doctor` now correctly detects `__wfw_ps1` availability by checking if the function is defined, rather than searching the PS1 string (which isn't exported to subprocesses)
+- **Dry-run output:** Simplified dry-run display with accurate config source tracking
+- **Documentation accuracy:** Key Features sections updated to reflect actual capabilities
+
+---
+
 ## Version 0.7.1 (2025-12-01)
 
 **Rich Markdown Rendering for Streaming Output**
