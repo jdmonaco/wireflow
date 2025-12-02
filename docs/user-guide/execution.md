@@ -135,7 +135,7 @@ wfw run analysis --dry-run        # Save prompts for inspection
 **Automatic backups:**
 
 ```
-.workflow/run/analysis/output/
+.workflow/run/analysis/
 ├── output.md                   # Latest
 ├── output-20241115143022.md    # Previous
 └── output-20241115141530.md    # Older

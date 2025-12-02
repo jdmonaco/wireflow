@@ -178,7 +178,7 @@ ls -la  # What's here?
 wfw list
 
 # Check has output
-ls .workflow/run/xyz/output/
+ls .workflow/run/xyz/output.*
 
 # Run dependency first
 wfw run xyz --stream
@@ -275,7 +275,7 @@ wfw run analysis --stream 2>&1 | less
 
 ```bash
 # Check output directory
-ls -la .workflow/run/workflow-name/output/
+ls -la .workflow/run/workflow-name/output.*
 
 # Check disk space
 df -h .
@@ -384,8 +384,8 @@ wfw run analysis
 
 # Second run: Creates backup
 wfw run analysis
-ls .workflow/run/analysis/output/
-# Now you'll see <name>-TIMESTAMP.md
+ls .workflow/run/analysis/
+# Now you'll see output.md and output-TIMESTAMP.md
 ```
 
 ## Global Config Issues

@@ -8,7 +8,7 @@ A workflow is a **named, persistent task configuration** stored in `.workflow/ru
 
 - **Task description** (`task.txt`) - The prompt/instructions for the task
 - **Configuration** (`config`) - Workflow-specific settings
-- **Output directory** (`output/`) - Where responses are saved
+- **Output file** (`output.<format>`) - Where responses are saved
 
 ## Creating Workflows
 
@@ -22,46 +22,64 @@ Creates `.workflow/run/analysis-01/` with:
 .workflow/run/analysis-01/
 ├── task.txt          # Your task description
 ├── config            # Workflow config (optional)
-└── output/           # Response outputs (created on first run)
+└── output.md         # Response output (created on first run)
 ```
 
 After creation, use `wfw edit analysis-01` to open the workflow files in your editor.
 
 ### Task.txt Structure
 
-The `task.txt` file uses an optional XML skeleton:
+The `task.txt` file uses an XML skeleton with metadata and content sections:
 
 ```xml
-<description>
-  Brief overview of this workflow's purpose
-</description>
-
-<instructions>
-  Detailed step-by-step instructions or requirements
-</instructions>
-
-<output-format>
-  Specific formatting requirements for the output
-</output-format>
+<user-task>
+  <metadata>
+    <name>workflow-name</name>
+    <version>1.0</version>
+  </metadata>
+  <content>
+    <description>
+      Brief 1-2 sentence overview of this workflow's purpose
+    </description>
+    <guidance>
+      High-level strategic guidance for approaching this task
+    </guidance>
+    <instructions>
+      Detailed step-by-step instructions or requirements
+    </instructions>
+    <output-format>
+      Specific formatting requirements or structure for the output
+    </output-format>
+  </content>
+</user-task>
 ```
 
 **Example:**
 
 ```xml
-<description>
-  Analyze a dataset and create a summary report
-</description>
-
-<instructions>
-  1. Data overview (rows, columns, data types)
-  2. Statistical summary of numerical columns
-  3. Key patterns or correlations
-  4. Recommendations for further analysis
-</instructions>
-
-<output-format>
-  Structured markdown with sections and tables
-</output-format>
+<user-task>
+  <metadata>
+    <name>analyze-data</name>
+    <version>1.0</version>
+  </metadata>
+  <content>
+    <description>
+      Analyze a dataset and create a summary report
+    </description>
+    <guidance>
+      Focus on actionable insights rather than exhaustive statistics
+    </guidance>
+    <instructions>
+      1. Data overview (rows, columns, data types)
+      2. Statistical summary of numerical columns
+      3. Key patterns or correlations
+      4. Recommendations for further analysis
+    </instructions>
+    <output-format>
+      Structured markdown with sections and tables
+    </output-format>
+  </content>
+</user-task>
 ```
 
 ### Workflow Configuration
