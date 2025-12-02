@@ -95,6 +95,73 @@ docs/developer-guide/   → Architecture, implementation, layer docs
 2. Test both streaming and batch modes
 3. Update token estimation if request structure changes
 
+## Coding Conventions
+
+### Boolean Variables
+
+Global execution-mode flags use string values `"true"`/`"false"`. Always compare with quoted strings:
+
+```bash
+# Correct
+if [[ "$DRY_RUN" == "true" ]]; then
+if [[ "$COUNT_TOKENS" != "true" ]]; then
+if [[ "$STREAM_MODE" == "true" ]] && [[ "$ENABLE_THINKING" != "true" ]]; then
+
+# Incorrect - avoid unquoted or -eq comparisons
+if [[ $DRY_RUN ]]; then           # Wrong: tests if variable is set, not value
+if [[ "$DRY_RUN" -eq 1 ]]; then   # Wrong: these are strings, not integers
+```
+
+Common boolean globals: `DRY_RUN`, `COUNT_TOKENS`, `STREAM_MODE`, `ENABLE_THINKING`, `ENABLE_CITATIONS`
+
+### Option Parsing (parse_common_option)
+
+When adding options to `parse_common_option()` in `lib/execute.sh`:
+
+```bash
+# Value option (PARSE_CONSUMED=2)
+--my-option)
+    [[ $# -eq 0 ]] && { echo "Error: --my-option requires argument" >&2; return 1; }
+    MY_OPTION="$1"
+    CONFIG_SOURCE_MAP[MY_OPTION]="cli"
+    PARSE_CONSUMED=2
+    ;;
+
+# Flag option (PARSE_CONSUMED=1)
+--my-flag)
+    MY_FLAG="true"
+    CONFIG_SOURCE_MAP[MY_FLAG]="cli"
+    PARSE_CONSUMED=1
+    ;;
+```
+
+Note: Do NOT add `shift` inside the case - the function already shifts after storing `$1` in `opt`.
+
+### Dependency Resolution
+
+Use `collect_all_dependencies()` for resolving component dependencies (system prompts or tasks). It uses nameref to avoid subshell variable loss:
+
+```bash
+local -A TRACKER=()
+mapfile -t components < <(collect_all_dependencies \
+    "TRACKER" \
+    "WIREFLOW_PROMPT_PREFIX" \
+    "BUILTIN_WIREFLOW_PROMPT_PREFIX" \
+    "${ROOT_COMPONENTS[@]}")
+```
+
+### Large JSON Payloads
+
+Use `--slurpfile` instead of `--argjson` to avoid "Argument list too long" errors:
+
+```bash
+# Correct - reads from file
+jq -n --slurpfile data "$temp_file" '{ content: $data[0] }'
+
+# Incorrect - passes via command line (subject to ARG_MAX)
+jq -n --argjson data "$large_json" '{ content: $data }'
+```
+
 ## Version Management
 
 **Current version:** 0.6.0 (pre-release)
