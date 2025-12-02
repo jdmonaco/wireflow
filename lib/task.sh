@@ -93,7 +93,20 @@ execute_task_mode() {
                 ;;
         esac
     done
-    
+
+    # =============================================================================
+    # Terminal Output Warning
+    # =============================================================================
+
+    # Warn if output will stream to terminal without being saved
+    if [[ -t 1 ]] && [[ -z "$output_file_path" ]] && \
+       [[ "$DRY_RUN" != "true" ]] && [[ "$COUNT_TOKENS" != "true" ]]; then
+        echo "Warning: Output will stream to terminal and not be saved."
+        echo "  Use --export/-ex <path> to save output to a file."
+        echo
+        prompt_to_continue_or_exit
+    fi
+
     # =============================================================================
     # Optional Project Discovery and Configuration
     # =============================================================================
