@@ -36,6 +36,7 @@ Background materials and references.
 
 | Option | Short | Description |
 |--------|-------|-------------|
+| `--provider <name>` | | API provider: `anthropic`, `openai` |
 | `--profile <tier>` | | Model tier: `fast`, `balanced`, `deep` |
 | `--model <model>` | `-m` | Explicit model override (bypasses profile) |
 

@@ -246,6 +246,7 @@ Context Options (background and references):
     --depends-on, -dp <name>...   Include outputs from other workflows
 
 Model Options:
+    --provider <name>             API provider: anthropic, openai
     --profile <tier>              Model tier: fast, balanced, deep
     --model, -m <model>           Explicit model override (bypasses profile)
 
@@ -309,6 +310,7 @@ Context Options (supporting materials and references):
     --context, -cx <path>...      Add context files/directories (multiple allowed)
 
 Model Options:
+    --provider <name>             API provider: anthropic, openai
     --profile <tier>              Model tier: fast, balanced, deep
     --model, -m <model>           Explicit model override (bypasses profile)
 

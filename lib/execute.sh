@@ -103,6 +103,16 @@ parse_common_option() {
             CONFIG_SOURCE_MAP[ENABLE_CITATIONS]="cli"
             PARSE_CONSUMED=1
             ;;
+        --provider)
+            [[ $# -eq 0 ]] && { echo "Error: --provider requires argument" >&2; return 1; }
+            if [[ "$1" != "anthropic" && "$1" != "openai" ]]; then
+                echo "Error: --provider must be 'anthropic' or 'openai'" >&2
+                return 1
+            fi
+            PROVIDER="$1"
+            CONFIG_SOURCE_MAP[PROVIDER]="cli"
+            PARSE_CONSUMED=2
+            ;;
         *)
             # Unknown option - caller handles
             PARSE_CONSUMED=0

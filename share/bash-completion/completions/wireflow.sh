@@ -119,7 +119,7 @@ _wireflow_api_options() {
     echo "--model -m --profile --temperature -t --max-tokens"
     echo "--system -p --format -f"
     echo "--enable-thinking --disable-thinking --thinking-budget --effort"
-    echo "--enable-citations --disable-citations"
+    echo "--enable-citations --disable-citations --provider"
 }
 
 # Common input/context options
