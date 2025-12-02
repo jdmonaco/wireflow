@@ -49,11 +49,11 @@ edit_files() {
         return 1
     fi
     
-    # Priority order: VISUAL > EDITOR > vim > nvim > nano > emacs > vi > ed
-    if [ -n "$VISUAL" ] && command -v "$VISUAL" >/dev/null 2>&1; then
-        editor="$VISUAL"
-    elif [ -n "$EDITOR" ] && command -v "$EDITOR" >/dev/null 2>&1; then
+    # Priority order: EDITOR > VISUAL > vim > nvim > nano > emacs > vi > ed
+    if [ -n "$EDITOR" ] && command -v "$EDITOR" >/dev/null 2>&1; then
         editor="$EDITOR"
+    elif [ -n "$VISUAL" ] && command -v "$VISUAL" >/dev/null 2>&1; then
+        editor="$VISUAL"
     elif command -v vim >/dev/null 2>&1; then
         editor="vim"
     elif command -v nvim >/dev/null 2>&1; then

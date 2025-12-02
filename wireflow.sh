@@ -447,8 +447,8 @@ case "$cmd" in
         exit 0
         ;;
     *)
-        echo "Error: Unknown subcommand: $cmd"
-        show_help
+        echo "Error: Unknown subcommand: $cmd" >&2
+        echo "Run '$SCRIPT_NAME help' to see available subcommands." >&2
         exit 1
         ;;
 esac

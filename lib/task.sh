@@ -144,6 +144,9 @@ execute_task_mode() {
     task_cache_dir=$(mktemp -d)
     trap "rm -rf $task_cache_dir" EXIT
 
+    # Document map file for citations (temp file for task mode)
+    DOCUMENT_MAP_FILE="$task_cache_dir/document-map.json"
+
     # Reset global content block arrays for this task
     SYSTEM_BLOCKS=()
     CONTEXT_BLOCKS=()

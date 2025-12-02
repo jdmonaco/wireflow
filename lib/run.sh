@@ -151,7 +151,7 @@ execute_run_mode() {
     local system_blocks_file="$WORKFLOW_DIR/system-blocks.json"
     local user_blocks_file="$WORKFLOW_DIR/user-blocks.json"
     local request_json_file="$WORKFLOW_DIR/request.json"
-    local document_map_file="$WORKFLOW_DIR/document-map.json"
+    DOCUMENT_MAP_FILE="$WORKFLOW_DIR/document-map.json"
     
     # Output files
     local output_file="$WORKFLOW_DIR/output.${OUTPUT_FORMAT}"

@@ -84,7 +84,6 @@ init_project() {
 # ============================================================================
 # Configuration Parameters
 # ============================================================================
-
 CONFIG_EOF
 
     # Write default project settings (empty) to the config file
@@ -278,7 +277,6 @@ TASK_SKELETON_EOF
 # ============================================================================
 # Configuration Parameters
 # ============================================================================
-
 WORKFLOW_CONFIG_EOF
 
     # Write default workflow settings (empty) to the config file

@@ -64,7 +64,7 @@ Configuration:
     Project config:  <PROJECT_ROOT>/.workflow/config
     Workflow config: <PROJECT_ROOT>/.workflow/run/<NAME>/config
 
-For more information, see README.md or visit the documentation.
+For more information, see README.md or the user-guide in the docs.
 EOF
 }
 
