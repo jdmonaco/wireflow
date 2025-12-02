@@ -9,7 +9,8 @@
 #   export PS1='\w$(__wfw_ps1 " (%s)")\$ '
 #
 # The optional format argument defaults to " (%s)" where %s is replaced
-# with the project name (basename of project root directory).
+# with the wireflow project path. For nested projects, this shows the full
+# ancestor path (e.g., "root/parent/project" instead of just "project").
 # =============================================================================
 
 # Find WireFlow project root by walking up the directory tree
@@ -41,18 +42,44 @@ __wfw_find_project_root() {
     return 1
 }
 
-# Print formatted project name for PS1 prompt integration
+# Find ancestor WireFlow projects above the given project root
+# Outputs ancestor paths from oldest (highest level) to newest (closest)
+__wfw_find_ancestor_projects() {
+    local project_root="$1"
+    local dir="$(dirname "$project_root")"
+    local -a roots=()
+
+    while [[ "$dir" != "/" ]]; do
+        [[ -d "$dir/.workflow" ]] && roots+=("$dir")
+        dir="$(dirname "$dir")"
+    done
+
+    # Print in reverse (oldest ancestor first)
+    for ((i=${#roots[@]}-1; i>=0; i--)); do
+        printf '%s\n' "${roots[i]}"
+    done
+}
+
+# Print formatted project path for PS1 prompt integration
 # Usage: __wfw_ps1 [format]
 #   format: printf format string (default: " (%s)")
+# For nested projects, shows full path: "ancestor/parent/project"
 __wfw_ps1() {
     local fmt="${1:- (%s)}"
     local project_root
 
     project_root="$(__wfw_find_project_root)" || return
 
-    local project_name
-    project_name="$(basename "$project_root")"
+    # Build wireflow path from ancestors + current project
+    local wfw_path=""
+    local ancestor
+    while IFS= read -r ancestor; do
+        wfw_path+="$(basename "$ancestor")/"
+    done < <(__wfw_find_ancestor_projects "$project_root")
+
+    # Append current project name
+    wfw_path+="$(basename "$project_root")"
 
     # shellcheck disable=SC2059
-    printf "$fmt" "$project_name"
+    printf "$fmt" "$wfw_path"
 }
