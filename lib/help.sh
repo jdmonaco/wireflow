@@ -42,7 +42,7 @@ Examples:
     $SCRIPT_NAME init .
     $SCRIPT_NAME new 01-analysis
     $SCRIPT_NAME run 01-analysis --stream
-    $SCRIPT_NAME task -i "Summarize findings" -cx data.md
+    $SCRIPT_NAME task -i "Summarize findings" -- data.md
     $SCRIPT_NAME batch my-workflow -in data/
 
 Environment variables:

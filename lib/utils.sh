@@ -1820,10 +1820,10 @@ convert_json_to_xml() {
     fi
 
     # Silently convert files (don't announce unless debugging)
+    # Files: dry-run-request (dry-run mode), run-request (post-execution), document-map (citations)
     local files=(
-        "system-blocks"
-        "user-blocks"
-        "request"
+        "dry-run-request"
+        "run-request"
         "document-map"
     )
 

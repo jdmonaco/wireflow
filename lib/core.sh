@@ -76,7 +76,7 @@ init_project() {
 
     # Write the project config header
     cat > "$project_config" <<CONFIG_EOF
-# Project-level wireflow configuration
+# Project-level configuration
 #
 # Leave values empty to inherit from parent levels.
 # Run 'wfw config' to view effective configuration.
@@ -97,7 +97,7 @@ CONFIG_EOF
 # ============================================================================
 #
 # Configuration Cascade:
-#   builtin defaults → global config → project config → workflow config → CLI
+#   builtin → global → [project] → workflow → CLI
 #
 # Scalar Variables (most settings):
 #   Leave EMPTY to inherit:        MODEL=
@@ -290,7 +290,7 @@ WORKFLOW_CONFIG_EOF
 # ============================================================================
 #
 # Configuration Cascade:
-#   builtin → global → project → workflow → CLI (you are here: workflow)
+#   builtin → global → project → [workflow] → CLI
 #
 # Scalar Variables (most settings):
 #   Leave EMPTY to inherit:        TEMPERATURE=
@@ -369,7 +369,8 @@ edit_workflow() {
     local output_dir="${4:-$OUTPUT_DIR}"
 
     # Show user what files will be edited before proceeding
-    prompt_to_continue_or_exit "Editing workflow: '$name' (project:$(display_normalized_path "$project_root"))"
+    echo "Project root: $(display_normalized_path "$project_root")"
+    prompt_to_continue_or_exit "Editing workflow: '$name'"
 
     # Collect the files to be edited
     local files_to_edit=("config" "task.txt")
@@ -517,7 +518,6 @@ cmd_list() {
         echo ""
         echo "Run '$SCRIPT_NAME new NAME' to create a new workflow."
     fi
-    echo ""
 }
 
 # =============================================================================

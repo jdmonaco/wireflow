@@ -140,10 +140,7 @@ execute_run_mode() {
         return 1
     fi
     
-    # JSON block files for API
-    local system_blocks_file="$WORKFLOW_DIR/system-blocks.json"
-    local user_blocks_file="$WORKFLOW_DIR/user-blocks.json"
-    local request_json_file="$WORKFLOW_DIR/request.json"
+    # Global file paths for API and citations
     DOCUMENT_MAP_FILE="$WORKFLOW_DIR/document-map.json"
     
     # Output files
@@ -194,42 +191,18 @@ execute_run_mode() {
     fi
     
     # =============================================================================
-    # Dry-Run Mode
-    # =============================================================================
-    
-    if [[ "$DRY_RUN" == "true" ]]; then
-        handle_dry_run_mode "run" "$WORKFLOW_DIR"
-        return 0
-    fi
-    
-    # =============================================================================
     # Execute API Request
     # =============================================================================
 
-    # Check if workflow has BATCH_MODE=true in config - route to batch subcommand
+    # Warn if workflow has BATCH_MODE=true configured
     if [[ "$BATCH_MODE" == "true" ]]; then
-        echo "Note: This workflow has BATCH_MODE=true configured."
-        echo "Routing to batch processing mode..."
+        echo "Warning: This workflow has BATCH_MODE=true configured."
+        echo "Consider using: $SCRIPT_NAME batch $WORKFLOW_NAME"
         echo ""
-
-        # Execute batch mode
-        execute_batch_mode "run" "$PROJECT_ROOT" "$WORKFLOW_DIR"
-        local batch_result=$?
-
-        if [[ $batch_result -ne 0 ]]; then
-            echo "Error: Batch submission failed" >&2
-            return $batch_result
-        fi
-
-        # Note: cmd_batch displays management commands after execute_batch_mode
-        # so we only show them here for BATCH_MODE=true workflows run via `wfw run`
-        echo ""
-        echo "Use '$SCRIPT_NAME batch status|results|cancel $WORKFLOW_NAME' to manage this batch."
-        return 0
     fi
 
-    # Execute API request
-    execute_api_request "run" "$output_file" ""
+    # Execute API request (dry-run handled internally)
+    execute_api_request "run" "$output_file" "" "$WORKFLOW_DIR"
     local api_result=$?
 
     if [[ $api_result -ne 0 ]]; then

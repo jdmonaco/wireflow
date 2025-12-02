@@ -668,117 +668,78 @@ estimate_tokens() {
 # Dry-Run Mode Handling
 # =============================================================================
 
-# Handle dry-run mode: save JSON blocks and API request to files and open in editor
-# Only activates if DRY_RUN flag is set
-#
+# Filter large base64 data from JSON for human-readable output
+# Replaces base64 data with placeholder showing size, preserves metadata
+# Args:
+#   $1 - JSON string to filter
+# Outputs:
+#   Filtered JSON with base64 data replaced by placeholders
+_filter_base64_for_display() {
+    local json="$1"
+    # Replace base64 data in image and document blocks with size placeholder
+    # Handles both Anthropic format (source.data) and OpenAI format (image_url.url)
+    echo "$json" | jq '
+        walk(
+            if type == "object" then
+                # Anthropic image/document blocks: source.type == "base64"
+                if .source?.type == "base64" and .source?.data then
+                    .source.data = "[base64 data omitted - \(.source.data | length) chars]"
+                # OpenAI image blocks: image_url.url starts with data:
+                elif .image_url?.url and (.image_url.url | startswith("data:")) then
+                    .image_url.url = "[base64 data URL omitted - \(.image_url.url | length) chars]"
+                else
+                    .
+                end
+            else
+                .
+            end
+        )
+    '
+}
+
+# Save dry-run request file and exit (helper called from execute_api_request)
 # Args:
 #   $1 - mode: "run" or "task"
-#   $2 - workflow_dir: Workflow directory (for run mode) or empty (for task mode)
-# Requires:
-#   DRY_RUN: Boolean flag
-#   COUNT_TOKENS: Boolean flag
-#   SYSTEM_BLOCKS: Array of system content blocks
-#   CONTEXT_BLOCKS: Array of context content blocks
-#   DEPENDENCY_BLOCKS: Array of dependency content blocks
-#   INPUT_BLOCKS: Array of input document content blocks
-#   TASK_BLOCK: Task content block
-# Returns:
-#   Exits script (does not return)
-handle_dry_run_mode() {
+#   $2 - workflow_dir: Workflow directory (for file paths in run mode)
+#   $3 - request_payload: JSON request payload string
+# Side effects:
+#   Saves dry-run-request.json, optionally converts to XML, opens editor, exits script
+_save_dry_run_and_exit() {
     local mode="$1"
     local workflow_dir="$2"
+    local request_payload="$3"
 
-    # Skip if not in dry-run mode
-    [[ "$DRY_RUN" != true ]] && return 0
-
-    local dry_run_json_request
-    local dry_run_json_blocks
+    local dry_run_request
 
     if [[ "$mode" == "run" ]]; then
         # Run mode: Save to workflow directory
-        dry_run_json_request="$workflow_dir/dry-run-request.json"
-        dry_run_json_blocks="$workflow_dir/dry-run-blocks.json"
+        dry_run_request="$workflow_dir/dry-run-request.json"
     else
-        # Task mode: Save to temp files with cleanup trap
-        dry_run_json_request=$(mktemp -t dry-run-request.XXXXXX.json)
-        dry_run_json_blocks=$(mktemp -t dry-run-blocks.XXXXXX.json)
-        trap "rm -f '$dry_run_json_request' '$dry_run_json_blocks'" EXIT
+        # Task mode: Save to temp file with cleanup trap
+        dry_run_request=$(mktemp -t dry-run-request.XXXXXX.json)
+        trap "rm -f '$dry_run_request'" EXIT
     fi
 
-    # Assemble content blocks (same logic as execute_api_request)
-    local system_blocks_json
-    system_blocks_json=$(printf '%s\n' "${SYSTEM_BLOCKS[@]}" | jq -s '.')
+    # Filter base64 data for human-readable output and save
+    _filter_base64_for_display "$request_payload" | jq '.' > "$dry_run_request"
 
-    local -a all_user_blocks=()
-    for block in "${CONTEXT_BLOCKS[@]}"; do
-        all_user_blocks+=("$block")
-    done
-    for block in "${DEPENDENCY_BLOCKS[@]}"; do
-        all_user_blocks+=("$block")
-    done
-    for block in "${INPUT_BLOCKS[@]}"; do
-        all_user_blocks+=("$block")
-    done
-    for block in "${IMAGE_BLOCKS[@]}"; do
-        all_user_blocks+=("$block")
-    done
-    # Add task dependency blocks for dry run
-    for block in "${TASK_BLOCKS[@]}"; do
-        all_user_blocks+=("$block")
-    done
-    all_user_blocks+=("$TASK_BLOCK")
+    # Convert to XML for run mode (creates human-readable view)
+    [[ "$mode" == "run" ]] && convert_json_to_xml "$workflow_dir"
 
-    local user_blocks_json
-    user_blocks_json=$(printf '%s\n' "${all_user_blocks[@]}" | jq -s '.')
-
-    # Build complete API request JSON payload
-    local request_payload
-    request_payload=$(jq -n \
-        --arg model "$MODEL" \
-        --argjson max_tokens "$MAX_TOKENS" \
-        --argjson temperature "$TEMPERATURE" \
-        --argjson system "$system_blocks_json" \
-        --argjson user_content "$user_blocks_json" \
-        '{
-            model: $model,
-            max_tokens: $max_tokens,
-            temperature: $temperature,
-            system: $system,
-            messages: [
-                {
-                    role: "user",
-                    content: $user_content
-                }
-            ]
-        }')
-
-    # Save JSON request payload
-    echo "$request_payload" | jq '.' > "$dry_run_json_request"
-
-    # Save content blocks for inspection
-    jq -n \
-        --argjson system "$system_blocks_json" \
-        --argjson user "$user_blocks_json" \
-        '{
-            system_blocks: $system,
-            user_blocks: $user,
-            total_blocks: ($system | length) + ($user | length)
-        }' > "$dry_run_json_blocks"
-
-    echo "Dry-run mode: JSON payload saved for inspection"
-    echo "  API request (JSON):    $dry_run_json_request"
-    echo "  Content blocks (JSON): $dry_run_json_blocks"
+    echo "Dry-run mode: Request payload saved (provider: ${PROVIDER:-anthropic})"
+    echo "  Request file: $dry_run_request"
+    [[ "$mode" == "run" ]] && echo "  XML view: ${dry_run_request%.json}.xml"
     echo ""
 
     # If count-tokens was also requested, prompt before opening
-    if [[ "$COUNT_TOKENS" == true ]]; then
+    if [[ "$COUNT_TOKENS" == "true" ]]; then
         read -p "Press Enter to inspect in editor (or Ctrl+C to cancel): " -r
         echo ""
     fi
 
     # Open in editor (skip in test mode)
     if [[ "${WIREFLOW_TEST_MODE:-}" != "true" ]]; then
-        edit_files "$dry_run_json_request" "$dry_run_json_blocks"
+        edit_files "$dry_run_request"
     else
         echo "=== DRY RUN MODE ==="
     fi
@@ -1499,6 +1460,7 @@ execute_api_request() {
     local mode="$1"
     local output_file="$2"
     local output_file_path="${3:-}"
+    local workflow_dir="${4:-}"  # For dry-run file paths
 
     # =============================================================================
     # Assemble Content Blocks for JSON API
@@ -1595,6 +1557,40 @@ execute_api_request() {
             # Validate API configuration for model compatibility
             validate_api_config "$effective_model" "$ENABLE_THINKING" "$EFFORT"
 
+            # Dry-run mode: save request and exit before API call
+            if [[ "$DRY_RUN" == "true" ]]; then
+                local request_payload
+                request_payload=$(jq -n \
+                    --arg model "$effective_model" \
+                    --argjson max_tokens "$MAX_TOKENS" \
+                    --argjson temperature "$TEMPERATURE" \
+                    --argjson system "$system_blocks_json" \
+                    --argjson user_content "$user_blocks_json" \
+                    '{
+                        model: $model,
+                        max_tokens: $max_tokens,
+                        temperature: $temperature,
+                        system: $system,
+                        messages: [{role: "user", content: $user_content}]
+                    }')
+
+                # Add thinking config if enabled
+                if [[ "$ENABLE_THINKING" == "true" ]]; then
+                    request_payload=$(echo "$request_payload" | jq \
+                        --argjson budget "$THINKING_BUDGET" \
+                        '. + {thinking: {type: "enabled", budget_tokens: $budget}}')
+                fi
+
+                # Add effort config if not high
+                if [[ "$EFFORT" != "high" ]]; then
+                    request_payload=$(echo "$request_payload" | jq \
+                        --arg effort "$EFFORT" \
+                        '. + {output_config: {effort: $effort}}')
+                fi
+
+                _save_dry_run_and_exit "$mode" "$workflow_dir" "$request_payload"
+            fi
+
             # Execute API request (stream or single mode)
             if [[ "$STREAM_MODE" == "true" ]]; then
                 anthropic_execute_stream \
@@ -1647,6 +1643,24 @@ execute_api_request() {
             local effective_model
             effective_model=$(openai_resolve_model "$PROFILE") || exit 1
 
+            # Dry-run mode: save request and exit before API call
+            if [[ "$DRY_RUN" == "true" ]]; then
+                local messages_json request_payload
+                messages_json=$(convert_to_openai_messages "$temp_system" "$temp_user")
+                request_payload=$(jq -n \
+                    --arg model "$effective_model" \
+                    --argjson max_tokens "$MAX_TOKENS" \
+                    --argjson temperature "$TEMPERATURE" \
+                    --argjson messages "$messages_json" \
+                    '{
+                        model: $model,
+                        max_tokens: $max_tokens,
+                        temperature: $temperature,
+                        messages: $messages
+                    }')
+                _save_dry_run_and_exit "$mode" "$workflow_dir" "$request_payload"
+            fi
+
             # Execute API request (stream or single mode)
             if [[ "$STREAM_MODE" == "true" ]]; then
                 openai_execute_stream \
@@ -1680,17 +1694,12 @@ execute_api_request() {
     esac
 
     # =============================================================================
-    # Save JSON Files for Reference (run mode only)
+    # Save Request JSON for Reference (run mode only)
     # =============================================================================
 
     if [[ "$mode" == "run" ]]; then
-        # Save system blocks
-        echo "$system_blocks_json" | jq '.' > "$SYSTEM_BLOCKS_FILE" 2>/dev/null || true
-
-        # Save user blocks
-        echo "$user_blocks_json" | jq '.' > "$USER_BLOCKS_FILE" 2>/dev/null || true
-
         # Save complete request payload (includes resolved model and all params)
+        # Filter base64 data for human-readable output
         local request_json
         request_json=$(jq -n \
             --arg model "$effective_model" \
@@ -1720,7 +1729,11 @@ execute_api_request() {
                 '. + {output_config: {effort: $effort}}')
         fi
 
-        echo "$request_json" > "$REQUEST_JSON_FILE" 2>/dev/null || true
+        # Filter base64 data and save to run-request.json
+        _filter_base64_for_display "$request_json" > "$workflow_dir/run-request.json" 2>/dev/null || true
+
+        # Convert JSON files to XML (run-request.json, document-map.json)
+        convert_json_to_xml "$workflow_dir"
 
         # Write execution log for cache validation and dependency tracking
         write_execution_log \

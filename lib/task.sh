@@ -174,15 +174,6 @@ execute_task_mode() {
     fi
     
     # =============================================================================
-    # Dry-Run Mode - Save Prompts and Inspect
-    # =============================================================================
-    
-    if [[ "$DRY_RUN" == "true" ]]; then
-        handle_dry_run_mode "task" "$task_source"
-        return 0
-    fi
-    
-    # =============================================================================
     # Output File Setup
     # =============================================================================
     
@@ -208,8 +199,8 @@ execute_task_mode() {
     # Execute API Request
     # =============================================================================
 
-    # Execute API request
-    execute_api_request "task" "$output_file" "$output_file_path"
+    # Execute API request (dry-run handled internally)
+    execute_api_request "task" "$output_file" "$output_file_path" "$task_cache_dir"
     local api_result=$?
 
     if [[ $api_result -ne 0 ]]; then

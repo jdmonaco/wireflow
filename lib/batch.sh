@@ -339,6 +339,24 @@ execute_batch_mode() {
         return 1
     fi
 
+    # Dry-run mode: show batch requests file and exit
+    if [[ "$DRY_RUN" == "true" ]]; then
+        local requests_file="$workflow_dir/batch-requests.json"
+        echo ""
+        echo "Dry-run mode: Batch requests saved for inspection"
+        echo "  Batch requests: $requests_file"
+        echo "  Request count: $BATCH_REQUEST_COUNT"
+        echo ""
+
+        # Open in editor (skip in test mode)
+        if [[ "${WIREFLOW_TEST_MODE:-}" != "true" ]]; then
+            edit_files "$requests_file"
+        else
+            echo "=== DRY RUN MODE ==="
+        fi
+        return 0
+    fi
+
     # Validate API key
     anthropic_validate "$ANTHROPIC_API_KEY" || return 1
 
@@ -951,6 +969,13 @@ cmd_batch() {
         return 1
     fi
 
+    # Warn if workflow has BATCH_MODE=false explicitly configured
+    if [[ "$BATCH_MODE" == "false" && "${WORKFLOW_SOURCE_MAP[BATCH_MODE]}" == "workflow" ]]; then
+        echo "Warning: This workflow has BATCH_MODE=false configured."
+        echo "Consider using: $SCRIPT_NAME run $WORKFLOW_NAME"
+        echo ""
+    fi
+
     # Set CLI-provided paths for aggregation
     CLI_INPUT_PATHS=("${cli_input_paths[@]}")
     CLI_CONTEXT_PATHS=("${cli_context_paths[@]}")
@@ -997,16 +1022,7 @@ cmd_batch() {
     fi
 
     # =============================================================================
-    # Dry-Run Mode
-    # =============================================================================
-
-    if [[ "$DRY_RUN" == "true" ]]; then
-        handle_dry_run_mode "run" "$WORKFLOW_DIR"
-        return 0
-    fi
-
-    # =============================================================================
-    # Execute Batch Mode
+    # Execute Batch Mode (dry-run handled internally)
     # =============================================================================
 
     execute_batch_mode "run" "$PROJECT_ROOT" "$WORKFLOW_DIR"

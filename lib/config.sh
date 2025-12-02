@@ -12,13 +12,31 @@
 # Write default (pass-through) config assignments to stdout
 # Used for: creating default config files
 cat_default_config() {
-    # Add the config parameters
+    # Provider/profile selections first
+    echo -en "\n# Select provider and model profile\n"
+    echo -en "# - PROVIDER values: 'anthropic', 'openai'\n"
+    echo -en "# - PROFILE values: 'balanced', 'fast', 'deep'\n"
+    printf '%s=\n' "PROVIDER"
+    printf '%s=\n' "PROFILE"
+
+    # Anthropic API config
     echo -en "\n# API processing parameters\n"
+    echo -en "# Note: Includes Anthropic-only thinking, effort, and citations settings\n"
     for key in "${CONFIG_KEYS[@]}"; do
-        printf '%s=\n' "$key"
+        if [[ ! "$key" =~ ^(PRO|OPENAI_) ]]; then
+            printf '%s=\n' "$key"
+        fi
     done
 
-    # Add the user-env variables
+    # OpenAI-compatible API config
+    echo -en "\n# OpenAI-compatible provider settings\n"
+    for key in "${CONFIG_KEYS[@]}"; do
+        if [[ "$key" =~ ^OPENAI_ ]]; then
+            printf '%s=\n' "$key"
+        fi
+    done
+
+    # User-env variables
     echo -en "\n# User-env variables\n"
     for key in "${USER_ENV_KEYS[@]}"; do
         printf '%s=\n' "$key"
@@ -81,6 +99,12 @@ extract_config() {
         if [[ -n "$source_dir" ]]; then
             cd "$source_dir" || exit 1
         fi
+
+        # Unset workflow-specific variables before sourcing so we only output
+        # them if actually defined in the config file (not inherited from shell)
+        for key in "${WORKFLOW_KEYS[@]}"; do
+            unset "$key"
+        done
 
         source "$config_file" 2>/dev/null || true
 
@@ -284,7 +308,7 @@ PROMPT_EOF
 
     # Create global config file with dynamic interpolation of built-in defaults
     cat > "$GLOBAL_CONFIG_FILE" <<EOF
-# Global Wireflow Configuration
+# Global WireFlow Configuration
 # ~/.config/wireflow/config
 #
 # Configuration Cascade:
@@ -1164,7 +1188,8 @@ show_effective_config() {
                 if [[ "$key" == *"API_KEY"* ]] || [[ "$key" == *"SECRET"* ]]; then
                     display_value="${display_value:0:10}..."
                 elif [[ "$key" == *"_PATH" ]] || [[ "$key" == *"_PREFIX" ]]; then
-                    display_value="$(display_absolute_path "$display_value")"
+                    # Only format non-empty paths (empty = unset)
+                    [[ -n "$display_value" ]] && display_value="$(display_absolute_path "$display_value")"
                 fi
             fi
 
