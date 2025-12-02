@@ -101,7 +101,7 @@ CONFIG_EOF
 #
 # Scalar Variables (most settings):
 #   Leave EMPTY to inherit:        MODEL=
-#   Set VALUE to override:         MODEL=claude-opus-4
+#   Set VALUE to override:         MODEL=claude-opus-4-5
 #
 # Array Variables (SYSTEM_PROMPTS, CONTEXT):
 # ┌────────────────────────┬─────────────────────────────────────┐
@@ -124,7 +124,7 @@ CONFIG_EOF
 #
 # Examples:
 #   # Override model for this project
-#   MODEL=claude-opus-4
+#   MODEL=claude-opus-4-5
 #
 #   # Set project-specific prompts
 #   SYSTEM_PROMPTS=(base neuroai-research)

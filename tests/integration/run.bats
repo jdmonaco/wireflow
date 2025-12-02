@@ -568,23 +568,6 @@ EOF
     assert_output --partial "DRY RUN MODE"
 }
 
-@test "integration: --force flag is recognized" {
-    run "${SCRIPT_DIR}/wireflow.sh" init
-    assert_success
-
-    run "${SCRIPT_DIR}/wireflow.sh" new test-workflow
-    assert_success
-
-    echo "Analyze this" > ".workflow/run/test-workflow/task.txt"
-
-    export WIREFLOW_DRY_RUN="true"
-
-    # --force should be recognized without error
-    run "${SCRIPT_DIR}/wireflow.sh" run test-workflow --force
-    assert_success
-    assert_output --partial "DRY RUN MODE"
-}
-
 @test "integration: execution log created after successful dry-run" {
     run "${SCRIPT_DIR}/wireflow.sh" init
     assert_success

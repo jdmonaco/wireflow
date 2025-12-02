@@ -8,12 +8,9 @@
 # Arguments:
 #   $@ - Execution options (model, temperature, input files, etc.)
 execute_run_mode() {
-    # Set execution parameter defaults (respect WIREFLOW_DRY_RUN env var)
-    local stream_mode=false  # Default to buffered in run mode
-    local count_tokens_only=false
-    local dry_run="${WIREFLOW_DRY_RUN:-false}"
-    local auto_deps=true     # Auto-execute stale dependencies by default
-    local force_execution=false  # Force re-execution ignoring cache
+    # Execution flags are globals set in wireflow.sh
+    # STREAM_MODE defaults to "false" for run mode (already set in wireflow.sh)
+    # DRY_RUN, COUNT_TOKENS, AUTO_DEPS also set in wireflow.sh
 
     # Initialize CLI override arrays (paths can be files or directories)
     local -a cli_input_paths=()
@@ -31,15 +28,15 @@ execute_run_mode() {
         # Handle run-mode specific options
         case "$1" in
             --stream|-s)
-                stream_mode=true
+                STREAM_MODE="true"
                 shift
                 ;;
             --dry-run|-n)
-                dry_run=true
+                DRY_RUN="true"
                 shift
                 ;;
             --count-tokens)
-                count_tokens_only=true
+                COUNT_TOKENS="true"
                 shift
                 ;;
             --input|-in)
@@ -83,11 +80,7 @@ execute_run_mode() {
                 shift
                 ;;
             --no-auto-deps)
-                auto_deps=false
-                shift
-                ;;
-            --force)
-                force_execution=true
+                AUTO_DEPS="false"
                 shift
                 ;;
             *)
@@ -103,7 +96,7 @@ execute_run_mode() {
     # =============================================================================
 
     # Check if we should auto-execute stale dependencies
-    if [[ "$auto_deps" == "true" && ${#DEPENDS_ON[@]} -gt 0 ]]; then
+    if [[ "$AUTO_DEPS" == "true" && ${#DEPENDS_ON[@]} -gt 0 ]]; then
         echo "Resolving dependencies..."
 
         # Get execution order (topological sort)
@@ -195,7 +188,7 @@ execute_run_mode() {
     # Token Estimation (if requested)
     # =============================================================================
 
-    if $count_tokens_only; then
+    if [[ "$COUNT_TOKENS" == "true" ]]; then
         estimate_tokens
         return 0
     fi
@@ -204,7 +197,7 @@ execute_run_mode() {
     # Dry-Run Mode
     # =============================================================================
     
-    if $dry_run; then
+    if [[ "$DRY_RUN" == "true" ]]; then
         handle_dry_run_mode "run" "$WORKFLOW_DIR"
         return 0
     fi
@@ -234,9 +227,6 @@ execute_run_mode() {
         echo "Use '$SCRIPT_NAME batch status|results|cancel $WORKFLOW_NAME' to manage this batch."
         return 0
     fi
-
-    # Set streaming mode
-    STREAM_MODE=$stream_mode
 
     # Execute API request
     execute_api_request "run" "$output_file" ""

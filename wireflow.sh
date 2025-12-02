@@ -33,9 +33,12 @@ source "$SCRIPT_DIR/lib/task.sh"
 source "$SCRIPT_DIR/lib/utils.sh"
 
 # =============================================================================
-# Test/Environment Mode Flags (must be set before subcommand handlers)
+# Execution Mode Flags (set by CLI, checked during execution)
 # =============================================================================
 DRY_RUN="${WIREFLOW_DRY_RUN:-false}"
+STREAM_MODE="false"   # run.sh keeps false, task.sh sets true at start
+COUNT_TOKENS="false"  # --count-tokens flag
+AUTO_DEPS="true"      # --no-auto-deps sets false (run mode only)
 
 # =============================================================================
 # Global Configuration Setup -- Builtin Defaults

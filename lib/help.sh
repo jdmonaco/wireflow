@@ -265,7 +265,6 @@ Execution Options:
     --count-tokens                Show token estimation only
     --dry-run, -n                 Save request JSON, open in editor
     --no-auto-deps                Skip automatic execution of stale dependencies
-    --force                       Force re-execution, ignoring cache
     --help, -h                    Quick help
 
 Notes:

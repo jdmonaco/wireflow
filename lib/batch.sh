@@ -805,8 +805,6 @@ cmd_batch() {
     local -a cli_input_paths=()
     local -a cli_context_paths=()
     local export_dir=""
-    local count_tokens_only=false
-    local dry_run="${WIREFLOW_DRY_RUN:-false}"
 
     # Parse batch options
     while [[ $# -gt 0 ]]; do
@@ -864,12 +862,12 @@ cmd_batch() {
                 shift
                 ;;
             --enable-thinking)
-                ENABLE_THINKING=true
+                ENABLE_THINKING="true"
                 CONFIG_SOURCE_MAP[ENABLE_THINKING]="cli"
                 shift
                 ;;
             --disable-thinking)
-                ENABLE_THINKING=false
+                ENABLE_THINKING="false"
                 CONFIG_SOURCE_MAP[ENABLE_THINKING]="cli"
                 shift
                 ;;
@@ -916,21 +914,21 @@ cmd_batch() {
                 shift
                 ;;
             --enable-citations)
-                ENABLE_CITATIONS=true
+                ENABLE_CITATIONS="true"
                 CONFIG_SOURCE_MAP[ENABLE_CITATIONS]="cli"
                 shift
                 ;;
             --disable-citations)
-                ENABLE_CITATIONS=false
+                ENABLE_CITATIONS="false"
                 CONFIG_SOURCE_MAP[ENABLE_CITATIONS]="cli"
                 shift
                 ;;
             --count-tokens)
-                count_tokens_only=true
+                COUNT_TOKENS="true"
                 shift
                 ;;
             --dry-run|-n)
-                dry_run=true
+                DRY_RUN="true"
                 shift
                 ;;
             *)
@@ -993,7 +991,7 @@ cmd_batch() {
     # Token Estimation (if requested)
     # =============================================================================
 
-    if $count_tokens_only; then
+    if [[ "$COUNT_TOKENS" == "true" ]]; then
         estimate_tokens
         return 0
     fi
@@ -1002,7 +1000,7 @@ cmd_batch() {
     # Dry-Run Mode
     # =============================================================================
 
-    if $dry_run; then
+    if [[ "$DRY_RUN" == "true" ]]; then
         handle_dry_run_mode "run" "$WORKFLOW_DIR"
         return 0
     fi

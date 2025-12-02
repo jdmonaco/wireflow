@@ -44,12 +44,12 @@ parse_common_option() {
             PARSE_CONSUMED=2
             ;;
         --enable-thinking)
-            ENABLE_THINKING=true
+            ENABLE_THINKING="true"
             CONFIG_SOURCE_MAP[ENABLE_THINKING]="cli"
             PARSE_CONSUMED=1
             ;;
         --disable-thinking)
-            ENABLE_THINKING=false
+            ENABLE_THINKING="false"
             CONFIG_SOURCE_MAP[ENABLE_THINKING]="cli"
             PARSE_CONSUMED=1
             ;;
@@ -90,12 +90,12 @@ parse_common_option() {
             PARSE_CONSUMED=2
             ;;
         --enable-citations)
-            ENABLE_CITATIONS=true
+            ENABLE_CITATIONS="true"
             CONFIG_SOURCE_MAP[ENABLE_CITATIONS]="cli"
             PARSE_CONSUMED=1
             ;;
         --disable-citations)
-            ENABLE_CITATIONS=false
+            ENABLE_CITATIONS="false"
             CONFIG_SOURCE_MAP[ENABLE_CITATIONS]="cli"
             PARSE_CONSUMED=1
             ;;
@@ -1596,7 +1596,7 @@ execute_api_request() {
             validate_api_config "$effective_model" "$ENABLE_THINKING" "$EFFORT"
 
             # Execute API request (stream or single mode)
-            if [[ "$STREAM_MODE" == true ]]; then
+            if [[ "$STREAM_MODE" == "true" ]]; then
                 anthropic_execute_stream \
                     api_key="$ANTHROPIC_API_KEY" \
                     model="$effective_model" \
@@ -1648,7 +1648,7 @@ execute_api_request() {
             effective_model=$(openai_resolve_model "$PROFILE") || exit 1
 
             # Execute API request (stream or single mode)
-            if [[ "$STREAM_MODE" == true ]]; then
+            if [[ "$STREAM_MODE" == "true" ]]; then
                 openai_execute_stream \
                     model="$effective_model" \
                     max_tokens="$MAX_TOKENS" \

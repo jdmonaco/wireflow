@@ -21,13 +21,13 @@ execute_task_mode() {
         return 1
     fi
     
+    # Task mode defaults to streaming (run mode defaults to non-streaming)
+    STREAM_MODE="true"
+
     # Initialize task-specific variables (paths can be files or directories)
     local -a cli_input_paths=()
     local -a cli_context_paths=()
     local output_file_path=""
-    local stream_mode=true  # Default to streaming in task mode
-    local count_tokens_only=false
-    local dry_run="${WIREFLOW_DRY_RUN:-false}"
     
     # Parse execution options
     while [[ $# -gt 0 ]]; do
@@ -71,19 +71,19 @@ execute_task_mode() {
                 shift
                 ;;
             --stream|-s)
-                stream_mode=true
+                STREAM_MODE="true"
                 shift
                 ;;
             --no-stream|-b)
-                stream_mode=false
+                STREAM_MODE="false"
                 shift
                 ;;
             --count-tokens)
-                count_tokens_only=true
+                COUNT_TOKENS="true"
                 shift
                 ;;
             --dry-run|-n)
-                dry_run=true
+                DRY_RUN="true"
                 shift
                 ;;
             *)
@@ -168,7 +168,7 @@ execute_task_mode() {
     # Token Estimation (if requested)
     # =============================================================================
     
-    if $count_tokens_only; then
+    if [[ "$COUNT_TOKENS" == "true" ]]; then
         estimate_tokens
         return 0
     fi
@@ -177,7 +177,7 @@ execute_task_mode() {
     # Dry-Run Mode - Save Prompts and Inspect
     # =============================================================================
     
-    if $dry_run; then
+    if [[ "$DRY_RUN" == "true" ]]; then
         handle_dry_run_mode "task" "$task_source"
         return 0
     fi
@@ -207,9 +207,6 @@ execute_task_mode() {
     # =============================================================================
     # Execute API Request
     # =============================================================================
-
-    # Set streaming mode
-    STREAM_MODE=$stream_mode
 
     # Execute API request
     execute_api_request "task" "$output_file" "$output_file_path"

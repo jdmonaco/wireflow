@@ -91,12 +91,6 @@ A workflow is considered stale when:
 wfw run 03-synthesis --no-auto-deps    # Use existing outputs only
 ```
 
-**Force Re-Execution:**
-
-```bash
-wfw run 01-analysis --force            # Ignore staleness check
-```
-
 ### Execution Log
 
 Each successful run creates `.workflow/run/<name>/execution.json` containing:
