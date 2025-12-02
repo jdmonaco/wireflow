@@ -57,6 +57,7 @@ nav:
     - wfw cat: reference/cat.md
     - wfw open: reference/open.md
     - wfw tasks: reference/tasks.md
+    - wfw prompts: reference/prompts.md
     - wfw list: reference/list.md
     - wfw shell: reference/shell.md
     - wfw help: reference/help.md

@@ -21,6 +21,7 @@ _wireflow() {
             task)     _wireflow_task ;;
             batch)    _wireflow_batch ;;
             tasks)    _wireflow_tasks ;;
+            prompts)  _wireflow_prompts ;;
             cat)      _wireflow_cat ;;
             open)     _wireflow_open ;;
             list)     _wireflow_list ;;
@@ -36,7 +37,7 @@ _wireflow() {
 # =============================================================================
 
 _wireflow_subcommands() {
-    local subcommands="init new edit config run task batch cat open tasks list shell help"
+    local subcommands="init new edit config run task batch cat open tasks prompts list shell help"
     COMPREPLY=($(compgen -W "$subcommands" -- "$cur"))
 }
 
@@ -81,6 +82,33 @@ _wireflow_list_tasks() {
 
     # List from builtin location
     _wireflow_list_tasks_from_dir "$builtin_dir"
+}
+
+# Helper: List prompts from a directory with subdirectory support
+_wireflow_list_prompts_from_dir() {
+    local dir="$1"
+    [[ ! -d "$dir" ]] && return
+
+    # Find .txt files up to 3 levels deep, output relative paths without .txt
+    find "$dir" -maxdepth 3 -name "*.txt" -type f 2>/dev/null | while read -r file; do
+        local relpath="${file#$dir/}"
+        echo "${relpath%.txt}"
+    done
+}
+
+# Get list of available prompts (with subdirectory support)
+# Lists custom location first, then builtins
+_wireflow_list_prompts() {
+    local builtin_dir="${XDG_CONFIG_HOME:-$HOME/.config}/wireflow/prompts/system"
+    local custom_dir="${WIREFLOW_PROMPT_PREFIX:-}"
+
+    # List from custom location first (if set and different from builtin)
+    if [[ -n "$custom_dir" && -d "$custom_dir" && "$custom_dir" != "$builtin_dir" ]]; then
+        _wireflow_list_prompts_from_dir "$custom_dir"
+    fi
+
+    # List from builtin location
+    _wireflow_list_prompts_from_dir "$builtin_dir"
 }
 
 # Common API options
@@ -569,6 +597,31 @@ _wireflow_tasks() {
         show|edit)
             # Complete with task names
             COMPREPLY=($(compgen -W "$(_wireflow_list_tasks)" -- "$cur"))
+            ;;
+        list)
+            if [[ "$cur" == -* ]]; then
+                COMPREPLY=($(compgen -W "--help -h" -- "$cur"))
+            fi
+            ;;
+        *)
+            return 0
+            ;;
+    esac
+}
+
+_wireflow_prompts() {
+    case "$prev" in
+        prompts)
+            # Complete with subcommands or prompt names
+            if [[ "$cur" == -* ]]; then
+                COMPREPLY=($(compgen -W "--help -h" -- "$cur"))
+            else
+                COMPREPLY=($(compgen -W "list show edit" -- "$cur"))
+            fi
+            ;;
+        show|edit)
+            # Complete with prompt names
+            COMPREPLY=($(compgen -W "$(_wireflow_list_prompts)" -- "$cur"))
             ;;
         list)
             if [[ "$cur" == -* ]]; then

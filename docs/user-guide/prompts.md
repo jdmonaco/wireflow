@@ -19,7 +19,18 @@ System prompts live in `$WIREFLOW_PROMPT_PREFIX/`:
 └── writing.txt      # Creative writing
 ```
 
-Default location is `~/.config/wireflow/prompts/`, created automatically on first use.
+Default location is `~/.config/wireflow/prompts/system/`, created automatically on first use.
+
+### Managing Prompts
+
+Use `wfw prompts` to list, view, or edit system prompts:
+
+```bash
+wfw prompts              # List available prompts
+wfw prompts show base    # View prompt in pager
+wfw prompts edit base    # Edit existing prompt
+wfw prompts edit custom  # Create new prompt
+```
 
 **Custom location:**
 

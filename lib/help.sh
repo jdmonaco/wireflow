@@ -27,6 +27,7 @@ Subcommands:
     cat NAME         Print output to stdout
     open NAME        Open output in app (macOS)
     tasks            Manage task templates
+    prompts          Manage system prompts
     list             Show project workflows
     shell            Install shell integration
     help [CMD]       Show help
@@ -105,6 +106,11 @@ show_quick_help_task() {
 show_quick_help_tasks() {
     echo "Usage: $SCRIPT_NAME tasks [show|edit <name>]"
     echo "See '$SCRIPT_NAME help tasks' for complete usage details."
+}
+
+show_quick_help_prompts() {
+    echo "Usage: $SCRIPT_NAME prompts [show|edit <name>]"
+    echo "See '$SCRIPT_NAME help prompts' for complete usage details."
 }
 
 show_quick_help_cat() {
@@ -368,6 +374,33 @@ Examples:
 See Also:
     $SCRIPT_NAME task <name>  # Execute task template
     $SCRIPT_NAME new <name> --task <template>  # Create workflow from template
+EOF
+}
+
+show_help_prompts() {
+    cat <<EOF
+Usage: $SCRIPT_NAME prompts [show|edit <name>]
+
+List, view, or edit system prompt files.
+
+Commands:
+    prompts              List available prompts (default)
+    prompts show <name>  Display prompt in pager
+    prompts edit <name>  Open prompt in editor
+
+Prompts are loaded via SYSTEM_PROMPTS config:
+    SYSTEM_PROMPTS=(base research)  # Load base.txt, research.txt
+
+Location: System prompts are stored in \$WIREFLOW_PROMPT_PREFIX
+          (default: ~/.config/wireflow/prompts/system/)
+
+Examples:
+    $SCRIPT_NAME prompts
+    $SCRIPT_NAME prompts show base
+    $SCRIPT_NAME prompts edit research
+
+See Also:
+    $SCRIPT_NAME config   # View SYSTEM_PROMPTS setting
 EOF
 }
 

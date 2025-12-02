@@ -759,6 +759,239 @@ EOF
 }
 
 # =============================================================================
+# Prompt Management Functions
+# =============================================================================
+
+# Resolve prompt file from name (checks custom location first, then builtin)
+# Arguments:
+#   $1 - Prompt name (without .txt extension)
+# Returns:
+#   stdout - Resolved prompt file path
+#   exit code - 0 if found, 1 if not found
+resolve_prompt_file() {
+    local prompt_name="$1"
+    local custom_file="$WIREFLOW_PROMPT_PREFIX/${prompt_name}.txt"
+    local builtin_file="$BUILTIN_WIREFLOW_PROMPT_PREFIX/${prompt_name}.txt"
+
+    # Check custom location first
+    if [[ -f "$custom_file" && -s "$custom_file" ]]; then
+        echo "$custom_file"
+        return 0
+    fi
+
+    # Fallback to builtin
+    if [[ -f "$builtin_file" && -s "$builtin_file" ]]; then
+        echo "$builtin_file"
+        return 0
+    fi
+
+    return 1
+}
+
+# Extract prompt description from file
+# Arguments:
+#   $1 - Prompt file path
+# Returns:
+#   stdout - Prompt description (truncated to 64 chars)
+extract_prompt_description() {
+    local prompt_file="$1"
+    local description
+
+    # Try to extract from <content> tags first (prompts use system-component format)
+    description=$(awk '/<content>/,/<\/content>/ {
+        if (!/content>/ && NF) {print; exit}
+    }' "$prompt_file" | sed 's/^[[:space:]]*//')
+
+    # Fallback to first non-empty, non-tag line
+    if [[ -z "$description" ]]; then
+        description=$(grep -v '^[[:space:]]*$' "$prompt_file" | grep -v '^[[:space:]]*<' | head -n1 |
+                     sed 's/^#\s*//' | sed 's/^[[:space:]]*//')
+    fi
+
+    # Truncate to 64 characters
+    if [[ ${#description} -gt 64 ]]; then
+        description="${description:0:64}..."
+    fi
+
+    echo "$description"
+}
+
+# List prompts from a directory (with subdirectory support)
+# Arguments:
+#   $1 - Directory path
+#   $2 - Section title (optional)
+# Returns:
+#   exit code - 0 if prompts found, 1 if none found
+list_prompts_from_dir() {
+    local dir="$1"
+    local title="$2"
+
+    [[ ! -d "$dir" ]] && return 1
+
+    # Find .txt files up to 3 levels deep
+    local -a prompt_files
+    mapfile -t prompt_files < <(find "$dir" -maxdepth 3 -name "*.txt" -type f 2>/dev/null | sort)
+    [[ ${#prompt_files[@]} -eq 0 ]] && return 1
+
+    # Calculate column width for prompt names (relative paths)
+    local maxlen=0
+    local minwidth=12
+    for file in "${prompt_files[@]}"; do
+        local relpath="${file#$dir/}"
+        local promptname="${relpath%.txt}"
+        local namelen=${#promptname}
+        [[ $namelen -gt $maxlen ]] && maxlen=$namelen
+    done
+    local namejust=$((maxlen < minwidth ? minwidth : maxlen))
+
+    # Print section title if provided
+    if [[ -n "$title" ]]; then
+        echo "$title"
+        echo
+    fi
+
+    # List each prompt with description (using relative path as name)
+    for prompt_file in "${prompt_files[@]}"; do
+        local relpath="${prompt_file#$dir/}"
+        local prompt_name="${relpath%.txt}"
+        local description=$(extract_prompt_description "$prompt_file")
+        printf "  %-${namejust}s %s\n" "$prompt_name" "$description"
+    done
+
+    return 0
+}
+
+# List available system prompts
+list_prompts() {
+    echo "Available prompts:"
+    echo
+
+    local has_custom=false
+    local has_builtin=false
+
+    # List custom prompts
+    if [[ "$WIREFLOW_PROMPT_PREFIX" != "$BUILTIN_WIREFLOW_PROMPT_PREFIX" ]]; then
+        if list_prompts_from_dir "$WIREFLOW_PROMPT_PREFIX"; then
+            has_custom=true
+        fi
+    fi
+
+    # List builtin prompts (separate section if custom prompts exist)
+    if [[ -d "$BUILTIN_WIREFLOW_PROMPT_PREFIX" ]]; then
+        if [[ $has_custom == true ]]; then
+            echo
+            if list_prompts_from_dir "$BUILTIN_WIREFLOW_PROMPT_PREFIX" "Built-in prompts (fallback):"; then
+                has_builtin=true
+                echo
+            fi
+        else
+            if list_prompts_from_dir "$BUILTIN_WIREFLOW_PROMPT_PREFIX"; then
+                has_builtin=true
+            fi
+        fi
+    fi
+
+    # Show message if no prompts found
+    if [[ $has_custom == false && $has_builtin == false ]]; then
+        echo "  (no prompts found)"
+    fi
+
+    # Show locations
+    echo
+    [[ $has_custom == true ]] && echo "Custom:   $(display_absolute_path "$WIREFLOW_PROMPT_PREFIX")"
+    [[ $has_builtin == true ]] && echo "Built-in: $(display_absolute_path "$BUILTIN_WIREFLOW_PROMPT_PREFIX")"
+
+    # Show usage
+    echo
+    echo "Usage:"
+    echo "  $SCRIPT_NAME prompts               # List prompts"
+    echo "  $SCRIPT_NAME prompts show <name>   # Preview prompt"
+    echo "  $SCRIPT_NAME prompts edit <name>   # Edit prompt"
+    echo
+    echo "Configure via SYSTEM_PROMPTS=(base research) in config files."
+}
+
+# Show prompt in pager (or pipe to console)
+show_prompt() {
+    local prompt_name="$1"
+
+    if [[ -z "$prompt_name" ]]; then
+        echo "Error: Prompt name required" >&2
+        echo "Usage: $SCRIPT_NAME prompts show <name>" >&2
+        return 1
+    fi
+
+    # Resolve prompt file
+    local prompt_file
+    if ! prompt_file=$(resolve_prompt_file "$prompt_name"); then
+        echo "Error: Prompt not found: '$prompt_name'" >&2
+        echo >&2
+
+        # Show helpful diagnostics
+        if [[ ! -d "$WIREFLOW_PROMPT_PREFIX" ]]; then
+            echo "Warning: Prompt directory not found:" >&2
+            echo "  $(display_absolute_path "$WIREFLOW_PROMPT_PREFIX")" >&2
+            echo >&2
+        fi
+
+        echo "Run '$SCRIPT_NAME prompts' to list available prompts." >&2
+        return 1
+    fi
+
+    # Display in pager
+    if command -v less &>/dev/null; then
+        less "$prompt_file"
+    else
+        cat "$prompt_file"
+    fi
+}
+
+# Edit prompt in editor
+edit_prompt() {
+    local prompt_name="$1"
+
+    if [[ -z "$prompt_name" ]]; then
+        echo "Error: Prompt name required" >&2
+        echo "Usage: $SCRIPT_NAME prompts edit <name>" >&2
+        return 1
+    fi
+
+    # Resolve prompt file (prefer custom location for editing)
+    local prompt_file
+    if prompt_file=$(resolve_prompt_file "$prompt_name"); then
+        # Prompt exists - edit it
+        edit_files "$prompt_file"
+        return
+    fi
+
+    # Prompt doesn't exist - create in custom location
+    if [[ ! -d "$WIREFLOW_PROMPT_PREFIX" ]]; then
+        echo "Creating prompt directory: $(display_absolute_path "$WIREFLOW_PROMPT_PREFIX")"
+        mkdir -p "$WIREFLOW_PROMPT_PREFIX"
+    fi
+
+    prompt_file="$WIREFLOW_PROMPT_PREFIX/${prompt_name}.txt"
+
+    echo "Creating new prompt: $prompt_name"
+
+    # Create template with system-component structure
+    cat > "$prompt_file" <<EOF
+<system-component>
+  <metadata>
+    <name>$prompt_name</name>
+    <version>1.0</version>
+  </metadata>
+  <content>
+    Your prompt content here.
+  </content>
+</system-component>
+EOF
+
+    # Open in editor
+    edit_files "$prompt_file"
+}
+
+# =============================================================================
 # Task Subcommand - Dispatch to Task-Mode Execution
 # =============================================================================
 

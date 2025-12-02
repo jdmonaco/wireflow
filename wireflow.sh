@@ -405,6 +405,44 @@ case "$cmd" in
         fi
         exit 0
         ;;
+    prompts)
+        # Manage system prompt files
+        if [[ $# -eq 0 ]]; then
+            # No subcommand - default to list
+            list_prompts
+        else
+            subcmd="$1"
+            shift
+
+            case "$subcmd" in
+                list)
+                    list_prompts
+                    ;;
+                show)
+                    if [[ $# -eq 0 ]]; then
+                        echo "Error: Prompt name required" >&2
+                        echo "Usage: $SCRIPT_NAME prompts show <name>" >&2
+                        exit 1
+                    fi
+                    show_prompt "$1"
+                    ;;
+                edit)
+                    if [[ $# -eq 0 ]]; then
+                        echo "Error: Prompt name required" >&2
+                        echo "Usage: $SCRIPT_NAME prompts edit <name>" >&2
+                        exit 1
+                    fi
+                    edit_prompt "$1"
+                    ;;
+                *)
+                    echo "Error: Unknown prompts subcommand: '$subcmd'" >&2
+                    show_quick_help_prompts
+                    exit 1
+                    ;;
+            esac
+        fi
+        exit 0
+        ;;
     shell)
         # Shell integration (install wfw + completions)
         cmd_shell "$@"
@@ -429,6 +467,7 @@ case "$cmd" in
             task) show_help_task ;;
             batch) show_help_batch ;;
             tasks) show_help_tasks ;;
+            prompts) show_help_prompts ;;
             cat) show_help_cat ;;
             open) show_help_open ;;
             list) show_help_list ;;
