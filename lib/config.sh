@@ -507,7 +507,7 @@ TASK_EOF
     cat > "$task_dir/summarize.txt" <<'TASK_EOF'
 <user-task>
   <metadata>
-    <name>default</name>
+    <name>summarize</name>
     <version>1.0</version>
   </metadata>
   <content>
@@ -538,7 +538,7 @@ TASK_EOF
     cat > "$task_dir/extract.txt" <<'TASK_EOF'
 <user-task>
   <metadata>
-    <name>default</name>
+    <name>extract</name>
     <version>1.0</version>
   </metadata>
   <content>
@@ -603,7 +603,7 @@ TASK_EOF
     cat > "$task_dir/review.txt" <<'TASK_EOF'
 <user-task>
   <metadata>
-    <name>default</name>
+    <name>review</name>
     <version>1.0</version>
   </metadata>
   <content>
@@ -636,7 +636,7 @@ TASK_EOF
     cat > "$task_dir/compare.txt" <<'TASK_EOF'
 <user-task>
   <metadata>
-    <name>default</name>
+    <name>compare</name>
     <version>1.0</version>
   </metadata>
   <content>
@@ -669,7 +669,7 @@ TASK_EOF
     cat > "$task_dir/outline.txt" <<'TASK_EOF'
 <user-task>
   <metadata>
-    <name>default</name>
+    <name>outline</name>
     <version>1.0</version>
   </metadata>
   <content>
@@ -702,7 +702,7 @@ TASK_EOF
     cat > "$task_dir/explain.txt" <<'TASK_EOF'
 <user-task>
   <metadata>
-    <name>default</name>
+    <name>explain</name>
     <version>1.0</version>
   </metadata>
   <content>
@@ -739,7 +739,7 @@ TASK_EOF
     cat > "$task_dir/critique.txt" <<'TASK_EOF'
 <user-task>
   <metadata>
-    <name>default</name>
+    <name>critique</name>
     <version>1.0</version>
   </metadata>
   <content>

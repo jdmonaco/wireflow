@@ -119,21 +119,11 @@ execute_task_mode() {
         # No project = no persistent cache for file conversions
         CACHE_DIR=""
     fi
-    
+
     # =============================================================================
-    # System Prompt Building
+    # Context Aggregation Setup
     # =============================================================================
-    
-    # Build system prompt from current configuration
-    if ! build_system_prompt; then
-        echo "Error: Failed to build system prompt" >&2
-        return 1
-    fi
-    
-    # =============================================================================
-    # Context Aggregation
-    # =============================================================================
-    
+
     # Set CLI-provided paths for aggregation (must match execute.sh variable names)
     # These can be files or directories; execute.sh handles expansion
     CLI_INPUT_PATHS=("${cli_input_paths[@]}")
@@ -154,6 +144,16 @@ execute_task_mode() {
     INPUT_BLOCKS=()
     IMAGE_BLOCKS=()
     DOCUMENT_INDEX_MAP=()
+
+    # =============================================================================
+    # Build System Prompt
+    # =============================================================================
+
+    # Build system prompt from current configuration
+    if ! build_system_prompt; then
+        echo "Error: Failed to build system prompt" >&2
+        return 1
+    fi
 
     # Aggregate context (no workflow dependencies in task mode)
     aggregate_context "task" "$project_root" "$task_cache_dir"

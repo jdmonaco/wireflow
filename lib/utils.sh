@@ -632,7 +632,7 @@ extract_title_from_file() {
 #   $1 - File path
 # Returns:
 #   "text" for text files (default)
-#   "document" for PDFs
+#   "pdf" for PDF documents
 #   "office" for Microsoft Office files (docx, pptx)
 #   "image" for supported image formats (jpg, png, gif, webp)
 detect_file_type() {

@@ -915,7 +915,7 @@ build_and_track_document_block() {
     fi
 
     # Handle PDF document files separately (optimized ordering: PDFs before text)
-    if [[ "$file_type" == "document" ]]; then
+    if [[ "$file_type" == "pdf" ]]; then
         echo "    Processing PDF document: $(basename "$file")" >&2
 
         # OpenAI provider: Convert PDF to images (no native PDF support)
