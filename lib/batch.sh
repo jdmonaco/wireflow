@@ -960,6 +960,21 @@ cmd_batch() {
     done
 
     # =============================================================================
+    # Model Validation (Batch is Anthropic-only)
+    # =============================================================================
+
+    # Resolve and validate model exists before expensive operations
+    local resolved_model
+    resolved_model=$(resolve_model)
+
+    echo "Validating model availability..."
+    if ! validate_model_availability "$resolved_model" "anthropic"; then
+        echo "" >&2
+        echo "Hint: Use 'wfw models' to see available models" >&2
+        return 1
+    fi
+
+    # =============================================================================
     # Setup Paths (same as run mode)
     # =============================================================================
 

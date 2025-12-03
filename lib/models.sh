@@ -67,6 +67,93 @@ fetch_lmstudio_model() {
     curl -s --max-time 5 "$lms_base/api/v0/models/$model_id"
 }
 
+# =============================================================================
+# Model Validation
+# =============================================================================
+
+# Validate that the resolved model exists via API endpoint
+# Arguments:
+#   $1 - Model ID to validate
+#   $2 - Provider (anthropic or openai)
+# Returns: 0 if model exists, 1 if not found or error
+# Note: Skipped when WIREFLOW_TEST_MODE=true
+validate_model_availability() {
+    local model_id="$1"
+    local provider="${2:-${PROVIDER:-anthropic}}"
+
+    # Skip validation in test mode
+    if [[ "${WIREFLOW_TEST_MODE:-}" == "true" ]]; then
+        return 0
+    fi
+
+    if [[ -z "$model_id" ]]; then
+        echo "Error: No model ID specified" >&2
+        return 1
+    fi
+
+    local result
+    local error_msg
+
+    case "$provider" in
+        anthropic)
+            result=$(fetch_anthropic_model "$model_id" 2>/dev/null)
+            if [[ -z "$result" ]]; then
+                echo "Error: Failed to connect to Anthropic API" >&2
+                return 1
+            fi
+            # Check for error response
+            if echo "$result" | jq -e '.error' &>/dev/null; then
+                error_msg=$(echo "$result" | jq -r '.error.message // .error' 2>/dev/null)
+                echo "Error: Model '$model_id' not found on Anthropic API" >&2
+                echo "  API response: $error_msg" >&2
+                return 1
+            fi
+            # Verify we got a valid model response
+            if ! echo "$result" | jq -e '.id' &>/dev/null; then
+                echo "Error: Invalid response from Anthropic API for model '$model_id'" >&2
+                return 1
+            fi
+            ;;
+        openai)
+            if [[ -z "$OPENAI_BASE_URL" ]]; then
+                echo "Error: OPENAI_BASE_URL not configured" >&2
+                return 1
+            fi
+            # Check server availability first
+            local status_code
+            status_code=$(check_server_status "$OPENAI_BASE_URL/models" 3)
+            if [[ "$status_code" != "200" ]]; then
+                echo "Error: OpenAI-compatible server not available at $OPENAI_BASE_URL (HTTP $status_code)" >&2
+                return 1
+            fi
+            # Fetch model info (use standard OpenAI endpoint for all servers)
+            result=$(fetch_openai_model "$model_id" 2>/dev/null)
+            if [[ -z "$result" ]]; then
+                echo "Error: Failed to query model from OpenAI-compatible server" >&2
+                return 1
+            fi
+            # Check for error response
+            if echo "$result" | jq -e '.error' &>/dev/null; then
+                error_msg=$(echo "$result" | jq -r '.error // "Model not found"' 2>/dev/null)
+                echo "Error: Model '$model_id' not found on OpenAI-compatible server" >&2
+                echo "  Server response: $error_msg" >&2
+                return 1
+            fi
+            # Verify we got a valid model response
+            if ! echo "$result" | jq -e '.id' &>/dev/null; then
+                echo "Error: Invalid response from server for model '$model_id'" >&2
+                return 1
+            fi
+            ;;
+        *)
+            echo "Error: Unknown provider '$provider'" >&2
+            return 1
+            ;;
+    esac
+
+    return 0
+}
+
 # Main entry point for models subcommand
 cmd_models() {
     local subcmd="${1:-}"

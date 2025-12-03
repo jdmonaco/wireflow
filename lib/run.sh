@@ -92,6 +92,27 @@ execute_run_mode() {
     done
 
     # =============================================================================
+    # Model Validation
+    # =============================================================================
+
+    # Resolve and validate model exists before expensive operations
+    local resolved_model
+    local provider="${PROVIDER:-anthropic}"
+
+    if [[ "$provider" == "openai" ]]; then
+        resolved_model=$(openai_resolve_model) || return 1
+    else
+        resolved_model=$(resolve_model)
+    fi
+
+    echo "Validating model availability..."
+    if ! validate_model_availability "$resolved_model" "$provider"; then
+        echo "" >&2
+        echo "Hint: Use 'wfw models' to see available models" >&2
+        return 1
+    fi
+
+    # =============================================================================
     # Automatic Dependency Execution
     # =============================================================================
 
