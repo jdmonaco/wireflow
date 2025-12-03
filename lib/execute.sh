@@ -927,7 +927,7 @@ build_and_track_document_block() {
         # Check if soffice is available
         if ! check_soffice_available; then
             echo "    Warning: LibreOffice (soffice) not available, skipping Office file: $file" >&2
-            echo "    Install LibreOffice to enable Office file support (.docx, .pptx)" >&2
+            echo "    Install LibreOffice to enable Office file support (.docx, .pptx, .xlsx)" >&2
             return 0  # Graceful skip
         fi
 

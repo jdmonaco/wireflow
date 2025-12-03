@@ -633,7 +633,7 @@ extract_title_from_file() {
 # Returns:
 #   "text" for text files (default)
 #   "pdf" for PDF documents
-#   "office" for Microsoft Office files (docx, pptx)
+#   "office" for Microsoft Office files (docx, pptx, xlsx)
 #   "image" for supported image formats (jpg, png, gif, webp)
 detect_file_type() {
     local file="$1"
@@ -655,7 +655,7 @@ detect_file_type() {
             echo "pdf"
             ;;
         # Microsoft Office types (require conversion)
-        docx|pptx)
+        docx|pptx|xlsx)
             echo "office"
             ;;
         # Binary files
@@ -1599,11 +1599,14 @@ build_content_block() {
     title=$(extract_title_from_file "$file")
 
     # Determine if this should be a document block
-    # Context and input files are always document type (for citations support)
+    # Context and input files use document type for Anthropic (citations support)
+    # OpenAI provider doesn't support document type - use text blocks instead
     # Dependencies and system/task remain text type
     local use_document_type=false
     if [[ "$block_category" == "context" || "$block_category" == "input" ]]; then
-        use_document_type=true
+        if [[ "${PROVIDER:-anthropic}" != "openai" ]]; then
+            use_document_type=true
+        fi
     fi
 
     if [[ "$use_document_type" == true ]]; then
