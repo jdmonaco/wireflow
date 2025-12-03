@@ -25,6 +25,7 @@ source "$SCRIPT_DIR/lib/config.sh"
 source "$SCRIPT_DIR/lib/core.sh"
 source "$SCRIPT_DIR/lib/execute.sh"
 source "$SCRIPT_DIR/lib/help.sh"
+source "$SCRIPT_DIR/lib/models.sh"
 source "$SCRIPT_DIR/lib/openai.sh"
 source "$SCRIPT_DIR/lib/output.sh"
 source "$SCRIPT_DIR/lib/pipeline.sh"
@@ -443,6 +444,11 @@ case "$cmd" in
         fi
         exit 0
         ;;
+    models)
+        # Display provider settings and available models
+        cmd_models "$@"
+        exit $?
+        ;;
     shell)
         # Shell integration (install wfw + completions)
         cmd_shell "$@"
@@ -468,6 +474,7 @@ case "$cmd" in
             batch) show_help_batch ;;
             tasks) show_help_tasks ;;
             prompts) show_help_prompts ;;
+            models) show_help_models ;;
             cat) show_help_cat ;;
             open) show_help_open ;;
             list) show_help_list ;;

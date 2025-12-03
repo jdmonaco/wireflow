@@ -28,6 +28,7 @@ Subcommands:
     open NAME        Open output in app (macOS)
     tasks            Manage task templates
     prompts          Manage system prompts
+    models           Show provider settings and models
     list             Show project workflows
     shell            Install shell integration
     help [CMD]       Show help
@@ -111,6 +112,11 @@ show_quick_help_tasks() {
 show_quick_help_prompts() {
     echo "Usage: $SCRIPT_NAME prompts [show|edit <name>]"
     echo "See '$SCRIPT_NAME help prompts' for complete usage details."
+}
+
+show_quick_help_models() {
+    echo "Usage: $SCRIPT_NAME models [show <model_id>]"
+    echo "See '$SCRIPT_NAME help models' for complete usage details."
 }
 
 show_quick_help_cat() {
@@ -403,6 +409,40 @@ Examples:
 
 See Also:
     $SCRIPT_NAME config   # View SYSTEM_PROMPTS setting
+EOF
+}
+
+show_help_models() {
+    cat <<EOF
+Usage: $SCRIPT_NAME models [show <model_id>]
+
+Display model and profile configuration for all providers.
+
+Subcommands:
+    (none)              List all provider settings and available models
+    show <model_id>     Show detailed info for a specific model
+
+Output Sections:
+    Anthropic           Profile settings and available Claude models
+    OpenAI-Compatible   Server status, profile settings, and available models
+
+For LM Studio servers (detected by :1234 port), displays rich model info:
+    - Load state (loaded models marked with *)
+    - Model type (llm, vlm, embeddings)
+    - Quantization and format
+    - Context length (loaded/max for loaded models)
+    - Capabilities (tool_use, etc.)
+
+Options:
+    -h, --help          Quick help
+
+Examples:
+    $SCRIPT_NAME models                          # List all provider info
+    $SCRIPT_NAME models show claude-sonnet-4     # Show Claude model details
+    $SCRIPT_NAME models show qwen3-14b-mlx       # Show LM Studio model details
+
+See Also:
+    $SCRIPT_NAME config   # View all configuration settings
 EOF
 }
 

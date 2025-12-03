@@ -22,6 +22,7 @@ _wireflow() {
             batch)    _wireflow_batch ;;
             tasks)    _wireflow_tasks ;;
             prompts)  _wireflow_prompts ;;
+            models)   _wireflow_models ;;
             cat)      _wireflow_cat ;;
             open)     _wireflow_open ;;
             list)     _wireflow_list ;;
@@ -37,7 +38,7 @@ _wireflow() {
 # =============================================================================
 
 _wireflow_subcommands() {
-    local subcommands="init new edit config run task batch cat open tasks prompts list shell help"
+    local subcommands="init new edit config run task batch cat open tasks prompts models list shell help"
     COMPREPLY=($(compgen -W "$subcommands" -- "$cur"))
 }
 
@@ -672,6 +673,77 @@ _wireflow_prompts() {
     esac
 }
 
+# Cache file for model completions (valid for 5 minutes)
+_wireflow_models_cache_file() {
+    echo "${TMPDIR:-/tmp}/wireflow-models-cache-$UID"
+}
+
+# Fetch and cache model IDs from all providers
+_wireflow_fetch_model_ids() {
+    local cache_file
+    cache_file=$(_wireflow_models_cache_file)
+
+    # Return cached if fresh (< 5 minutes old)
+    if [[ -f "$cache_file" ]]; then
+        local cache_age
+        cache_age=$(( $(date +%s) - $(stat -f %m "$cache_file" 2>/dev/null || stat -c %Y "$cache_file" 2>/dev/null || echo 0) ))
+        if [[ $cache_age -lt 300 ]]; then
+            cat "$cache_file"
+            return 0
+        fi
+    fi
+
+    local models=""
+
+    # Anthropic models (if API key set)
+    if [[ -n "${ANTHROPIC_API_KEY:-}" ]]; then
+        local anthropic_models
+        anthropic_models=$(curl -s --max-time 2 "https://api.anthropic.com/v1/models?limit=100" \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -H "anthropic-version: 2023-06-01" 2>/dev/null | jq -r '.data[].id' 2>/dev/null)
+        models="$models $anthropic_models"
+    fi
+
+    # OpenAI-compatible models (if configured and available)
+    if [[ -n "${OPENAI_BASE_URL:-}" ]]; then
+        local openai_models
+        if [[ "$OPENAI_BASE_URL" =~ :1234 ]]; then
+            # LM Studio: use v0 API
+            local lms_base="${OPENAI_BASE_URL%/v1}"
+            openai_models=$(curl -s --max-time 2 "$lms_base/api/v0/models" 2>/dev/null | jq -r '.data[].id' 2>/dev/null)
+        else
+            openai_models=$(curl -s --max-time 2 "$OPENAI_BASE_URL/models" \
+                -H "Authorization: Bearer ${OPENAI_API_KEY:-fake-api-key}" 2>/dev/null | jq -r '.data[].id' 2>/dev/null)
+        fi
+        models="$models $openai_models"
+    fi
+
+    # Cache and output
+    echo "$models" | tr ' ' '\n' | sort -u | grep -v '^$' > "$cache_file"
+    cat "$cache_file"
+}
+
+_wireflow_models() {
+    case "$prev" in
+        models)
+            if [[ "$cur" == -* ]]; then
+                COMPREPLY=($(compgen -W "--help -h" -- "$cur"))
+            else
+                COMPREPLY=($(compgen -W "show" -- "$cur"))
+            fi
+            ;;
+        show)
+            # Complete with model IDs from cache
+            COMPREPLY=($(compgen -W "$(_wireflow_fetch_model_ids)" -- "$cur"))
+            ;;
+        *)
+            if [[ "$cur" == -* ]]; then
+                COMPREPLY=($(compgen -W "--help -h" -- "$cur"))
+            fi
+            ;;
+    esac
+}
+
 _wireflow_cat() {
     case "$prev" in
         cat)
@@ -723,7 +795,7 @@ _wireflow_help() {
     case "$prev" in
         help)
             # Complete with subcommand names
-            COMPREPLY=($(compgen -W "init new edit config run task batch tasks cat open list shell" -- "$cur"))
+            COMPREPLY=($(compgen -W "init new edit config run task batch tasks prompts models cat open list shell" -- "$cur"))
             ;;
     esac
 }
