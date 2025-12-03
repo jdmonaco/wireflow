@@ -358,6 +358,9 @@ _wireflow_run() {
         --effort)
             COMPREPLY=($(compgen -W "low medium high" -- "$cur"))
             ;;
+        --provider)
+            COMPREPLY=($(compgen -W "anthropic openai" -- "$cur"))
+            ;;
         --system|-p)
             COMPREPLY=($(compgen -W "$(_wireflow_list_prompts)" -- "$cur"))
             ;;
@@ -456,6 +459,9 @@ _wireflow_task() {
             ;;
         --profile)
             COMPREPLY=($(compgen -W "fast balanced deep" -- "$cur"))
+            ;;
+        --provider)
+            COMPREPLY=($(compgen -W "anthropic openai" -- "$cur"))
             ;;
         --temperature|-t)
             COMPREPLY=($(compgen -W "0.0 0.3 0.5 0.7 1.0" -- "$cur"))

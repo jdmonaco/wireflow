@@ -1681,7 +1681,7 @@ execute_api_request() {
             "$WORKFLOW_NAME" \
             "$workflow_dir" \
             "$output_file" \
-            "$project_root"
+            "$PROJECT_ROOT"
     fi
 
     # Cleanup temp files

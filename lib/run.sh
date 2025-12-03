@@ -225,7 +225,7 @@ execute_run_mode() {
             md|markdown)
                 if command -v mdformat &>/dev/null; then
                     echo "Formatting output with mdformat..."
-                    mdformat --no-validate "$output_file"
+                    mdformat --no-validate "$output_file" 2>/dev/null
                 fi
                 ;;
             json)
