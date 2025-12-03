@@ -238,7 +238,7 @@ execute_run_mode() {
     # Convert JSON files to XML (optional, if yq available)
     convert_json_to_xml "$WORKFLOW_DIR"
     
-    echo "Response saved to: $(display_absolute_path "$output_file")"
+    echo "Response saved to: $(display_path "$output_file")"
     
     # Format-specific post-processing
     if [[ -f "$output_file" ]]; then
@@ -265,7 +265,7 @@ execute_run_mode() {
         rm "$output_link"
     fi
     ln "$output_file" "$output_link"
-    echo "Hardlink created: $(display_absolute_path "$output_link")"
+    echo "Hardlink created: $(display_path "$output_link")"
     
     # Copy output file to EXPORT_PATH if specified
     if [[ -n "$EXPORT_PATH" ]]; then
@@ -280,7 +280,7 @@ execute_run_mode() {
         if mkdir -p "$export_dir" 2>/dev/null; then
             # Copy with preserved timestamps
             if cp -p "$output_file" "$resolved_path" 2>/dev/null; then
-                echo "Response exported to: $(display_absolute_path "$resolved_path")"
+                echo "Response exported to: $(display_path "$resolved_path")"
             else
                 echo "Warning: Export failed to $resolved_path" >&2
             fi

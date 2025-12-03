@@ -260,14 +260,14 @@ execute_task_mode() {
             local output_base=$(basename "$output_file" ".${OUTPUT_FORMAT}")
             local citations_output="${output_dir}/${output_base}-citations.md"
             mv "$CITATIONS_FILE_PATH" "$citations_output"
-            echo "Citations saved to: $(display_absolute_path "$citations_output")"
+            echo "Citations saved to: $(display_path "$citations_output")"
         fi
     fi
     
     # Only post-process if output file was explicitly specified
     if [[ -n "$output_file_path" && -f "$output_file" ]]; then
         echo
-        echo "Response saved to: $(display_absolute_path "$output_file")"
+        echo "Response saved to: $(display_path "$output_file")"
         
         # Format-specific post-processing
         case "$OUTPUT_FORMAT" in

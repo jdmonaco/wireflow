@@ -119,6 +119,31 @@ display_absolute_path() {
     echo "${abs_path/#$HOME/\~}"
 }
 
+# Display path for console output
+# Uses project-relative path when PROJECT_ROOT is set and path is within project
+# Falls back to absolute path with tilde for paths outside project
+# Arguments:
+#   $1 - Path to display
+# Returns:
+#   stdout - Formatted path for display
+display_path() {
+    local path="${1:-.}"
+    local abs_path="$(absolute_path "$path")"
+
+    # If PROJECT_ROOT is set and path is under project, show relative
+    # Note: Project root itself shows as absolute path with tilde (not ".")
+    if [[ -n "${PROJECT_ROOT:-}" ]]; then
+        local project_abs="$(absolute_path "$PROJECT_ROOT")"
+        if [[ "$abs_path" == "$project_abs"/* ]]; then
+            echo "${abs_path#$project_abs/}"
+            return
+        fi
+    fi
+
+    # Fall back to absolute path with tilde
+    echo "${abs_path/#$HOME/\~}"
+}
+
 # Relative path normalization with respect to any base path  
 # Arguments:  
 #   $1 - Target path, optional (defaults to '.')  
@@ -357,8 +382,8 @@ _print_labeled_path() {
     local path="$2"
     local indent="${3:-  }"
     [[ -z "$path" ]] && return 1
-    local display="$(display_absolute_path "$path")"
-    printf "${indent}%-12s%-55s%s\n" "${label}:" "$display"
+    local display="$(display_path "$path")"
+    printf "${indent}%-12s%s\n" "${label}:" "$display"
 }
 
 # Show current project location (root directory path)
@@ -384,8 +409,8 @@ show_workflow_location() {
     [[ -z "$name" || -z "$workflow_dir" ]] && return 1
     [[ ! -d "$workflow_dir" ]] && return 1
 
-    # Display current project root
-    echo "Workflow ('$name'):"
+    # Display workflow paths (name already shown in "Loaded 'x' config" message)
+    echo "Workflow:"
     _print_labeled_path "Project" "$project_root" || true
     _print_labeled_path "Run path" "$workflow_dir"
     _print_labeled_path "Task file" "$workflow_dir/task.txt"

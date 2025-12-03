@@ -482,10 +482,10 @@ process_batch_results() {
 
     echo ""
     echo "Batch results: $success_count succeeded, $error_count failed"
-    echo "Output directory: $(display_absolute_path "$output_dir")"
+    echo "Output directory: $(display_path "$output_dir")"
 
     if [[ $error_count -gt 0 ]]; then
-        echo "See errors: $(display_absolute_path "$errors_log")"
+        echo "See errors: $(display_path "$errors_log")"
     fi
 
     return 0
