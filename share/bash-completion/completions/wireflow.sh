@@ -693,6 +693,17 @@ _wireflow_fetch_model_ids() {
         fi
     fi
 
+    # Source wireflow config to get OPENAI_BASE_URL if not in environment
+    local config_file="${XDG_CONFIG_HOME:-$HOME/.config}/wireflow/config"
+    if [[ -f "$config_file" ]]; then
+        # Extract just the variables we need (avoid executing arbitrary code)
+        local config_openai_url config_openai_key
+        config_openai_url=$(grep -E '^OPENAI_BASE_URL=' "$config_file" 2>/dev/null | head -1 | cut -d= -f2- | tr -d '"'"'")
+        config_openai_key=$(grep -E '^OPENAI_API_KEY=' "$config_file" 2>/dev/null | head -1 | cut -d= -f2- | tr -d '"'"'")
+        [[ -z "${OPENAI_BASE_URL:-}" && -n "$config_openai_url" ]] && OPENAI_BASE_URL="$config_openai_url"
+        [[ -z "${OPENAI_API_KEY:-}" && -n "$config_openai_key" ]] && OPENAI_API_KEY="$config_openai_key"
+    fi
+
     local models=""
 
     # Anthropic models (if API key set)
@@ -731,12 +742,18 @@ _wireflow_models() {
             if [[ "$cur" == -* ]]; then
                 COMPREPLY=($(compgen -W "--help -h" -- "$cur"))
             else
-                COMPREPLY=($(compgen -W "show" -- "$cur"))
+                COMPREPLY=($(compgen -W "list show ps" -- "$cur"))
             fi
             ;;
         show)
-            # Complete with model IDs from cache
+            # Complete with model IDs from all providers (Anthropic + OpenAI-compatible)
             COMPREPLY=($(compgen -W "$(_wireflow_fetch_model_ids)" -- "$cur"))
+            ;;
+        list|ps)
+            # No further completions needed
+            if [[ "$cur" == -* ]]; then
+                COMPREPLY=($(compgen -W "--help -h" -- "$cur"))
+            fi
             ;;
         *)
             if [[ "$cur" == -* ]]; then

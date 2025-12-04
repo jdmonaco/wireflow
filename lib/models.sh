@@ -146,9 +146,13 @@ validate_model_availability() {
                 echo "Error: OPENAI_BASE_URL is not set" >&2
                 return 1
             fi
-            # Check server availability first
+            # Check server availability first (use appropriate endpoint for server type)
             local status_code
-            status_code=$(check_server_status "$OPENAI_BASE_URL/v1/models" 3)
+            if is_ollama_server "$OPENAI_BASE_URL"; then
+                status_code=$(check_server_status "$OPENAI_BASE_URL/api/tags" 3)
+            else
+                status_code=$(check_server_status "$OPENAI_BASE_URL/v1/models" 3)
+            fi
             if [[ "$status_code" != "200" ]]; then
                 echo "Error: OpenAI-compatible server not available at $OPENAI_BASE_URL (HTTP $status_code)" >&2
                 return 1
@@ -277,21 +281,33 @@ display_anthropic_section() {
 display_openai_section() {
     printf "  Base URL: %-40s [%s]\n" "$OPENAI_BASE_URL" "${USER_ENV_SOURCE_MAP[OPENAI_BASE_URL]:-builtin}"
 
-    # Check server status
+    # Check server status using appropriate endpoint for server type
+    # Ollama doesn't support HEAD on /v1/models, so use /api/tags instead
     local status_code
-    status_code=$(check_server_status "$OPENAI_BASE_URL/v1/models")
-
-    if [[ "$status_code" == "200" ]]; then
-        if is_ollama_server "$OPENAI_BASE_URL"; then
+    if is_ollama_server "$OPENAI_BASE_URL"; then
+        status_code=$(check_server_status "$OPENAI_BASE_URL/api/tags")
+        if [[ "$status_code" == "200" ]]; then
             echo "  Status: Online (Ollama)"
-        elif is_lmstudio_server "$OPENAI_BASE_URL"; then
+        else
+            echo "  Status: Offline (HTTP $status_code)"
+            return 0
+        fi
+    elif is_lmstudio_server "$OPENAI_BASE_URL"; then
+        status_code=$(check_server_status "$OPENAI_BASE_URL/v1/models")
+        if [[ "$status_code" == "200" ]]; then
             echo "  Status: Online (LM Studio)"
         else
-            echo "  Status: Online"
+            echo "  Status: Offline (HTTP $status_code)"
+            return 0
         fi
     else
-        echo "  Status: Offline (HTTP $status_code)"
-        return 0
+        status_code=$(check_server_status "$OPENAI_BASE_URL/v1/models")
+        if [[ "$status_code" == "200" ]]; then
+            echo "  Status: Online"
+        else
+            echo "  Status: Offline (HTTP $status_code)"
+            return 0
+        fi
     fi
 
     # Model profile settings
@@ -404,7 +420,11 @@ cmd_models_show() {
     # Try OpenAI-compatible if configured
     if [[ -n "$OPENAI_BASE_URL" ]]; then
         local status_code
-        status_code=$(check_server_status "$OPENAI_BASE_URL/v1/models")
+        if is_ollama_server "$OPENAI_BASE_URL"; then
+            status_code=$(check_server_status "$OPENAI_BASE_URL/api/tags")
+        else
+            status_code=$(check_server_status "$OPENAI_BASE_URL/v1/models")
+        fi
 
         if [[ "$status_code" == "200" ]]; then
             local result
@@ -460,9 +480,13 @@ cmd_models_ps() {
         return 1
     fi
 
-    # Check server availability
+    # Check server availability (use appropriate endpoint for server type)
     local status_code
-    status_code=$(check_server_status "$OPENAI_BASE_URL/v1/models" 3)
+    if is_ollama_server "$OPENAI_BASE_URL"; then
+        status_code=$(check_server_status "$OPENAI_BASE_URL/api/tags" 3)
+    else
+        status_code=$(check_server_status "$OPENAI_BASE_URL/v1/models" 3)
+    fi
 
     if [[ "$status_code" != "200" ]]; then
         echo "Server not available at $OPENAI_BASE_URL (HTTP $status_code)" >&2
