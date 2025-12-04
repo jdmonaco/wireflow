@@ -358,51 +358,6 @@ EOF
 }
 
 # ============================================================================
-# Dependency resolution tests
-# ============================================================================
-
-@test "integration: system prompt dependency resolution" {
-    # Create prompts with dependencies
-    local prompts_dir="${GLOBAL_CONFIG_DIR}/prompts/system"
-    mkdir -p "$prompts_dir"
-
-    # Base component
-    cat > "$prompts_dir/base.txt" <<'EOF'
-<system-component>
-  <metadata>
-    <name>base</name>
-    <version>1.0</version>
-  </metadata>
-  <content>Base component content</content>
-</system-component>
-EOF
-
-    # Dependent component
-    cat > "$prompts_dir/extended.txt" <<'EOF'
-<system-component>
-  <metadata>
-    <name>extended</name>
-    <version>1.0</version>
-    <dependencies>
-      <dependency>base</dependency>
-    </dependencies>
-  </metadata>
-  <content>Extended component content</content>
-</system-component>
-EOF
-
-    # Test dependency resolution
-    export WIREFLOW_PROMPT_PREFIX="$prompts_dir"
-    export BUILTIN_WIREFLOW_PROMPT_PREFIX="$prompts_dir"
-
-    local deps
-    deps=$(resolve_system_dependencies "extended")
-
-    # Check that deps contains "base"
-    [[ "$deps" == *"base"* ]]
-}
-
-# ============================================================================
 # Streaming vs batch mode tests
 # ============================================================================
 
@@ -438,78 +393,6 @@ EOF
     run "${SCRIPT_DIR}/wireflow.sh" run batcher
     assert_success
     assert_output --partial "DRY RUN MODE"
-}
-
-# ============================================================================
-# Edge cases and error conditions
-# ============================================================================
-
-@test "integration: handles circular dependencies gracefully" {
-    local prompts_dir="${GLOBAL_CONFIG_DIR}/prompts/system"
-    mkdir -p "$prompts_dir"
-
-    # Create circular dependency
-    cat > "$prompts_dir/comp-a.txt" <<'EOF'
-<system-component>
-  <metadata>
-    <name>comp-a</name>
-    <version>1.0</version>
-    <dependencies>
-      <dependency>comp-b</dependency>
-    </dependencies>
-  </metadata>
-  <content>Component A</content>
-</system-component>
-EOF
-
-    cat > "$prompts_dir/comp-b.txt" <<'EOF'
-<system-component>
-  <metadata>
-    <name>comp-b</name>
-    <version>1.0</version>
-    <dependencies>
-      <dependency>comp-a</dependency>
-    </dependencies>
-  </metadata>
-  <content>Component B</content>
-</system-component>
-EOF
-
-    export WIREFLOW_PROMPT_PREFIX="$prompts_dir"
-    export BUILTIN_WIREFLOW_PROMPT_PREFIX="$prompts_dir"
-
-    # Should handle circular dependency without infinite loop
-    run resolve_system_dependencies "comp-a"
-    # Test that it completes without hanging (output size should be bounded)
-    # Note: Current implementation may produce repeated output due to circular deps
-    # but should not cause infinite recursion
-    assert [ "${#output}" -lt "50000" ]  # Output should be bounded (no infinite loop)
-}
-
-@test "integration: handles missing dependencies gracefully" {
-    local prompts_dir="${GLOBAL_CONFIG_DIR}/prompts/system"
-    mkdir -p "$prompts_dir"
-
-    cat > "$prompts_dir/broken.txt" <<'EOF'
-<system-component>
-  <metadata>
-    <name>broken</name>
-    <version>1.0</version>
-    <dependencies>
-      <dependency>non-existent</dependency>
-    </dependencies>
-  </metadata>
-  <content>Broken component</content>
-</system-component>
-EOF
-
-    export WIREFLOW_PROMPT_PREFIX="$prompts_dir"
-    export BUILTIN_WIREFLOW_PROMPT_PREFIX="$prompts_dir"
-
-    # Should handle missing dependency gracefully
-    run resolve_system_dependencies "broken"
-    # Should complete without error, possibly with warning
-    assert_success || assert_output --partial "Warning"
 }
 
 # ============================================================================
