@@ -232,8 +232,7 @@ execute_task_mode() {
         # Backup if file exists
         if [[ -f "$output_file" ]]; then
             echo "Backing up previous output file..."
-            local output_bak="${output_file%.*}-$(date +"%Y%m%d%H%M%S").${output_file##*.}"
-            mv -v "$output_file" "$output_bak"
+            backup_file_to_versioned "$output_file" "Previous Versions" true
             echo
         fi
     else

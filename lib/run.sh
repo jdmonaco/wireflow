@@ -290,6 +290,11 @@ execute_run_mode() {
         # Create parent directories
         local export_dir=$(dirname "$resolved_path")
         if mkdir -p "$export_dir" 2>/dev/null; then
+            # Backup existing export file to Previous Versions
+            if [[ -f "$resolved_path" ]]; then
+                echo "Backing up previous export file..."
+                backup_file_to_versioned "$resolved_path" "Previous Versions" true
+            fi
             # Copy with preserved timestamps
             if cp -p "$output_file" "$resolved_path" 2>/dev/null; then
                 echo "Response exported to: $(display_path "$resolved_path")"

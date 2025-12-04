@@ -1749,6 +1749,87 @@ build_document_content_block() {
 }
 
 # =============================================================================
+# File Backup Utilities
+# =============================================================================
+
+# Backup a file to a versioned subdirectory with timestamp
+# Uses the file's last-modified time for the timestamp
+# Arguments:
+#   $1 - file_path: Path to file to backup
+#   $2 - backup_dir_name: Name of backup subdirectory (e.g., "backups" or "Previous Versions")
+#   $3 - use_space_format: "true" = " YYYYMMDD HHMMSS", "false" = "-YYYYMMDDHHMMSS" (default: false)
+# Returns:
+#   0 on success or if file doesn't exist
+#   Outputs mv -v result to stdout
+backup_file_to_versioned() {
+    local file_path="$1"
+    local backup_dir_name="$2"
+    local use_space_format="${3:-false}"
+
+    [[ ! -f "$file_path" ]] && return 0
+
+    local parent_dir
+    parent_dir=$(dirname "$file_path")
+    local filename
+    filename=$(basename "$file_path")
+    local backup_dir="$parent_dir/$backup_dir_name"
+
+    mkdir -p "$backup_dir"
+
+    local base="${filename%.*}"
+    local ext="${filename##*.}"
+
+    # Get last-modified time of the file (cross-platform)
+    local mtime
+    mtime=$(stat -f "%Sm" -t "%Y%m%d%H%M%S" "$file_path" 2>/dev/null) || \
+        mtime=$(date -d "@$(stat -c %Y "$file_path")" +"%Y%m%d%H%M%S" 2>/dev/null)
+
+    local timestamp
+    if [[ "$use_space_format" == "true" ]]; then
+        # Format as " YYYYMMDD HHMMSS"
+        timestamp=" ${mtime:0:8} ${mtime:8:6}"
+    else
+        # Format as "-YYYYMMDDHHMMSS"
+        timestamp="-${mtime}"
+    fi
+
+    local backup_path="$backup_dir/${base}${timestamp}.${ext}"
+    mv -v "$file_path" "$backup_path"
+}
+
+# Backup a directory to "Previous Versions/" subdirectory with timestamp
+# Uses the directory's last-modified time for the timestamp
+# Arguments:
+#   $1 - dir_path: Path to directory to backup
+# Returns:
+#   0 on success or if directory doesn't exist
+#   Outputs mv -v result to stdout
+backup_directory_to_versioned() {
+    local dir_path="$1"
+
+    [[ ! -d "$dir_path" ]] && return 0
+
+    local parent_dir
+    parent_dir=$(dirname "$dir_path")
+    local dirname
+    dirname=$(basename "$dir_path")
+    local versions_dir="$parent_dir/Previous Versions"
+
+    mkdir -p "$versions_dir"
+
+    # Get last-modified time of the directory (cross-platform)
+    local mtime
+    mtime=$(stat -f "%Sm" -t "%Y%m%d%H%M%S" "$dir_path" 2>/dev/null) || \
+        mtime=$(date -d "@$(stat -c %Y "$dir_path")" +"%Y%m%d%H%M%S" 2>/dev/null)
+
+    # Format as " YYYYMMDD HHMMSS"
+    local timestamp=" ${mtime:0:8} ${mtime:8:6}"
+    local backup_path="$versions_dir/${dirname}${timestamp}"
+
+    mv -v "$dir_path" "$backup_path"
+}
+
+# =============================================================================
 # JSON to XML Conversion (Optional Post-Processing)
 # =============================================================================
 

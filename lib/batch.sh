@@ -435,6 +435,12 @@ process_batch_results() {
         return 1
     fi
 
+    # Backup existing output directory to Previous Versions
+    if [[ -d "$output_dir" ]]; then
+        echo "Backing up previous batch output..."
+        backup_directory_to_versioned "$output_dir"
+    fi
+
     # Create output directory
     mkdir -p "$output_dir"
 
