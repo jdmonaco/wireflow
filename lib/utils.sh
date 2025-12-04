@@ -1831,104 +1831,29 @@ backup_directory_to_versioned() {
 
 # =============================================================================
 # JSON to XML Conversion (Optional Post-Processing)
+# Requires: yq (https://github.com/mikefarah/yq)
 # =============================================================================
-
-# Helper: Generate indentation
-_indent() {
-    local level=$1
-    printf '%*s' $((level * 2)) ''
-}
-
-# Helper: Check if string contains XML tags
-_contains_xml() {
-    local pattern='<[^>]+>'
-    [[ "$1" =~ $pattern ]]
-}
-
-# Helper: Convert JSON value to pseudo-XML recursively
-_json_to_pseudo_xml() {
-    local json="$1"
-    local level="${2:-0}"
-    local key="$3"
-
-    # Determine the type of JSON value
-    local first_char="${json:0:1}"
-    local last_char="${json: -1}"
-
-    if [[ "$first_char" == "{" && "$last_char" == "}" ]]; then
-        # Object
-        if [[ -n "$key" ]]; then
-            _indent "$level"
-            echo "<$key>"
-        fi
-
-        # Parse object keys and values
-        while IFS= read -r line; do
-            local k="${line%%:*}"
-            local v="${line#*:}"
-            k="${k//\"/}"  # Remove quotes from key
-            _json_to_pseudo_xml "$v" $((level + 1)) "$k"
-        done < <(echo "$json" | jq -r 'to_entries | .[] | "\(.key):\(.value | @json)"')
-
-        if [[ -n "$key" ]]; then
-            _indent "$level"
-            echo "</$key>"
-        fi
-
-    elif [[ "$first_char" == "[" && "$last_char" == "]" ]]; then
-        # Array
-        while IFS= read -r item; do
-            _json_to_pseudo_xml "$item" "$level" "$key"
-        done < <(echo "$json" | jq -c '.[]')
-
-    elif [[ "$first_char" == "\"" ]]; then
-        # String value
-        local str_val
-        str_val=$(echo "$json" | jq -r '.')
-
-        if _contains_xml "$str_val"; then
-            # XML string - add newlines for readability
-            _indent "$level"
-            echo "<$key>"
-            echo "$str_val"
-            _indent "$level"
-            echo "</$key>"
-        else
-            # Regular string - inline
-            _indent "$level"
-            echo "<$key>$str_val</$key>"
-        fi
-
-    else
-        # Number, boolean, or null
-        local val
-        val=$(echo "$json" | jq -r '.')
-        _indent "$level"
-        echo "<$key>$val</$key>"
-    fi
-}
 
 # Convert JSON files to pseudo-XML (optional)
 # Creates human-readable XML files alongside JSON for inspection/debugging
-# Detects XML-like content in string values and preserves their structure
+# Uses yq for conversion, then un-escapes HTML entities for readability
 # Arguments:
 #   $1 - workflow_dir: Directory containing JSON files
 # Returns:
-#   0 if conversion succeeded or jq unavailable (not an error)
-#   1 if conversion failed (should not happen, silently ignored)
+#   0 always (conversion is optional, failures are silent)
 # Side effects:
-#   Creates .xml files alongside .json files if jq available
+#   Creates .xml files alongside .json files if yq available
 # Note:
 #   JSON files are canonical, XML files are convenience views only
+#   Output is "pseudo-XML" with un-escaped entities (not valid XML)
 convert_json_to_xml() {
     local workflow_dir="$1"
 
-    # Check if jq is available (required for parsing)
-    if ! command -v jq >/dev/null 2>&1; then
+    # Check if yq is available (optional dependency)
+    if ! command -v yq >/dev/null 2>&1; then
         return 0  # Not an error, just skip conversion
     fi
 
-    # Silently convert files (don't announce unless debugging)
     # Files: dry-run-request (dry-run mode), run-request (post-execution), document-map (citations)
     local files=(
         "dry-run-request"
@@ -1941,15 +1866,11 @@ convert_json_to_xml() {
         local xml_file="$workflow_dir/${base}.xml"
 
         if [[ -f "$json_file" ]]; then
-            # Convert using custom pseudo-XML converter
-            {
-                echo "<root>"
-                _json_to_pseudo_xml "$(<"$json_file")" 1
-                echo "</root>"
-            } > "$xml_file" 2>/dev/null || {
-                # Conversion failed, remove partial file
-                rm -f "$xml_file"
-            }
+            # Convert using yq, un-escape HTML entities for readability
+            if ! yq -p=json -o=xml . "$json_file" 2>/dev/null | \
+                 sed 's/&lt;/</g; s/&gt;/>/g; s/&amp;/\&/g' > "$xml_file"; then
+                rm -f "$xml_file"  # Remove partial file on failure
+            fi
         fi
     done
 
