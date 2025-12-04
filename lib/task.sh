@@ -297,10 +297,15 @@ execute_task_mode() {
                 ;;
             # txt, html, etc. - no formatting needed
         esac
-        
+
+        # Display output in pager (non-streaming with explicit output file only)
+        if [[ "$STREAM_MODE" != "true" ]]; then
+            display_in_pager "$output_file"
+        fi
+
         echo
         echo "Task completed successfully!"
     fi
-    
+
     return 0
 }

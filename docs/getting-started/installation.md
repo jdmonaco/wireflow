@@ -136,6 +136,46 @@ sudo dnf install poppler-utils      # Fedora/RHEL
 !!! note "Anthropic Provider"
     If using the default Anthropic provider, `pdftoppm` is not required - PDFs are processed natively.
 
+### Enhanced Output Display
+
+WireFlow can use enhanced pagers for better output display. These are optional but recommended for the best experience:
+
+**glow** - Renders markdown beautifully in the terminal ([charmbracelet/glow](https://github.com/charmbracelet/glow)):
+
+```bash
+# macOS
+brew install glow
+
+# Linux
+# See https://github.com/charmbracelet/glow#installation
+```
+
+**gum** - Enhanced text paging for all file types ([charmbracelet/gum](https://github.com/charmbracelet/gum)):
+
+```bash
+# macOS
+brew install gum
+
+# Linux
+# See https://github.com/charmbracelet/gum#installation
+```
+
+Without these tools, WireFlow falls back to `$PAGER` (if set) or `less`.
+
+### Request Inspection
+
+**yq** - Enables JSON to XML conversion for easier request file inspection:
+
+```bash
+# macOS
+brew install yq
+
+# Linux
+# See https://github.com/mikefarah/yq#install
+```
+
+Without `yq`, request files are saved as JSON only.
+
 ## Installation Methods
 
 ### Method 1: Clone Repository (Recommended)

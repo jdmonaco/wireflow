@@ -1757,7 +1757,7 @@ build_document_content_block() {
 # Arguments:
 #   $1 - file_path: Path to file to backup
 #   $2 - backup_dir_name: Name of backup subdirectory (e.g., "backups" or "Previous Versions")
-#   $3 - use_space_format: "true" = " YYYYMMDD HHMMSS", "false" = "-YYYYMMDDHHMMSS" (default: false)
+#   $3 - use_space_format: "true" = " YYYY-MM-DDTHH-MM-SS", "false" = "-YYYY-MM-DDTHH-MM-SS" (default: false)
 # Returns:
 #   0 on success or if file doesn't exist
 #   Outputs mv -v result to stdout
@@ -1781,16 +1781,16 @@ backup_file_to_versioned() {
 
     # Get last-modified time of the file (cross-platform)
     local mtime
-    mtime=$(stat -f "%Sm" -t "%Y%m%d%H%M%S" "$file_path" 2>/dev/null) || \
-        mtime=$(date -d "@$(stat -c %Y "$file_path")" +"%Y%m%d%H%M%S" 2>/dev/null)
+    mtime=$(stat -f "%Sm" -t "%Y-%m-%dT%H-%M-%S" "$file_path" 2>/dev/null) || \
+        mtime=$(date -d "@$(stat -c %Y "$file_path")" +"%Y-%m-%dT%H-%M-%S" 2>/dev/null)
 
     local timestamp
     if [[ "$use_space_format" == "true" ]]; then
-        # Format as " YYYYMMDD HHMMSS"
-        timestamp=" ${mtime:0:8} ${mtime:8:6}"
+        # Format as " YYYY-MM-DDTHH-MM-SS"
+        timestamp=" ${mtime}"
     else
-        # Format as "-YYYYMMDDHHMMSS"
-        timestamp="-${mtime}"
+        # Format as "_YYYY-MM-DDTHH-MM-SS"
+        timestamp="_${mtime}"
     fi
 
     local backup_path="$backup_dir/${base}${timestamp}.${ext}"

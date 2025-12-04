@@ -125,6 +125,9 @@ wfw run 02-analysis --depends-on 01-context --stream
 - `curl` and `jq` for API interaction
 - Anthropic API key ([get one here](https://console.anthropic.com/))
 
+**Optional:** `glow` or `gum` for enhanced output display, `yq` for request inspection.
+See [installation guide](getting-started/installation.md#optional-dependencies) for details.
+
 ## License
 
 MIT License - see repository for details

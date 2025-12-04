@@ -176,9 +176,6 @@ anthropic_execute_single() {
         echo "$response" | jq -r '.content[] | select(.type == "text") | .text' > "${params[output_file]}"
     fi
 
-    # Display with less
-    less "${params[output_file]}"
-
     return 0
 }
 

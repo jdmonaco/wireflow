@@ -659,7 +659,7 @@ _filter_base64_for_display() {
 #   $2 - workflow_dir: Workflow directory (for file paths in run mode)
 #   $3 - request_payload: JSON request payload string
 # Side effects:
-#   Saves dry-run-request.json, optionally converts to XML, opens editor, exits script
+#   Saves dry-run-request.json, optionally converts to XML, opens in pager, exits script
 _save_dry_run_and_exit() {
     local mode="$1"
     local workflow_dir="$2"
@@ -687,15 +687,20 @@ _save_dry_run_and_exit() {
     [[ "$mode" == "run" ]] && echo "  XML view: ${dry_run_request%.json}.xml"
     echo ""
 
-    # If count-tokens was also requested, prompt before opening
+    # If count-tokens was also requested, prompt before opening pager
     if [[ "$COUNT_TOKENS" == "true" ]]; then
-        read -p "Press Enter to inspect in editor (or Ctrl+C to cancel): " -r
+        read -p "Press Enter to view request (or Ctrl+C to cancel): " -r
         echo ""
     fi
 
-    # Open in editor (skip in test mode)
+    # Display in pager (skip in test mode)
     if [[ "${WIREFLOW_TEST_MODE:-}" != "true" ]]; then
-        edit_files "$dry_run_request"
+        # Prefer XML if available, fall back to JSON
+        local display_file="$dry_run_request"
+        if [[ -f "${dry_run_request%.json}.xml" ]]; then
+            display_file="${dry_run_request%.json}.xml"
+        fi
+        display_in_pager "$display_file"
     else
         echo "=== DRY RUN MODE ==="
     fi
@@ -1671,16 +1676,6 @@ execute_api_request() {
 
         # Filter base64 data and save to run-request.json
         _filter_base64_for_display "$request_json" > "$workflow_dir/run-request.json" 2>/dev/null || true
-
-        # Convert JSON files to XML (run-request.json, document-map.json)
-        convert_json_to_xml "$workflow_dir"
-
-        # Write execution log for cache validation and dependency tracking
-        write_execution_log \
-            "$WORKFLOW_NAME" \
-            "$workflow_dir" \
-            "$output_file" \
-            "$PROJECT_ROOT"
     fi
 
     # Cleanup temp files

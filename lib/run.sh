@@ -249,7 +249,14 @@ execute_run_mode() {
     
     # Convert JSON files to XML (optional, if yq available)
     convert_json_to_xml "$WORKFLOW_DIR"
-    
+
+    # Write execution log for cache validation and dependency tracking
+    write_execution_log \
+        "$WORKFLOW_NAME" \
+        "$WORKFLOW_DIR" \
+        "$output_file" \
+        "$PROJECT_ROOT"
+
     echo "Response saved to: $(display_path "$output_file")"
     
     # Format-specific post-processing
@@ -305,9 +312,14 @@ execute_run_mode() {
             echo "Warning: Failed to create export directory $export_dir" >&2
         fi
     fi
-    
+
+    # Display output in pager (non-streaming only)
+    if [[ "$STREAM_MODE" != "true" ]]; then
+        display_in_pager "$output_file"
+    fi
+
     echo
     echo "Workflow '$WORKFLOW_NAME' completed successfully!"
-    
+
     return 0
 }

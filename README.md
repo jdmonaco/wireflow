@@ -158,6 +158,9 @@ wfw task -i "Extract action items" -cx meeting-notes.md
 - `curl` and `jq`
 - Anthropic API key ([get one here](https://console.anthropic.com/))
 
+**Optional:** `glow` or `gum` for enhanced output display, `yq` for request inspection.
+See [installation guide](https://docs.joemona.co/wireflow/getting-started/installation/#optional-dependencies) for details.
+
 ## Configuration
 
 ### Global Configuration

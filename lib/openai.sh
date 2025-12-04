@@ -245,9 +245,6 @@ openai_execute_single() {
     # Write to output file
     echo "$content" > "${params[output_file]}"
 
-    # Display with less
-    less "${params[output_file]}"
-
     return 0
 }
 
