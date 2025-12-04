@@ -115,7 +115,7 @@ show_quick_help_prompts() {
 }
 
 show_quick_help_models() {
-    echo "Usage: $SCRIPT_NAME models [show <model_id>]"
+    echo "Usage: $SCRIPT_NAME models [show <model_id> | ps]"
     echo "See '$SCRIPT_NAME help models' for complete usage details."
 }
 
@@ -414,24 +414,33 @@ EOF
 
 show_help_models() {
     cat <<EOF
-Usage: $SCRIPT_NAME models [show <model_id>]
+Usage: $SCRIPT_NAME models [show <model_id> | ps]
 
 Display model and profile configuration for all providers.
 
 Subcommands:
     (none)              List all provider settings and available models
     show <model_id>     Show detailed info for a specific model
+    ps                  Show running/loaded models on local server
 
 Output Sections:
     Anthropic           Profile settings and available Claude models
     OpenAI-Compatible   Server status, profile settings, and available models
 
-For LM Studio servers (detected by :1234 port), displays rich model info:
+Local Inference Servers:
+    LM Studio (:1234)   Rich model info via /api/v0 endpoint
+    Ollama (:11434)     Rich model info via /api endpoint
+
+    Both display:
     - Load state (loaded models marked with *)
-    - Model type (llm, vlm, embeddings)
-    - Quantization and format
-    - Context length (loaded/max for loaded models)
-    - Capabilities (tool_use, etc.)
+    - Model family and parameters
+    - Quantization level
+    - Context length info
+
+    The 'ps' subcommand shows only currently loaded models with:
+    - VRAM usage (Ollama)
+    - Active context length
+    - Expiration time (Ollama)
 
 Options:
     -h, --help          Quick help
@@ -439,7 +448,8 @@ Options:
 Examples:
     $SCRIPT_NAME models                          # List all provider info
     $SCRIPT_NAME models show claude-sonnet-4     # Show Claude model details
-    $SCRIPT_NAME models show qwen3-14b-mlx       # Show LM Studio model details
+    $SCRIPT_NAME models show llama3.2            # Show Ollama model details
+    $SCRIPT_NAME models ps                       # Show running models
 
 See Also:
     $SCRIPT_NAME config   # View all configuration settings

@@ -3,13 +3,21 @@
 # =============================================================================
 # Display provider settings and available models from API endpoints.
 # Supports Anthropic Claude API and OpenAI-compatible providers.
-# Special handling for LM Studio servers (port :1234) using richer v0 API.
+# Special handling for local inference servers:
+#   - LM Studio (port :1234) using /api/v0 endpoint
+#   - Ollama (port :11434) using /api endpoint
 # =============================================================================
 
 # Check if URL is LM Studio (port :1234)
 is_lmstudio_server() {
     local url="$1"
     [[ "$url" =~ :1234(/|$) ]]
+}
+
+# Check if URL is Ollama (port :11434)
+is_ollama_server() {
+    local url="$1"
+    [[ "$url" =~ :11434(/|$) ]]
 }
 
 # Query Anthropic /v1/models endpoint
@@ -65,6 +73,31 @@ fetch_lmstudio_model() {
     local base_url="${OPENAI_BASE_URL:-}"
     local lms_base="${base_url%/v1}"
     curl -s --max-time 5 "$lms_base/api/v0/models/$model_id"
+}
+
+# Query Ollama /api/tags endpoint (GET)
+fetch_ollama_models() {
+    local base_url="${OPENAI_BASE_URL:-}"
+    [[ -z "$base_url" ]] && return 1
+    local ollama_base="${base_url%/v1}"
+    curl -s --max-time 5 "$ollama_base/api/tags"
+}
+
+# Query Ollama /api/show endpoint (POST with model in body)
+fetch_ollama_model() {
+    local model_id="$1"
+    local base_url="${OPENAI_BASE_URL:-}"
+    local ollama_base="${base_url%/v1}"
+    curl -s --max-time 5 "$ollama_base/api/show" \
+        -H "Content-Type: application/json" \
+        -d "{\"model\": \"$model_id\"}"
+}
+
+# Query Ollama /api/ps endpoint for running models (GET)
+fetch_ollama_running() {
+    local base_url="${OPENAI_BASE_URL:-}"
+    local ollama_base="${base_url%/v1}"
+    curl -s --max-time 5 "$ollama_base/api/ps"
 }
 
 # =============================================================================
@@ -163,6 +196,9 @@ cmd_models() {
             shift
             cmd_models_show "$@"
             ;;
+        ps)
+            cmd_models_ps
+            ;;
         ""|list)
             cmd_models_list
             ;;
@@ -252,7 +288,9 @@ display_openai_section() {
     status_code=$(check_server_status "$OPENAI_BASE_URL/models")
 
     if [[ "$status_code" == "200" ]]; then
-        if is_lmstudio_server "$OPENAI_BASE_URL"; then
+        if is_ollama_server "$OPENAI_BASE_URL"; then
+            echo "  Status: Online (Ollama)"
+        elif is_lmstudio_server "$OPENAI_BASE_URL"; then
             echo "  Status: Online (LM Studio)"
         else
             echo "  Status: Online"
@@ -270,7 +308,9 @@ display_openai_section() {
 
     # Fetch and display available models
     echo "  Available Models:"
-    if is_lmstudio_server "$OPENAI_BASE_URL"; then
+    if is_ollama_server "$OPENAI_BASE_URL"; then
+        display_ollama_models
+    elif is_lmstudio_server "$OPENAI_BASE_URL"; then
         display_lmstudio_models
     else
         display_openai_models
@@ -315,6 +355,34 @@ display_lmstudio_models() {
     fi
 }
 
+# Display models from Ollama /api/tags with rich info
+display_ollama_models() {
+    local models_json
+    if models_json=$(fetch_ollama_models 2>/dev/null); then
+        if echo "$models_json" | jq -e '.models' &>/dev/null; then
+            # Format: * name (running indicator)  family  params  quant  size
+            # Join with running models to show loaded status
+            local running_json
+            running_json=$(fetch_ollama_running 2>/dev/null) || running_json='{"models":[]}'
+
+            echo "$models_json" | jq -r --argjson running "$running_json" '
+                ($running.models // [] | map(.model) | INDEX(.)) as $loaded |
+                .models | sort_by(.name) | .[] |
+                (if $loaded[.name] then "  * " else "    " end) +
+                (.name | .[0:30] | . + " " * (30 - length)) + "  " +
+                ((.details.family // "?") | .[0:10] | . + " " * (10 - length)) + "  " +
+                ((.details.parameter_size // "?") | .[0:6] | . + " " * (6 - length)) + "  " +
+                ((.details.quantization_level // "?") | .[0:6] | . + " " * (6 - length)) + "  " +
+                ((.size // 0) / 1073741824 | . * 10 | floor / 10 | tostring + "GB" | .[0:8])
+            ' 2>/dev/null
+        else
+            echo "    (failed to parse response)"
+        fi
+    else
+        echo "    (failed to fetch models)"
+    fi
+}
+
 # Show detailed info for a specific model
 cmd_models_show() {
     local model_id="$1"
@@ -346,15 +414,25 @@ cmd_models_show() {
 
         if [[ "$status_code" == "200" ]]; then
             local result
-            if is_lmstudio_server "$OPENAI_BASE_URL"; then
+            if is_ollama_server "$OPENAI_BASE_URL"; then
+                result=$(fetch_ollama_model "$model_id" 2>/dev/null)
+                # Ollama /api/show returns details/model_info, not id
+                if [[ -n "$result" ]] && echo "$result" | jq -e '.details' &>/dev/null; then
+                    echo "$result" | jq .
+                    return 0
+                fi
+            elif is_lmstudio_server "$OPENAI_BASE_URL"; then
                 result=$(fetch_lmstudio_model "$model_id" 2>/dev/null)
+                if [[ -n "$result" ]] && echo "$result" | jq -e '.id' &>/dev/null; then
+                    echo "$result" | jq .
+                    return 0
+                fi
             else
                 result=$(fetch_openai_model "$model_id" 2>/dev/null)
-            fi
-
-            if [[ -n "$result" ]] && echo "$result" | jq -e '.id' &>/dev/null; then
-                echo "$result" | jq .
-                return 0
+                if [[ -n "$result" ]] && echo "$result" | jq -e '.id' &>/dev/null; then
+                    echo "$result" | jq .
+                    return 0
+                fi
             fi
         fi
     fi
@@ -372,4 +450,95 @@ cmd_models_show() {
 
     echo "Error: Model '$model_id' not found" >&2
     return 1
+}
+
+# =============================================================================
+# Running Models Display (ps subcommand)
+# =============================================================================
+
+# Show running/loaded models on local inference servers
+# Ignores PROVIDER - checks OPENAI_BASE_URL for Ollama/LM Studio
+cmd_models_ps() {
+    load_global_config
+
+    if [[ -z "$OPENAI_BASE_URL" ]]; then
+        echo "No local inference server configured (OPENAI_BASE_URL not set)" >&2
+        return 1
+    fi
+
+    # Check server availability
+    local status_code
+    status_code=$(check_server_status "$OPENAI_BASE_URL/models" 3)
+
+    if [[ "$status_code" != "200" ]]; then
+        echo "Server not available at $OPENAI_BASE_URL (HTTP $status_code)" >&2
+        return 1
+    fi
+
+    if is_ollama_server "$OPENAI_BASE_URL"; then
+        echo "Running Models (Ollama):"
+        display_ollama_running
+    elif is_lmstudio_server "$OPENAI_BASE_URL"; then
+        echo "Loaded Models (LM Studio):"
+        display_lmstudio_running
+    else
+        echo "Server at $OPENAI_BASE_URL is not Ollama or LM Studio" >&2
+        echo "The 'ps' command requires a local inference server with running model info" >&2
+        return 1
+    fi
+}
+
+# Display running models from Ollama /api/ps
+display_ollama_running() {
+    local running_json
+    if running_json=$(fetch_ollama_running 2>/dev/null); then
+        if echo "$running_json" | jq -e '.models' &>/dev/null; then
+            local count
+            count=$(echo "$running_json" | jq '.models | length')
+            if [[ "$count" == "0" ]]; then
+                echo "  (no models currently loaded)"
+                return 0
+            fi
+            # Format: name  VRAM  context  expires
+            echo "$running_json" | jq -r '
+                .models | .[] |
+                "  " +
+                (.model | .[0:30] | . + " " * (30 - length)) + "  " +
+                ((.size_vram // 0) / 1073741824 | . * 10 | floor / 10 | tostring + "GB VRAM" | .[0:12] | . + " " * (12 - length)) + "  " +
+                ("ctx:" + ((.context_length // "?") | tostring) | .[0:12] | . + " " * (12 - length)) + "  " +
+                (if .expires_at then "expires " + (.expires_at | split("T")[1] | split(".")[0]) else "" end)
+            ' 2>/dev/null
+        else
+            echo "  (failed to parse response)"
+        fi
+    else
+        echo "  (failed to fetch running models)"
+    fi
+}
+
+# Display loaded models from LM Studio (filters /api/v0/models for state=loaded)
+display_lmstudio_running() {
+    local models_json
+    if models_json=$(fetch_lmstudio_models 2>/dev/null); then
+        if echo "$models_json" | jq -e '.data' &>/dev/null; then
+            local count
+            count=$(echo "$models_json" | jq '[.data[] | select(.state == "loaded")] | length')
+            if [[ "$count" == "0" ]]; then
+                echo "  (no models currently loaded)"
+                return 0
+            fi
+            # Format: name  type  context (loaded/max)
+            echo "$models_json" | jq -r '
+                .data | map(select(.state == "loaded")) | .[] |
+                "  " +
+                (.id | .[0:30] | . + " " * (30 - length)) + "  " +
+                ((.type // "?") | .[0:6] | . + " " * (6 - length)) + "  " +
+                ("ctx:" + ((.loaded_context_length // "?") | tostring) + "/" + ((.max_context_length // "?") | tostring) | .[0:16])
+            ' 2>/dev/null
+        else
+            echo "  (failed to parse response)"
+        fi
+    else
+        echo "  (failed to fetch models)"
+    fi
 }
