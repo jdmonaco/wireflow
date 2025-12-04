@@ -707,12 +707,14 @@ _wireflow_fetch_model_ids() {
     # OpenAI-compatible models (if configured and available)
     if [[ -n "${OPENAI_BASE_URL:-}" ]]; then
         local openai_models
-        if [[ "$OPENAI_BASE_URL" =~ :1234 ]]; then
-            # LM Studio: use v0 API
-            local lms_base="${OPENAI_BASE_URL%/v1}"
-            openai_models=$(curl -s --max-time 2 "$lms_base/api/v0/models" 2>/dev/null | jq -r '.data[].id' 2>/dev/null)
+        if [[ "$OPENAI_BASE_URL" =~ :11434 ]]; then
+            # Ollama: use /api/tags
+            openai_models=$(curl -s --max-time 2 "$OPENAI_BASE_URL/api/tags" 2>/dev/null | jq -r '.models[].name' 2>/dev/null)
+        elif [[ "$OPENAI_BASE_URL" =~ :1234 ]]; then
+            # LM Studio: use /api/v0 API
+            openai_models=$(curl -s --max-time 2 "$OPENAI_BASE_URL/api/v0/models" 2>/dev/null | jq -r '.data[].id' 2>/dev/null)
         else
-            openai_models=$(curl -s --max-time 2 "$OPENAI_BASE_URL/models" \
+            openai_models=$(curl -s --max-time 2 "$OPENAI_BASE_URL/v1/models" \
                 -H "Authorization: Bearer ${OPENAI_API_KEY:-fake-api-key}" 2>/dev/null | jq -r '.data[].id' 2>/dev/null)
         fi
         models="$models $openai_models"

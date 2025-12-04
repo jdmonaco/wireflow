@@ -137,7 +137,7 @@ CONTEXT=(
 ```bash
 # ~/.config/wireflow/config
 PROVIDER="openai"
-OPENAI_BASE_URL="http://localhost:1234/v1"
+OPENAI_BASE_URL="http://localhost:1234"
 OPENAI_MODEL_FAST="phi-4-mini"
 OPENAI_MODEL_BALANCED="qwen2.5-14b"
 OPENAI_MODEL_DEEP="qwen2.5-72b"

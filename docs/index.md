@@ -63,7 +63,7 @@ export PATH="$HOME/.local/bin:$PATH"  # if not already in PATH
 ```bash
 # In ~/.config/wireflow/config
 PROVIDER="openai"
-OPENAI_BASE_URL="http://localhost:1234/v1"
+OPENAI_BASE_URL="http://localhost:1234"
 OPENAI_MODEL_BALANCED="your-model-name"
 ```
 

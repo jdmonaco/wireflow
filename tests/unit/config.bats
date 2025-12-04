@@ -141,49 +141,72 @@ EOF
 # find_ancestor_projects() tests
 # =============================================================================
 
-@test "find_ancestor_projects: returns failure for single project (no ancestors)" {
-    mkdir -p "$TEST_TEMP_DIR/project/.workflow"
+# These tests use /tmp/claude for isolation to avoid finding the wireflow repo
+# as an ancestor project when tests run inside the repo directory.
 
-    cd "$TEST_TEMP_DIR/project"
-    run find_ancestor_projects "$TEST_TEMP_DIR/project"
+@test "find_ancestor_projects: returns failure for single project (no ancestors)" {
+    # Use /tmp/claude for true isolation from repo ancestors
+    local isolated_dir="/tmp/claude/ancestor-test-$$"
+    mkdir -p "$isolated_dir/project/.workflow"
+
+    cd "$isolated_dir/project"
+    run find_ancestor_projects "$isolated_dir/project"
+
+    # Cleanup
+    rm -rf "$isolated_dir"
 
     # Returns failure when there are no ancestor projects
     assert_failure
 }
 
 @test "find_ancestor_projects: returns oldest first for nested projects" {
-    # Create three-level nesting
-    mkdir -p "$TEST_TEMP_DIR/grandparent/.workflow"
-    mkdir -p "$TEST_TEMP_DIR/grandparent/parent/.workflow"
-    mkdir -p "$TEST_TEMP_DIR/grandparent/parent/child/.workflow"
+    # Use /tmp/claude for true isolation from repo ancestors
+    local isolated_dir="/tmp/claude/ancestor-test-$$"
 
-    cd "$TEST_TEMP_DIR/grandparent/parent/child"
-    run find_ancestor_projects "$TEST_TEMP_DIR/grandparent/parent/child"
+    # Create three-level nesting
+    mkdir -p "$isolated_dir/grandparent/.workflow"
+    mkdir -p "$isolated_dir/grandparent/parent/.workflow"
+    mkdir -p "$isolated_dir/grandparent/parent/child/.workflow"
+
+    # Get canonical path (on macOS, /tmp -> /private/tmp)
+    local canonical_dir
+    canonical_dir="$(cd "$isolated_dir" && pwd -P)"
+
+    cd "$isolated_dir/grandparent/parent/child"
+    run find_ancestor_projects "$isolated_dir/grandparent/parent/child"
+
+    # Cleanup before assertions (in case they fail)
+    local saved_output="$output"
+    rm -rf "$isolated_dir"
 
     assert_success
 
     # Parse output (newline-separated)
     local -a ancestors
-    mapfile -t ancestors <<< "$output"
+    mapfile -t ancestors <<< "$saved_output"
 
     # Should have 2 ancestors (grandparent and parent)
     [[ ${#ancestors[@]} -eq 2 ]]
 
-    # First should be grandparent (oldest)
-    [[ "${ancestors[0]}" == "$TEST_TEMP_DIR/grandparent" ]]
+    # First should be grandparent (oldest) - use canonical path
+    [[ "${ancestors[0]}" == "$canonical_dir/grandparent" ]]
 
     # Second should be parent
-    [[ "${ancestors[1]}" == "$TEST_TEMP_DIR/grandparent/parent" ]]
+    [[ "${ancestors[1]}" == "$canonical_dir/grandparent/parent" ]]
 }
 
-@test "find_ancestor_projects: stops at HOME boundary" {
-    # Create project outside of any parent projects
-    mkdir -p "$HOME/standalone/.workflow"
+@test "find_ancestor_projects: stops at filesystem root" {
+    # Use /tmp/claude for true isolation - no ancestors possible above /tmp
+    local isolated_dir="/tmp/claude/ancestor-test-$$"
+    mkdir -p "$isolated_dir/standalone/.workflow"
 
-    cd "$HOME/standalone"
-    run find_ancestor_projects "$HOME/standalone"
+    cd "$isolated_dir/standalone"
+    run find_ancestor_projects "$isolated_dir/standalone"
 
-    # Returns failure when no ancestors found (stopped at HOME)
+    # Cleanup
+    rm -rf "$isolated_dir"
+
+    # Returns failure when no ancestors found
     assert_failure
 }
 

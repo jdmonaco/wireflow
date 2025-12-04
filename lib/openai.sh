@@ -19,7 +19,7 @@ openai_validate() {
     if [[ -z "$OPENAI_BASE_URL" ]]; then
         echo "Error: OPENAI_BASE_URL is not set" >&2
         echo "Set it in your config file or environment, e.g.:" >&2
-        echo "  OPENAI_BASE_URL=\"http://localhost:1234/v1\"" >&2
+        echo "  OPENAI_BASE_URL=\"http://localhost:1234\"" >&2
         return 1
     fi
 
@@ -47,7 +47,7 @@ openai_list_models() {
     fi
 
     local response
-    response=$(curl -s "${OPENAI_BASE_URL}/models" \
+    response=$(curl -s "${OPENAI_BASE_URL}/v1/models" \
         -H "Authorization: Bearer ${OPENAI_API_KEY:-lm-studio}" \
         -H "Content-Type: application/json")
 
@@ -217,7 +217,7 @@ openai_execute_single() {
     echo -n "Sending OpenAI-compatible API request... "
 
     local response
-    response=$(echo "$json_payload" | curl -s "${OPENAI_BASE_URL}/chat/completions" \
+    response=$(echo "$json_payload" | curl -s "${OPENAI_BASE_URL}/v1/chat/completions" \
         -H "Authorization: Bearer ${OPENAI_API_KEY:-lm-studio}" \
         -H "Content-Type: application/json" \
         -d @-)
@@ -316,7 +316,7 @@ openai_execute_stream() {
     # OpenAI SSE format:
     #   data: {"id":"...","choices":[{"delta":{"content":"..."}}]}
     #   data: [DONE]
-    echo "$json_payload" | curl -Ns "${OPENAI_BASE_URL}/chat/completions" \
+    echo "$json_payload" | curl -Ns "${OPENAI_BASE_URL}/v1/chat/completions" \
         -H "Authorization: Bearer ${OPENAI_API_KEY:-lm-studio}" \
         -H "Content-Type: application/json" \
         -d @- | while IFS= read -r line; do

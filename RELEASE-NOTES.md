@@ -85,7 +85,7 @@ Use any OpenAI API-compatible endpoint for local or self-hosted inference:
 ```bash
 # ~/.config/wireflow/config
 PROVIDER="openai"
-OPENAI_BASE_URL="http://localhost:1234/v1"
+OPENAI_BASE_URL="http://localhost:1234"
 OPENAI_MODEL_BALANCED="qwen2.5-14b"
 ```
 

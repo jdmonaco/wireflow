@@ -386,8 +386,8 @@ PROVIDER=$BUILTIN_PROVIDER
 # Settings for OpenAI-compatible local servers (LM Studio, ollama, vLLM).
 # Only used when PROVIDER=openai
 #
-# OPENAI_BASE_URL: Server endpoint including /v1 path
-#   Examples: http://localhost:1234/v1, http://192.168.0.114:1234/v1
+# OPENAI_BASE_URL: Server base URL (without /v1 path)
+#   Examples: http://localhost:1234, http://localhost:11434
 # OPENAI_API_KEY: API key (many local servers accept any value)
 # OPENAI_MODEL: Explicit model override (bypasses profile system)
 # OPENAI_MODEL_*: Model for each profile tier (like Anthropic profiles)

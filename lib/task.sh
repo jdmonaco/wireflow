@@ -95,12 +95,51 @@ execute_task_mode() {
     done
 
     # =============================================================================
+    # Optional Project Discovery and Configuration
+    # =============================================================================
+
+    # Try to find project root (non-fatal)
+    # Must happen before model validation so PROVIDER is set correctly
+    local project_root
+    project_root=$(find_project_root 2>/dev/null) || true
+
+    # Load project and ancestor configs if in a project
+    if [[ -n "$project_root" ]]; then
+        echo "Using project context from: $(display_absolute_path "$project_root")"
+
+        # Load ancestor configs
+        load_ancestor_configs
+
+        # Load project config
+        load_project_config "$project_root/.workflow/config"
+
+        # Set project-level cache directory for file conversions
+        CACHE_DIR="$project_root/.workflow/cache"
+    else
+        echo "Running in standalone mode (no project context)"
+        # No project = no persistent cache for file conversions
+        CACHE_DIR=""
+    fi
+
+    # =============================================================================
+    # Provider Feature Warnings
+    # =============================================================================
+
+    # Warn about unsupported features before model validation
+    local provider="${PROVIDER:-anthropic}"
+
+    if [[ "$provider" == "openai" ]]; then
+        [[ "$ENABLE_THINKING" == "true" ]] && openai_check_feature "thinking"
+        [[ "$EFFORT" != "high" ]] && openai_check_feature "effort"
+        [[ "$ENABLE_CITATIONS" == "true" ]] && openai_check_feature "citations"
+    fi
+
+    # =============================================================================
     # Model Validation
     # =============================================================================
 
     # Resolve and validate model exists before expensive operations
     local resolved_model
-    local provider="${PROVIDER:-anthropic}"
 
     if [[ "$provider" == "openai" ]]; then
         resolved_model=$(openai_resolve_model) || return 1
@@ -126,32 +165,6 @@ execute_task_mode() {
         echo "  Use --export/-ex <path> to save output to a file."
         echo
         prompt_to_continue_or_exit
-    fi
-
-    # =============================================================================
-    # Optional Project Discovery and Configuration
-    # =============================================================================
-    
-    # Try to find project root (non-fatal)
-    local project_root
-    project_root=$(find_project_root 2>/dev/null) || true
-    
-    # Load project and ancestor configs if in a project
-    if [[ -n "$project_root" ]]; then
-        echo "Using project context from: $(display_absolute_path "$project_root")"
-
-        # Load ancestor configs
-        load_ancestor_configs
-
-        # Load project config
-        load_project_config "$project_root/.workflow/config"
-
-        # Set project-level cache directory for file conversions
-        CACHE_DIR="$project_root/.workflow/cache"
-    else
-        echo "Running in standalone mode (no project context)"
-        # No project = no persistent cache for file conversions
-        CACHE_DIR=""
     fi
 
     # =============================================================================

@@ -319,7 +319,7 @@ Add provider settings:
 ```bash
 # Use OpenAI-compatible API (e.g., LM Studio)
 PROVIDER="openai"
-OPENAI_BASE_URL="http://localhost:1234/v1"
+OPENAI_BASE_URL="http://localhost:1234"
 
 # Model profiles for local models
 OPENAI_MODEL_FAST="phi-4-mini"

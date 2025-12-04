@@ -44,7 +44,7 @@ teardown() {
 @test "config: shows OpenAI settings when configured" {
     cat >> .workflow/config <<'EOF'
 PROVIDER="openai"
-OPENAI_BASE_URL="http://localhost:1234/v1"
+OPENAI_BASE_URL="http://localhost:1234"
 OPENAI_MODEL_BALANCED="test-model"
 EOF
 
@@ -84,7 +84,7 @@ EOF
 @test "task: fails with openai provider when model not configured" {
     cat >> .workflow/config <<'EOF'
 PROVIDER="openai"
-OPENAI_BASE_URL="http://localhost:1234/v1"
+OPENAI_BASE_URL="http://localhost:1234"
 OPENAI_MODEL=""
 OPENAI_MODEL_BALANCED=""
 EOF
@@ -105,7 +105,7 @@ EOF
 
     cat >> .workflow/run/test-thinking/config <<'EOF'
 PROVIDER="openai"
-OPENAI_BASE_URL="http://localhost:1234/v1"
+OPENAI_BASE_URL="http://localhost:1234"
 OPENAI_MODEL_BALANCED="test-model"
 ENABLE_THINKING="true"
 EOF
@@ -123,7 +123,7 @@ EOF
 
     cat >> .workflow/run/test-effort/config <<'EOF'
 PROVIDER="openai"
-OPENAI_BASE_URL="http://localhost:1234/v1"
+OPENAI_BASE_URL="http://localhost:1234"
 OPENAI_MODEL_BALANCED="test-model"
 EFFORT="low"
 EOF
@@ -140,7 +140,7 @@ EOF
 
     cat >> .workflow/run/test-citations/config <<'EOF'
 PROVIDER="openai"
-OPENAI_BASE_URL="http://localhost:1234/v1"
+OPENAI_BASE_URL="http://localhost:1234"
 OPENAI_MODEL_BALANCED="test-model"
 ENABLE_CITATIONS="true"
 EOF

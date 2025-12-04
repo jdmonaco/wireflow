@@ -35,7 +35,7 @@ teardown() {
 }
 
 @test "openai_validate: fails with invalid URL protocol" {
-    OPENAI_BASE_URL="ftp://localhost:1234/v1"
+    OPENAI_BASE_URL="ftp://localhost:1234"
 
     run openai_validate
     assert_failure
@@ -43,26 +43,26 @@ teardown() {
 }
 
 @test "openai_validate: succeeds with http URL" {
-    OPENAI_BASE_URL="http://localhost:1234/v1"
+    OPENAI_BASE_URL="http://localhost:1234"
 
     run openai_validate
     assert_success
 }
 
 @test "openai_validate: succeeds with https URL" {
-    OPENAI_BASE_URL="https://api.example.com/v1"
+    OPENAI_BASE_URL="https://api.example.com"
 
     run openai_validate
     assert_success
 }
 
 @test "openai_validate: strips trailing slash from URL" {
-    OPENAI_BASE_URL="http://localhost:1234/v1/"
+    OPENAI_BASE_URL="http://localhost:1234/"
 
     openai_validate
 
     # After validation, trailing slash should be removed
-    [[ "$OPENAI_BASE_URL" == "http://localhost:1234/v1" ]]
+    [[ "$OPENAI_BASE_URL" == "http://localhost:1234" ]]
 }
 
 # =============================================================================

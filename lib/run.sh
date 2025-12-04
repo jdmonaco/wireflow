@@ -92,12 +92,24 @@ execute_run_mode() {
     done
 
     # =============================================================================
+    # Provider Feature Warnings
+    # =============================================================================
+
+    # Warn about unsupported features before model validation
+    local provider="${PROVIDER:-anthropic}"
+
+    if [[ "$provider" == "openai" ]]; then
+        [[ "$ENABLE_THINKING" == "true" ]] && openai_check_feature "thinking"
+        [[ "$EFFORT" != "high" ]] && openai_check_feature "effort"
+        [[ "$ENABLE_CITATIONS" == "true" ]] && openai_check_feature "citations"
+    fi
+
+    # =============================================================================
     # Model Validation
     # =============================================================================
 
     # Resolve and validate model exists before expensive operations
     local resolved_model
-    local provider="${PROVIDER:-anthropic}"
 
     if [[ "$provider" == "openai" ]]; then
         resolved_model=$(openai_resolve_model) || return 1

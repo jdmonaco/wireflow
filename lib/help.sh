@@ -54,7 +54,7 @@ Environment variables:
 
 Provider settings (set in config or environment):
     PROVIDER                  API provider: anthropic (default) | openai
-    OPENAI_BASE_URL           OpenAI-compatible server URL (e.g., http://localhost:1234/v1)
+    OPENAI_BASE_URL           OpenAI-compatible server URL (e.g., http://localhost:1234)
     OPENAI_API_KEY            API key for OpenAI-compatible server
     OPENAI_MODEL              Explicit model override for OpenAI provider
     OPENAI_MODEL_FAST         Model for --profile fast (OpenAI provider)

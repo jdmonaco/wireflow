@@ -31,7 +31,7 @@ fetch_anthropic_models() {
 fetch_openai_models() {
     local base_url="${OPENAI_BASE_URL:-}"
     [[ -z "$base_url" ]] && return 1
-    curl -s --max-time 5 "$base_url/models" \
+    curl -s --max-time 5 "$base_url/v1/models" \
         -H "Authorization: Bearer ${OPENAI_API_KEY:-fake-api-key}"
 }
 
@@ -39,9 +39,7 @@ fetch_openai_models() {
 fetch_lmstudio_models() {
     local base_url="${OPENAI_BASE_URL:-}"
     [[ -z "$base_url" ]] && return 1
-    # Strip /v1 suffix to get base, then add /api/v0/models
-    local lms_base="${base_url%/v1}"
-    curl -s --max-time 5 "$lms_base/api/v0/models"
+    curl -s --max-time 5 "$base_url/api/v0/models"
 }
 
 # Check server availability with timeout
@@ -63,7 +61,7 @@ fetch_anthropic_model() {
 fetch_openai_model() {
     local model_id="$1"
     local base_url="${OPENAI_BASE_URL:-}"
-    curl -s --max-time 5 "$base_url/models/$model_id" \
+    curl -s --max-time 5 "$base_url/v1/models/$model_id" \
         -H "Authorization: Bearer ${OPENAI_API_KEY:-fake-api-key}"
 }
 
@@ -71,24 +69,21 @@ fetch_openai_model() {
 fetch_lmstudio_model() {
     local model_id="$1"
     local base_url="${OPENAI_BASE_URL:-}"
-    local lms_base="${base_url%/v1}"
-    curl -s --max-time 5 "$lms_base/api/v0/models/$model_id"
+    curl -s --max-time 5 "$base_url/api/v0/models/$model_id"
 }
 
 # Query Ollama /api/tags endpoint (GET)
 fetch_ollama_models() {
     local base_url="${OPENAI_BASE_URL:-}"
     [[ -z "$base_url" ]] && return 1
-    local ollama_base="${base_url%/v1}"
-    curl -s --max-time 5 "$ollama_base/api/tags"
+    curl -s --max-time 5 "$base_url/api/tags"
 }
 
 # Query Ollama /api/show endpoint (POST with model in body)
 fetch_ollama_model() {
     local model_id="$1"
     local base_url="${OPENAI_BASE_URL:-}"
-    local ollama_base="${base_url%/v1}"
-    curl -s --max-time 5 "$ollama_base/api/show" \
+    curl -s --max-time 5 "$base_url/api/show" \
         -H "Content-Type: application/json" \
         -d "{\"model\": \"$model_id\"}"
 }
@@ -96,8 +91,7 @@ fetch_ollama_model() {
 # Query Ollama /api/ps endpoint for running models (GET)
 fetch_ollama_running() {
     local base_url="${OPENAI_BASE_URL:-}"
-    local ollama_base="${base_url%/v1}"
-    curl -s --max-time 5 "$ollama_base/api/ps"
+    curl -s --max-time 5 "$base_url/api/ps"
 }
 
 # =============================================================================
@@ -149,12 +143,12 @@ validate_model_availability() {
             ;;
         openai)
             if [[ -z "$OPENAI_BASE_URL" ]]; then
-                echo "Error: OPENAI_BASE_URL not configured" >&2
+                echo "Error: OPENAI_BASE_URL is not set" >&2
                 return 1
             fi
             # Check server availability first
             local status_code
-            status_code=$(check_server_status "$OPENAI_BASE_URL/models" 3)
+            status_code=$(check_server_status "$OPENAI_BASE_URL/v1/models" 3)
             if [[ "$status_code" != "200" ]]; then
                 echo "Error: OpenAI-compatible server not available at $OPENAI_BASE_URL (HTTP $status_code)" >&2
                 return 1
@@ -285,7 +279,7 @@ display_openai_section() {
 
     # Check server status
     local status_code
-    status_code=$(check_server_status "$OPENAI_BASE_URL/models")
+    status_code=$(check_server_status "$OPENAI_BASE_URL/v1/models")
 
     if [[ "$status_code" == "200" ]]; then
         if is_ollama_server "$OPENAI_BASE_URL"; then
@@ -410,7 +404,7 @@ cmd_models_show() {
     # Try OpenAI-compatible if configured
     if [[ -n "$OPENAI_BASE_URL" ]]; then
         local status_code
-        status_code=$(check_server_status "$OPENAI_BASE_URL/models")
+        status_code=$(check_server_status "$OPENAI_BASE_URL/v1/models")
 
         if [[ "$status_code" == "200" ]]; then
             local result
@@ -468,7 +462,7 @@ cmd_models_ps() {
 
     # Check server availability
     local status_code
-    status_code=$(check_server_status "$OPENAI_BASE_URL/models" 3)
+    status_code=$(check_server_status "$OPENAI_BASE_URL/v1/models" 3)
 
     if [[ "$status_code" != "200" ]]; then
         echo "Server not available at $OPENAI_BASE_URL (HTTP $status_code)" >&2
