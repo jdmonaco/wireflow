@@ -2,7 +2,7 @@
 
 **Reproducible AI Workflows for Research & Development**
 
-Version 0.7.2 (pre-release) · [Documentation](https://docs.joemona.co/wireflow/) · [GitHub](https://github.com/jdmonaco/wireflow)
+Version 0.7.3 (pre-release) · [Documentation](https://docs.joemona.co/wireflow/) · [GitHub](https://github.com/jdmonaco/wireflow)
 
 ## Key Features
 

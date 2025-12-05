@@ -1,5 +1,95 @@
 # Release Notes
 
+## Version 0.7.3 (2025-12-04)
+
+**System Prompts, Model Discovery, and External Image Embeds**
+
+This release adds subcommands for managing system prompts and discovering models, along with support for embedding remote images in Markdown documents and processing Excel spreadsheets.
+
+### 🎛️ System Prompt Management (`wfw prompts`)
+
+New subcommand mirrors `wfw tasks` functionality for system prompts:
+
+```bash
+wfw prompts                 # List available prompts (custom + builtin)
+wfw prompts show research   # Display prompt content in pager
+wfw prompts edit research   # Edit or create custom prompt
+```
+
+Manage your prompt library as easily as task templates.
+
+### 🤖 Model Discovery & Validation (`wfw models`)
+
+New subcommand for model configuration and API discovery:
+
+```bash
+wfw models                  # Show provider settings and available models
+wfw models show claude-sonnet-4-5  # Detailed model info via API
+wfw models ps               # Running/loaded models on local servers
+```
+
+Special support for Ollama (port :11434) and LM Studio (port :1234) with rich model metadata including quantization, context length, and VRAM usage.
+
+Pre-execution model validation now verifies your configured model exists before building the request, preventing wasted time on invalid configurations.
+
+### 🖼️ External Image Embeds
+
+Standard Markdown image syntax now works for remote URLs:
+
+```markdown
+![NSF Logo](https://www.nsf.gov/images/logo.png)
+```
+
+Remote images are automatically downloaded and cached. Cache status indicators in console output show whether images were:
+- `(downloaded)` - Fetched from remote URL
+- `(cached)` - Retrieved from local cache
+- `(converted)` - Format conversion applied
+- `(resized)` - Dimensions adjusted for API limits
+
+### 📊 Excel Support
+
+Excel spreadsheets (.xlsx) are now converted to PDF via LibreOffice and processed as document context/input, joining .docx and .pptx in the Office file family.
+
+### 📁 Enhanced Backup Organization
+
+Output backups are now organized into timestamped subdirectories:
+
+```
+.workflow/run/<name>/backups/
+└── 2025-12-04T15-30-00/
+    └── output.md
+```
+
+Export file backups use `Previous Versions/` with human-readable timestamps based on file modification time.
+
+### 🔧 Provider & CLI Improvements
+
+- **`--provider` CLI option:** Switch providers per-invocation without config changes
+- **Terminal output warning:** Task mode now warns when output won't be saved
+- **Ollama server detection:** Rich API support for local Ollama instances
+
+### ⚠️ Breaking Changes
+
+1. **`--system/-p` option syntax:** Now uses multi-argument pattern like `-cx` and `-in`:
+   ```bash
+   # Old (no longer works)
+   wfw run analysis -p "base,research"
+
+   # New
+   wfw run analysis -p base research
+   ```
+
+2. **`OPENAI_BASE_URL` convention:** URL no longer includes `/v1` suffix:
+   ```bash
+   # Old
+   OPENAI_BASE_URL="http://localhost:1234/v1"
+
+   # New
+   OPENAI_BASE_URL="http://localhost:1234"
+   ```
+
+---
+
 ## Version 0.7.2 (2025-12-02)
 
 **Shell Integration Polish & Completion Improvements**

@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.3] - 2025-12-04
+
+### Added
+- `wfw prompts` subcommand for system prompt management (0587543)
+- `wfw models` subcommand for provider settings and available models (52dd653)
+- `wfw models ps` for running/loaded models on local servers (d9bf987)
+- Ollama server detection via port :11434 with rich API support (d9bf987)
+- Model validation before expensive operations (a1bb9a3)
+- Excel (.xlsx) support via LibreOffice PDF conversion (2d201a7)
+- External image embeds via Markdown `![alt](url)` syntax (041a185)
+- Cache status indicators for image processing messages (9dd0a8d)
+- `--provider` CLI option for run/task modes (8e43aed)
+- Terminal output warning for unsaved task mode output (aca0339)
+- Multi-argument `--system/-p` option pattern (5ae30bc)
+- Enhanced backup organization in timestamped subdirectories (5e174c5)
+
+### Changed
+- **BREAKING:** `--system/-p` uses multi-argument pattern instead of comma-separated (5ae30bc)
+- **BREAKING:** `OPENAI_BASE_URL` no longer includes /v1 suffix (415a3c2)
+- Project-relative paths in console output via display_path() (bbae358)
+- JSON-to-XML conversion uses yq instead of complex jq script (94d72a3)
+- Pager display moved to end of run/task mode (cd1ba7a)
+
+### Fixed
+- Cache status detection for remote images without resize (bda9a4b)
+- mktemp template suffix for macOS compatibility (253a045)
+- Ollama status checks use /api/tags endpoint (6087a3f)
+- OpenAI provider config loading from project config (415a3c2)
+- execution.json path bug with $project_root variable (49b7531)
+- Duplicate system prompts in dependency resolution (065b5dc)
+- jq "Argument list too long" via --slurpfile (065b5dc)
+- Task mode PDF processing and system prompt ordering (997b7bf)
+- OpenAI document blocks use text type instead of document (2d201a7)
+
 ## [0.7.2] - 2025-12-02
 
 ### Added

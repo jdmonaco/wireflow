@@ -11,7 +11,7 @@ set -e
 # workflow dependencies and chaining, and intelligent context management.
 #
 # =============================================================================
-WIREFLOW_VERSION="0.7.2"
+WIREFLOW_VERSION="0.7.3"
 # =============================================================================
 
 # Script name -- as called by the user

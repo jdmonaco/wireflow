@@ -2,7 +2,7 @@
 
 **Reproducible AI Workflows for Research & Development**
 
-Version 0.7.2 (pre-release)
+Version 0.7.3 (pre-release)
 
 ## Key Features
 
