@@ -371,7 +371,8 @@ download_remote_image() {
     # Check if already cached (even temp files persist within session)
     if [[ -f "$cached_file" && -f "$meta_file" ]]; then
         # For remote files, just check cache exists (no source file to validate against)
-        set_cache_status "hit"
+        # Note: Don't set status here - it's handled in build_and_track_document_block
+        # based on metadata timestamp comparison
         echo "$cached_file"
         return 0
     fi
@@ -383,14 +384,12 @@ download_remote_image() {
     if ! curl -fsSL -o "$cached_file" "$url" 2>/dev/null; then
         echo "Warning: Failed to download image: $url" >&2
         rm -f "$cached_file"
-        set_cache_status ""
         return 1
     fi
 
     # Write cache metadata (use URL as source)
     write_cache_metadata "$cached_file" "$url" "download"
 
-    set_cache_status "downloaded"
     echo "$cached_file"
     return 0
 }

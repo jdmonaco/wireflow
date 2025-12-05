@@ -844,7 +844,7 @@ build_and_track_document_block() {
 
     # Handle image files separately
     if [[ "$file_type" == "image" ]]; then
-        # Clear cache status before processing
+        # Clear any stale status from previous processing
         clear_cache_status
 
         # Build image content block (Vision API)
@@ -860,14 +860,41 @@ build_and_track_document_block() {
         local status
         status=$(get_cache_status)
         local status_text=""
+
+        # For remote images (cache_key is URL), check metadata for cache age
+        if [[ "$cache_key" =~ ^https?:// && "$status" == "passthrough" ]]; then
+            # Image didn't need resize/convert - check if it was downloaded this session
+            # by looking at metadata timestamp (within last few seconds = fresh download)
+            local meta_file="${file}.meta"
+            if [[ -f "$meta_file" ]]; then
+                local cached_at
+                cached_at=$(jq -r '.cached_at // empty' "$meta_file" 2>/dev/null)
+                if [[ -n "$cached_at" ]]; then
+                    # Compare with current time (within 60 seconds = likely this session)
+                    local cached_epoch current_epoch
+                    cached_epoch=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$cached_at" "+%s" 2>/dev/null || echo 0)
+                    current_epoch=$(date "+%s")
+                    if (( current_epoch - cached_epoch < 60 )); then
+                        status="downloaded"
+                    else
+                        status="hit"
+                    fi
+                fi
+            fi
+        fi
+
         case "$status" in
             hit)              status_text=" (cached)" ;;
             downloaded)       status_text=" (downloaded)" ;;
             converted)        status_text=" (converted)" ;;
             resized)          status_text=" (resized)" ;;
             converted_resized) status_text=" (converted+resized)" ;;
+            # passthrough: no special processing needed, no status shown
         esac
         echo "    Processing image: $(basename "$file")${status_text}" >&2
+
+        # Clear status for next file
+        clear_cache_status
 
         # Add to IMAGE_BLOCKS array (images are separate, not in context/input)
         IMAGE_BLOCKS+=("$block")
