@@ -307,6 +307,74 @@ resolve_obsidian_embed() {
 # Populated by preprocess_obsidian_markdown(), consumed by caller
 declare -a OBSIDIAN_EMBED_FILES=()
 declare -a OBSIDIAN_EMBED_ROLES=()
+declare -a OBSIDIAN_EMBED_CACHE_KEYS=()  # URL for remote images, empty for local
+
+# Download remote image to cache directory
+# Arguments:
+#   $1 - url: Remote image URL
+#   $2 - cache_dir: Cache directory path (optional, uses CACHE_DIR or temp dir)
+# Returns:
+#   Prints path to cached image file
+#   Returns 1 on failure
+download_remote_image() {
+    local url="$1"
+    local cache_dir="${2:-${CACHE_DIR:-}}"
+    local use_temp=false
+
+    # Validate URL (must be http/https)
+    if [[ ! "$url" =~ ^https?:// ]]; then
+        echo "Warning: Invalid image URL: $url" >&2
+        return 1
+    fi
+
+    # Fall back to temp directory if no cache dir available (standalone mode)
+    if [[ -z "$cache_dir" ]]; then
+        cache_dir="${TMPDIR:-/tmp}/wireflow-remote-images"
+        use_temp=true
+    fi
+
+    # Generate cache ID from URL
+    local cache_id
+    cache_id=$(generate_cache_id "$url")
+
+    # Extract extension from URL (strip query params)
+    local url_path="${url%%\?*}"
+    local ext="${url_path##*.}"
+    ext="${ext,,}"  # lowercase
+    # Default to jpg if no valid extension
+    [[ ! "$ext" =~ ^(jpg|jpeg|png|gif|webp|svg|heic|tiff?)$ ]] && ext="jpg"
+
+    local cache_subdir="$cache_dir/conversions/images"
+    local cached_file="$cache_subdir/${cache_id}.${ext}"
+    local meta_file="${cached_file}.meta"
+
+    # Check if already cached (even temp files persist within session)
+    if [[ -f "$cached_file" && -f "$meta_file" ]]; then
+        # For remote files, just check cache exists (no source file to validate against)
+        echo "$cached_file"
+        return 0
+    fi
+
+    # Create cache directory
+    mkdir -p "$cache_subdir"
+
+    # Download with curl (follow redirects, fail on errors)
+    if ! curl -fsSL -o "$cached_file" "$url" 2>/dev/null; then
+        echo "Warning: Failed to download image: $url" >&2
+        rm -f "$cached_file"
+        return 1
+    fi
+
+    # Write cache metadata (use URL as source)
+    write_cache_metadata "$cached_file" "$url" "download"
+
+    echo "$cached_file"
+    return 0
+}
+
+# Global variable for preprocessed markdown output
+# Used to avoid subshell so array modifications persist
+declare -g PREPROCESSED_MARKDOWN_CONTENT=""
 
 # Preprocess Obsidian markdown, resolving ![[...]] embeds
 # Arguments:
@@ -315,11 +383,13 @@ declare -a OBSIDIAN_EMBED_ROLES=()
 #   $3 - role ("context" or "input")
 #   $4 - project root (for relative path calculation)
 # Outputs:
-#   - Modified markdown to stdout
+#   - Sets PREPROCESSED_MARKDOWN_CONTENT global variable
 #   - Populates OBSIDIAN_EMBED_FILES array with resolved absolute paths
 #   - Populates OBSIDIAN_EMBED_ROLES array with corresponding roles
+#   - Populates OBSIDIAN_EMBED_CACHE_KEYS array with cache keys (URL for remote)
 # Returns:
 #   0 on success, warnings to stderr for missing files
+# Note: Call directly (not in $()) to preserve array modifications
 preprocess_obsidian_markdown() {
     local content="$1"
     local source_file="$2"
@@ -331,6 +401,7 @@ preprocess_obsidian_markdown() {
     # Clear global arrays for this file
     OBSIDIAN_EMBED_FILES=()
     OBSIDIAN_EMBED_ROLES=()
+    OBSIDIAN_EMBED_CACHE_KEYS=()
 
     # Process content line by line
     local output=""
@@ -342,34 +413,55 @@ preprocess_obsidian_markdown() {
             local full_match="![[${embed_ref}${modifiers}]]"
             local resolved_path
 
-            # Try to find the file
-            resolved_path=$(resolve_obsidian_embed "$embed_ref" "$source_dir")
+            # Try to find the file (ignore error if not found)
+            resolved_path=$(resolve_obsidian_embed "$embed_ref" "$source_dir") || true
 
             if [[ -n "$resolved_path" ]]; then
-                # Generate XML tag from project-relative path
-                local rel_path xml_tag
-                rel_path=$(relative_path "$resolved_path" "$project_root")
-                xml_tag=$(sanitize "$rel_path")
-
-                # Replace embed with XML reference tag
-                # Escape brackets for bash glob pattern substitution
-                local escaped_match="${full_match//\[/\\[}"
-                escaped_match="${escaped_match//\]/\\]}"
-                line="${line//$escaped_match/<${xml_tag}\/>}"
+                # Keep original Obsidian syntax - ![[filename]] serves as
+                # a human-readable label that the model can correlate with
+                # the subsequent image/document block (no replacement needed)
 
                 # Track file for inclusion (deduplication handled by caller)
                 OBSIDIAN_EMBED_FILES+=("$resolved_path")
                 OBSIDIAN_EMBED_ROLES+=("$role")
+                OBSIDIAN_EMBED_CACHE_KEYS+=("")  # Empty = use file path
             else
                 # Warning to stderr, keep original syntax
                 echo "Warning: Obsidian embed not found: $embed_ref (in $source_file)" >&2
             fi
         fi
+
+        # Check for Markdown remote image syntax: ![alt text](url)
+        # Pattern: ![optional alt text](http(s)://url)
+        # Only match URLs, not local file references
+        # Note: Regex stored in variable to avoid bash syntax issues
+        local md_image_regex='!\[([^]]*)\]\((https?://[^)]+)\)'
+        if [[ "$line" =~ $md_image_regex ]]; then
+            local alt_text="${BASH_REMATCH[1]}"
+            local image_url="${BASH_REMATCH[2]}"
+
+            echo "  Found remote image embed: $image_url" >&2
+
+            # Download to cache (uses temp dir if no project cache available)
+            local cached_path
+            if cached_path=$(download_remote_image "$image_url"); then
+                # Keep original markdown syntax - ![alt text](url) serves as
+                # a human-readable label that the model can correlate with
+                # the subsequent image block (no replacement needed)
+
+                # Add to embed arrays for processing
+                OBSIDIAN_EMBED_FILES+=("$cached_path")
+                OBSIDIAN_EMBED_ROLES+=("$role")
+                OBSIDIAN_EMBED_CACHE_KEYS+=("$image_url")  # URL as cache key
+            fi
+            # Download failure: warning already shown, keep original syntax
+        fi
+
         output+="$line"$'\n'
     done <<< "$content"
 
-    # Remove trailing newline added by loop
-    printf '%s' "${output%$'\n'}"
+    # Set global variable (remove trailing newline added by loop)
+    PREPROCESSED_MARKDOWN_CONTENT="${output%$'\n'}"
 }
 
 # =============================================================================
@@ -1019,12 +1111,15 @@ convert_image_format() {
 # Uses global CACHE_DIR for project-level caching with hash-based IDs
 # Arguments:
 #   $1 - source_file: Original image file (absolute path)
+#   $2 - cache_key: Optional cache key for ID generation (default: source_file)
+#                   For remote images, pass the original URL as cache key
 # Returns:
 #   Path to cached/converted/resized image (or original if no processing needed)
 # Note:
 #   When CACHE_DIR is empty (standalone task mode), processes to temp file
 cache_image() {
     local source_file="$1"
+    local cache_key="${2:-$source_file}"  # Use source_file if no key provided
 
     # Check if format conversion is needed
     local needs_conversion=false
@@ -1095,7 +1190,7 @@ cache_image() {
     local cached_file
     if [[ -n "$CACHE_DIR" ]]; then
         local cache_id
-        cache_id=$(generate_cache_id "$source_file")
+        cache_id=$(generate_cache_id "$cache_key")  # Use cache_key for ID (may be URL)
         local cache_subdir="$CACHE_DIR/conversions/images"
         cached_file="$cache_subdir/${cache_id}.${output_extension}"
 
@@ -1131,7 +1226,7 @@ cache_image() {
     if convert_image_format "$source_file" "$cached_file" "$resize_w" "$resize_h"; then
         # Write cache metadata (if using project cache)
         if [[ -n "$CACHE_DIR" ]]; then
-            write_cache_metadata "$cached_file" "$source_file" "$conversion_type"
+            write_cache_metadata "$cached_file" "$cache_key" "$conversion_type"
         fi
 
         # Log what happened
@@ -1155,6 +1250,7 @@ cache_image() {
 # Build image content block for Vision API
 # Arguments:
 #   $1 - file: Image file path (absolute)
+#   $2 - cache_key (optional): Cache key for resized images (URL for remote images)
 # Returns:
 #   JSON content block with type="image", base64-encoded data
 # Note:
@@ -1162,6 +1258,7 @@ cache_image() {
 #   Uses global CACHE_DIR for caching resized images
 build_image_content_block() {
     local file="$1"
+    local cache_key="${2:-}"  # Optional cache key (URL for remote images)
 
     # Get absolute path
     local abs_path
@@ -1173,8 +1270,9 @@ build_image_content_block() {
     fi
 
     # Cache and potentially resize image
+    # Pass cache_key if provided (for remote images, uses URL as cache key)
     local image_file
-    image_file=$(cache_image "$abs_path")
+    image_file=$(cache_image "$abs_path" "$cache_key")
 
     # Get media type
     local media_type
@@ -1366,25 +1464,29 @@ convert_pdf_to_images() {
 # Files larger than this skip hash verification when mtime changes
 CACHE_HASH_SIZE_LIMIT=$((10 * 1024 * 1024))
 
-# Generate a deterministic cache ID from absolute path
-# Uses SHA-256 hash of the absolute path (first 16 characters)
+# Generate a deterministic cache ID from path or URL
+# Uses SHA-256 hash of the path/URL (first 16 characters)
 # Arguments:
-#   $1 - Source file path (will be resolved to absolute)
+#   $1 - Source file path (will be resolved to absolute) or URL
 # Returns:
 #   16-character hex cache ID (stdout)
 generate_cache_id() {
     local source_path="$1"
-    local abs_path
+    local hash_input
 
-    # Resolve to absolute path
-    if [[ "$source_path" == /* ]]; then
-        abs_path="$source_path"
+    # URLs are hashed directly without path resolution
+    if [[ "$source_path" =~ ^https?:// ]]; then
+        hash_input="$source_path"
+    # Absolute paths used as-is
+    elif [[ "$source_path" == /* ]]; then
+        hash_input="$source_path"
+    # Relative paths resolved to absolute
     else
-        abs_path="$(cd "$(dirname "$source_path")" && pwd)/$(basename "$source_path")"
+        hash_input="$(cd "$(dirname "$source_path")" && pwd)/$(basename "$source_path")"
     fi
 
-    # Hash the absolute path for cache ID (first 16 chars of SHA-256)
-    echo "$abs_path" | shasum -a 256 | cut -c1-16
+    # Hash the path/URL for cache ID (first 16 chars of SHA-256)
+    echo "$hash_input" | shasum -a 256 | cut -c1-16
 }
 
 # Write cache metadata sidecar file
@@ -1399,6 +1501,19 @@ write_cache_metadata() {
     local source_path="$2"
     local conversion_type="$3"
     local meta_file="${cached_file}.meta"
+
+    # Handle URL sources (no file stats available)
+    if [[ "$source_path" =~ ^https?:// ]]; then
+        cat > "$meta_file" <<EOF
+{
+  "source_path": "$source_path",
+  "source_type": "url",
+  "conversion_type": "$conversion_type",
+  "cached_at": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+}
+EOF
+        return 0
+    fi
 
     # Get source file stats
     local source_mtime source_size source_hash
@@ -1447,6 +1562,12 @@ validate_cache_entry() {
     # Read metadata (using simple parsing since jq may not be available)
     local source_path source_mtime source_hash source_size
     source_path=$(grep '"source_path"' "$meta_file" | sed 's/.*: *"\([^"]*\)".*/\1/')
+
+    # For URL sources, just check cache exists (can't re-validate against remote)
+    if [[ "$source_path" =~ ^https?:// ]]; then
+        return 0  # Cache file and metadata exist, that's enough
+    fi
+
     source_mtime=$(grep '"source_mtime"' "$meta_file" | sed 's/.*: *\([0-9]*\).*/\1/')
     source_size=$(grep '"source_size"' "$meta_file" | sed 's/.*: *\([0-9]*\).*/\1/')
     source_hash=$(grep '"source_hash"' "$meta_file" | sed 's/.*: *"\([^"]*\)".*/\1/')
@@ -1590,6 +1711,7 @@ convert_office_to_pdf() {
 #   $3 - Enable citations flag: "true" or "false" (for document blocks)
 #   $4 - Additional metadata key (optional, e.g., "workflow")
 #   $5 - Additional metadata value (optional)
+#   $6 - Pre-preprocessed content (optional, skips file read and preprocessing if provided)
 # Returns:
 #   JSON content block object (document or text type)
 build_content_block() {
@@ -1598,6 +1720,7 @@ build_content_block() {
     local enable_citations="${3:-false}"
     local meta_key="${4:-}"
     local meta_value="${5:-}"
+    local preprocessed_content="${6:-}"
 
     if [[ ! -f "$file" ]]; then
         echo "{}" >&2
@@ -1608,14 +1731,21 @@ build_content_block() {
     local abs_path
     abs_path=$(cd "$(dirname "$file")" && pwd)/$(basename "$file")
 
-    # Read file content
+    # Use pre-preprocessed content if provided, otherwise read and preprocess
     local content
-    content=$(cat "$file")
+    if [[ -n "$preprocessed_content" ]]; then
+        content="$preprocessed_content"
+    else
+        # Read file content
+        content=$(cat "$file")
 
-    # Preprocess Obsidian markdown files to resolve embeds
-    if [[ "$file" == *.md || "$file" == *.markdown ]]; then
-        if [[ -n "${PROJECT_ROOT:-}" ]]; then
-            content=$(preprocess_obsidian_markdown "$content" "$abs_path" "$block_category" "$PROJECT_ROOT")
+        # Preprocess Obsidian markdown files to resolve embeds
+        # Note: When called from build_and_track_document_block, preprocessing
+        # is done there so embed arrays persist; this path is for direct calls
+        # (embed arrays won't persist here since this function runs in subshell)
+        if [[ "$file" == *.md || "$file" == *.markdown ]]; then
+            preprocess_obsidian_markdown "$content" "$abs_path" "$block_category" "${PROJECT_ROOT:-}"
+            content="$PREPROCESSED_MARKDOWN_CONTENT"
         fi
     fi
 

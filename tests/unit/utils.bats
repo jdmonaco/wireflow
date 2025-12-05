@@ -313,7 +313,7 @@ teardown() {
     rm -rf "$test_dir"
 }
 
-@test "preprocess_obsidian_markdown: replaces embed with XML tag" {
+@test "preprocess_obsidian_markdown: keeps original embed syntax" {
     local test_dir
     test_dir=$(realpath "$(mktemp -d)")
 
@@ -327,11 +327,11 @@ teardown() {
 
 End of document."
 
-    run preprocess_obsidian_markdown "$content" "$test_dir/notes.md" "context" "$test_dir"
+    # Call directly (not with run) to set global variable
+    preprocess_obsidian_markdown "$content" "$test_dir/notes.md" "context" "$test_dir"
 
-    # Should contain XML tag instead of embed syntax
-    assert_output --partial "<photo.png/>"
-    refute_output --partial "![[photo.png]]"
+    # Should keep original embed syntax (model correlates with image block)
+    [[ "$PREPROCESSED_MARKDOWN_CONTENT" == *"![[photo.png]]"* ]]
 
     rm -rf "$test_dir"
 }
@@ -348,8 +348,8 @@ End of document."
 Some text
 ![[doc.pdf]]"
 
-    # Run preprocessing
-    preprocess_obsidian_markdown "$content" "$test_dir/notes.md" "context" "$test_dir" > /dev/null
+    # Run preprocessing (sets PREPROCESSED_MARKDOWN_CONTENT global)
+    preprocess_obsidian_markdown "$content" "$test_dir/notes.md" "context" "$test_dir"
 
     # Check arrays are populated
     assert_equal "${#OBSIDIAN_EMBED_FILES[@]}" "2"
@@ -365,12 +365,17 @@ Some text
 
     local content="![[missing.png]]"
 
-    run preprocess_obsidian_markdown "$content" "$test_dir/notes.md" "context" "$test_dir"
+    # Run preprocessing, capturing stderr to temp file
+    local stderr_file
+    stderr_file=$(mktemp)
+    preprocess_obsidian_markdown "$content" "$test_dir/notes.md" "context" "$test_dir" 2>"$stderr_file"
 
-    # Should keep original syntax
-    assert_output --partial "![[missing.png]]"
-    # Warning should go to stderr (captured in run output)
+    # Should keep original syntax in output
+    [[ "$PREPROCESSED_MARKDOWN_CONTENT" == *"![[missing.png]]"* ]]
+    # Warning should go to stderr
+    grep -q "Warning" "$stderr_file"
 
+    rm -f "$stderr_file"
     rm -rf "$test_dir"
 }
 

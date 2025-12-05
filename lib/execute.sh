@@ -822,6 +822,7 @@ build_prompts() {
 #   $6 - meta_value (optional): Additional metadata value
 #   $7 - project_root: Project root directory (for image caching)
 #   $8 - workflow_dir: Workflow directory (for image caching)
+#   $9 - cache_key (optional): Cache key for image caching (URL for remote images)
 # Side effects:
 #   Appends block to CONTEXT_BLOCKS, INPUT_BLOCKS, or IMAGE_BLOCKS
 #   Appends to DOCUMENT_INDEX_MAP (text files only, not images)
@@ -835,6 +836,7 @@ build_and_track_document_block() {
     local meta_value="${6:-}"
     local project_root="${7:-}"
     local workflow_dir="${8:-}"
+    local cache_key="${9:-}"
 
     # Detect file type
     local file_type
@@ -845,8 +847,9 @@ build_and_track_document_block() {
         echo "    Processing image: $(basename "$file")" >&2
 
         # Build image content block (Vision API)
+        # Pass cache_key for remote images (URL as cache key)
         local block
-        block=$(build_image_content_block "$file")
+        block=$(build_image_content_block "$file" "$cache_key")
         if [[ -z "$block" ]]; then
             echo "    Warning: Failed to process image: $file" >&2
             return 1
@@ -1009,11 +1012,23 @@ build_and_track_document_block() {
     fi
 
     # Handle text files
+    # For markdown files, preprocess here (not in subshell) so embed arrays persist
+    local preprocessed_content=""
+    if [[ "$file" == *.md || "$file" == *.markdown ]]; then
+        local abs_path
+        abs_path=$(cd "$(dirname "$file")" && pwd)/$(basename "$file")
+        local raw_content
+        raw_content=$(cat "$file")
+        # Call preprocessing directly (not in $()) so OBSIDIAN_EMBED_* arrays persist
+        preprocess_obsidian_markdown "$raw_content" "$abs_path" "$category" "${project_root:-}"
+        preprocessed_content="$PREPROCESSED_MARKDOWN_CONTENT"
+    fi
+
     local block
     if [[ -n "$meta_key" && -n "$meta_value" ]]; then
-        block=$(build_content_block "$file" "$category" "$enable_citations" "$meta_key" "$meta_value")
+        block=$(build_content_block "$file" "$category" "$enable_citations" "$meta_key" "$meta_value" "$preprocessed_content")
     else
-        block=$(build_content_block "$file" "$category" "$enable_citations")
+        block=$(build_content_block "$file" "$category" "$enable_citations" "" "" "$preprocessed_content")
     fi
 
     # Add to appropriate array
@@ -1028,16 +1043,19 @@ build_and_track_document_block() {
         for i in "${!OBSIDIAN_EMBED_FILES[@]}"; do
             local embed_file="${OBSIDIAN_EMBED_FILES[$i]}"
             local embed_role="${OBSIDIAN_EMBED_ROLES[$i]}"
+            local embed_cache_key="${OBSIDIAN_EMBED_CACHE_KEYS[$i]:-}"
 
             echo "    Processing embedded file: $(basename "$embed_file")" >&2
 
             # Recursively process embed file (handles images, PDFs, etc.)
-            build_and_track_document_block "$embed_file" "$embed_role" "$enable_citations" "$doc_index_var" "" "" "$project_root" "$workflow_dir"
+            # Pass cache_key for remote images (URL as cache key for resizing)
+            build_and_track_document_block "$embed_file" "$embed_role" "$enable_citations" "$doc_index_var" "" "" "$project_root" "$workflow_dir" "$embed_cache_key"
         done
 
         # Clear arrays after processing
         OBSIDIAN_EMBED_FILES=()
         OBSIDIAN_EMBED_ROLES=()
+        OBSIDIAN_EMBED_CACHE_KEYS=()
     fi
 
     # Track document index (get current value via indirect reference)
