@@ -876,7 +876,7 @@ write_citations_sidecar() {
         sidecar_file="$output_dir/citations.md"
     else
         # Stdout mode - use temp file (will be output to stdout by caller)
-        sidecar_file=$(mktemp -t citations.XXXXXX.md)
+        sidecar_file=$(mktemp -t citations-XXXXXX).md
     fi
 
     # Load document map if available

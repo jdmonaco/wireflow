@@ -1203,7 +1203,7 @@ cache_image() {
         mkdir -p "$cache_subdir"
     else
         # No persistent cache (standalone task mode): use temp file
-        cached_file=$(mktemp -t "wfw_image_XXXXXX.${output_extension}")
+        cached_file=$(mktemp -t wfw_image_XXXXXX).${output_extension}
     fi
 
     # Determine conversion type for metadata

@@ -672,7 +672,7 @@ _save_dry_run_and_exit() {
         dry_run_request="$workflow_dir/dry-run-request.json"
     else
         # Task mode: Save to temp file with cleanup trap
-        dry_run_request=$(mktemp -t dry-run-request.XXXXXX.json)
+        dry_run_request=$(mktemp -t dry-run-request-XXXXXX).json
         trap "rm -f '$dry_run_request'" EXIT
     fi
 
