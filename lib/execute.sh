@@ -844,7 +844,8 @@ build_and_track_document_block() {
 
     # Handle image files separately
     if [[ "$file_type" == "image" ]]; then
-        echo "    Processing image: $(basename "$file")" >&2
+        # Clear cache status before processing
+        clear_cache_status
 
         # Build image content block (Vision API)
         # Pass cache_key for remote images (URL as cache key)
@@ -854,6 +855,19 @@ build_and_track_document_block() {
             echo "    Warning: Failed to process image: $file" >&2
             return 1
         fi
+
+        # Format status message based on cache result
+        local status
+        status=$(get_cache_status)
+        local status_text=""
+        case "$status" in
+            hit)              status_text=" (cached)" ;;
+            downloaded)       status_text=" (downloaded)" ;;
+            converted)        status_text=" (converted)" ;;
+            resized)          status_text=" (resized)" ;;
+            converted_resized) status_text=" (converted+resized)" ;;
+        esac
+        echo "    Processing image: $(basename "$file")${status_text}" >&2
 
         # Add to IMAGE_BLOCKS array (images are separate, not in context/input)
         IMAGE_BLOCKS+=("$block")
@@ -1045,10 +1059,9 @@ build_and_track_document_block() {
             local embed_role="${OBSIDIAN_EMBED_ROLES[$i]}"
             local embed_cache_key="${OBSIDIAN_EMBED_CACHE_KEYS[$i]:-}"
 
-            echo "    Processing embedded file: $(basename "$embed_file")" >&2
-
             # Recursively process embed file (handles images, PDFs, etc.)
             # Pass cache_key for remote images (URL as cache key for resizing)
+            # Note: The called function prints its own "Processing image/PDF" message
             build_and_track_document_block "$embed_file" "$embed_role" "$enable_citations" "$doc_index_var" "" "" "$project_root" "$workflow_dir" "$embed_cache_key"
         done
 

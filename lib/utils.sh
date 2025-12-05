@@ -309,6 +309,26 @@ declare -a OBSIDIAN_EMBED_FILES=()
 declare -a OBSIDIAN_EMBED_ROLES=()
 declare -a OBSIDIAN_EMBED_CACHE_KEYS=()  # URL for remote images, empty for local
 
+# File-based cache status for cross-subshell communication
+# Used because subshells lose global variable state
+# Values: "hit", "converted", "resized", "converted_resized", "downloaded", "passthrough", ""
+CACHE_STATUS_FILE="${TMPDIR:-/tmp}/wireflow-cache-status.$$"
+
+# Set cache status (writes to file for subshell persistence)
+set_cache_status() {
+    echo "$1" > "$CACHE_STATUS_FILE"
+}
+
+# Get cache status (reads from file)
+get_cache_status() {
+    [[ -f "$CACHE_STATUS_FILE" ]] && cat "$CACHE_STATUS_FILE" || echo ""
+}
+
+# Clear cache status
+clear_cache_status() {
+    rm -f "$CACHE_STATUS_FILE"
+}
+
 # Download remote image to cache directory
 # Arguments:
 #   $1 - url: Remote image URL
@@ -351,6 +371,7 @@ download_remote_image() {
     # Check if already cached (even temp files persist within session)
     if [[ -f "$cached_file" && -f "$meta_file" ]]; then
         # For remote files, just check cache exists (no source file to validate against)
+        set_cache_status "hit"
         echo "$cached_file"
         return 0
     fi
@@ -362,12 +383,14 @@ download_remote_image() {
     if ! curl -fsSL -o "$cached_file" "$url" 2>/dev/null; then
         echo "Warning: Failed to download image: $url" >&2
         rm -f "$cached_file"
+        set_cache_status ""
         return 1
     fi
 
     # Write cache metadata (use URL as source)
     write_cache_metadata "$cached_file" "$url" "download"
 
+    set_cache_status "downloaded"
     echo "$cached_file"
     return 0
 }
@@ -1182,6 +1205,11 @@ cache_image() {
 
     # If no conversion and no resize needed, return original
     if [[ "$needs_conversion" == false && "$needs_resize" == false ]]; then
+        # No processing needed - preserve prior status (e.g., "downloaded" or "hit")
+        # Only set to passthrough if no prior status was set
+        local prior_status
+        prior_status=$(get_cache_status)
+        [[ -z "$prior_status" ]] && set_cache_status "passthrough"
         echo "$source_file"
         return 0
     fi
@@ -1196,6 +1224,7 @@ cache_image() {
 
         # Check if already cached and valid
         if validate_cache_entry "$cached_file"; then
+            set_cache_status "hit"
             echo "$cached_file"
             return 0
         fi
@@ -1229,19 +1258,20 @@ cache_image() {
             write_cache_metadata "$cached_file" "$cache_key" "$conversion_type"
         fi
 
-        # Log what happened
+        # Set cache status based on what processing was done
         if [[ "$needs_conversion" == true && "$needs_resize" == true ]]; then
-            echo "  Converted and resized: ${source_extension^^} → ${output_extension^^}, ${width}x${height} → ${target_width}x${target_height}" >&2
+            set_cache_status "converted_resized"
         elif [[ "$needs_conversion" == true ]]; then
-            echo "  Converted image: ${source_extension^^} → ${output_extension^^}" >&2
+            set_cache_status "converted"
         else
-            echo "  Resized image: ${width}x${height} → ${target_width}x${target_height} (cached)" >&2
+            set_cache_status "resized"
         fi
 
         echo "$cached_file"
         return 0
     else
         [[ -z "$CACHE_DIR" ]] && rm -f "$cached_file"
+        set_cache_status ""
         echo "$source_file"
         return 1
     fi
