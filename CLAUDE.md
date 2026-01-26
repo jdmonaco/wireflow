@@ -205,3 +205,49 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 **Types:** feat, fix, docs, test, refactor, style, chore
 
 **Subject:** Max 72 chars, imperative mood
+
+## Claude Code Configuration
+
+This project uses the global `~/.claude/settings.json` for all permissions and settings.
+
+### Tools Manager: tlmgr
+
+The `tlmgr` command manages all tool repositories from the umbrella ~/tools directory:
+
+```bash
+tlmgr --json summary  # Overall status of all 14 repos
+tlmgr --json list     # Detailed status with branches
+tlmgr changes         # Show uncommitted changes
+tlmgr unpushed        # Show unpushed commits
+```
+
+Always use `tlmgr` (not relative paths like `./bin/tools-manager.sh`).
+
+### Development Workflow
+
+**Auto-allowed git operations:**
+- Read: status, diff, log, show, branch, grep, blame
+- Write: add, commit, push, pull, checkout, switch, restore, stash
+
+**Require confirmation:**
+- Destructive: merge, rebase, reset, cherry-pick, revert
+- Force operations: push --force
+- Repository changes: clone, init, submodule
+
+### Available Development Tools
+
+**Python:** pytest, pip, poetry, uv (install, run, sync)  
+**Node:** npm (test, run, install), node  
+**Build:** make, bash scripts in ./scripts/  
+**Utilities:** find, grep, rg, cat, ls, tree, jq, yq, head, tail, wc  
+**Documents:** pandoc, md2docx, mdformat
+
+### Configuration
+
+All permissions are centralized in `~/.claude/settings.json`:
+- Sandbox is disabled globally
+- Full read/write access to ~/tools/** and ~/agents/**
+- Standard security protections (no ~/.ssh, .env files, etc.)
+- Consistent behavior across all projects
+
+No project-specific `.claude/` folders are needed.
